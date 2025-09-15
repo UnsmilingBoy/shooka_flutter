@@ -5,6 +5,7 @@ class ContainerButton extends StatefulWidget {
   final Widget child;
   final Color? color;
   final VoidCallback? onPressed;
+  final bool? fillWidth;
   final EdgeInsets? padding;
   const ContainerButton({
     super.key,
@@ -13,6 +14,7 @@ class ContainerButton extends StatefulWidget {
     this.onPressed,
     this.padding,
     this.color,
+    this.fillWidth,
   });
 
   @override
@@ -23,6 +25,7 @@ class _ContainerButtonState extends State<ContainerButton> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: widget.fillWidth == true ? double.infinity : null,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.borderRadius ?? 10),
         color: widget.color,

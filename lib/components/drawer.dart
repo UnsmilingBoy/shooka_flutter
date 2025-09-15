@@ -19,7 +19,7 @@ class MyDrawer extends StatelessWidget {
             //
             SizedBox(height: 60),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 10),
+              margin: const EdgeInsets.only(right: 10, left: 10, bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -34,9 +34,6 @@ class MyDrawer extends StatelessWidget {
                       color: Colors.blue,
                       colorBlendMode: BlendMode.srcATop, // Blend mode
                     ),
-                    // backgroundImage: AssetImage(
-                    //   'assets/icons/romak-logo-blue.png',
-                    // ),
                   ),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,

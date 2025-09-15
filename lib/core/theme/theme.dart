@@ -34,7 +34,7 @@ class AppTheme {
     scaffoldBackgroundColor: Color.fromARGB(255, 24, 27, 41),
     colorScheme: ColorScheme.dark(
       primary: Colors.blue[800]!,
-      secondary: Colors.amber[500]!,
+      secondary: Colors.amber[900]!,
       surface: Color.fromARGB(255, 35, 39, 58),
     ),
     appBarTheme: AppBarTheme(

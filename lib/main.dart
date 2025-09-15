@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/device_list.dart';
 import 'package:shooka_flutter/(tabs)/profile/profile_page.dart';
 import 'package:shooka_flutter/core/theme/theme.dart';
 import 'package:shooka_flutter/core/theme/theme_provider.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/home': (context) => const MyHomePage(),
           '/profile': (context) => const ProfilePage(),
+          '/device_list': (context) => const DeviceList(),
         },
         debugShowCheckedModeBanner: false,
         title: 'Shooka',
