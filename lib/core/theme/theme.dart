@@ -7,6 +7,7 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: Colors.blue[800],
     scaffoldBackgroundColor: Colors.white,
+    hintColor: Colors.grey,
     colorScheme: ColorScheme.light(
       primary: Colors.blue[800]!,
       secondary: Colors.amber[500]!,
@@ -20,20 +21,24 @@ class AppTheme {
         fontWeight: FontWeight.bold,
       ),
     ),
-    textTheme: GoogleFonts.vazirmatnTextTheme(),
+    textTheme: GoogleFonts.vazirmatnTextTheme().apply(
+      bodyColor: Colors.black,
+      displayColor: Colors.black,
+    ),
   );
 
   // Dark Theme
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
-    primaryColor: Colors.blue[800],
-    scaffoldBackgroundColor: Colors.black,
+    primaryColor: const Color(0xFF1565C0),
+    scaffoldBackgroundColor: Color.fromARGB(255, 24, 27, 41),
     colorScheme: ColorScheme.dark(
       primary: Colors.blue[800]!,
       secondary: Colors.amber[500]!,
+      surface: Color.fromARGB(255, 35, 39, 58),
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.blue[800],
+      backgroundColor: Color.fromARGB(255, 24, 27, 41),
       foregroundColor: Colors.white,
       titleTextStyle: TextStyle(
         fontSize: 20,
@@ -41,6 +46,9 @@ class AppTheme {
         color: Colors.white,
       ),
     ),
-    textTheme: GoogleFonts.vazirmatnTextTheme(),
+    textTheme: GoogleFonts.vazirmatnTextTheme().apply(
+      bodyColor: Colors.white,
+      displayColor: Colors.white,
+    ),
   );
 }
