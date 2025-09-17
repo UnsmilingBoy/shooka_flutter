@@ -37,6 +37,7 @@ dependencies:
   provider: ^6.1.5+1
   google_fonts: ^6.3.1
   percent_indicator: ^4.2.5
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -48,6 +49,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+
+# App Icon
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/romak-logo-blue.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

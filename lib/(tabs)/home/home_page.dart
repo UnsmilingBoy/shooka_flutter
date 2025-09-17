@@ -116,7 +116,11 @@ class MyHomePage extends StatelessWidget {
                                     borderRadius: 5,
                                     fillWidth: true,
                                     child: Text("افزودن موتورخانه"),
-                                    onPressed: () {},
+                                    onPressed: () =>
+                                        Navigator.pushReplacementNamed(
+                                          context,
+                                          "/add_device",
+                                        ),
                                   ),
                                   ContainerButton(
                                     padding: EdgeInsets.all(15),
@@ -126,7 +130,11 @@ class MyHomePage extends StatelessWidget {
                                     borderRadius: 5,
                                     fillWidth: true,
                                     child: Text("افزودن رویداد"),
-                                    onPressed: () {},
+                                    onPressed: () =>
+                                        Navigator.pushReplacementNamed(
+                                          context,
+                                          "/add_event",
+                                        ),
                                   ),
                                 ],
                               ),
@@ -170,7 +178,7 @@ class MyHomePage extends StatelessWidget {
                           InkWell(
                             onTap: () => Navigator.pushReplacementNamed(
                               context,
-                              "/device_list", //TODO: FIX THIS WITH AN ACTUAL ROUTE
+                              "/device_list",
                             ),
                             child: Icon(Icons.chevron_right_rounded),
                           ),
@@ -275,7 +283,7 @@ class MyHomePage extends StatelessWidget {
                           InkWell(
                             onTap: () => Navigator.pushReplacementNamed(
                               context,
-                              "/events", //TODO: FIX THIS WITH AN ACTUAL ROUTE
+                              "/events",
                             ),
                             child: Icon(Icons.chevron_right_rounded),
                           ),
