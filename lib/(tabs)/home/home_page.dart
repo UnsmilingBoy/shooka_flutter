@@ -154,7 +154,7 @@ class MyHomePage extends StatelessWidget {
                           InkWell(
                             onTap: () => Navigator.pushReplacementNamed(
                               context,
-                              "/events", //TODO: FIX THIS WITH AN ACTUAL ROUTE
+                              "/events",
                             ),
                             child: Icon(Icons.chevron_right_rounded),
                           ),
