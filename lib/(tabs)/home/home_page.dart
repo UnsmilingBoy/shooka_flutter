@@ -36,6 +36,12 @@ class MyHomePage extends StatelessWidget {
         "author": "admin",
         "device": "دانشگاه مازندران - پردیس - سالن ورزشی قائم",
       },
+      {
+        "title": "پیام ادمین",
+        "message": "سنسور دمای برگشت باید تعویض گردد",
+        "author": "admin",
+        "device": "دانشگاه مازندران - پردیس - سالن ورزشی قائم",
+      },
     ];
 
     return BasePage(
@@ -50,7 +56,7 @@ class MyHomePage extends StatelessWidget {
                 children: [
                   Text(
                     "خوش آمدید سپنتا شفیع زاده!",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ],
               ),
@@ -67,25 +73,29 @@ class MyHomePage extends StatelessWidget {
                     // Active Boilers Info Tile
                     //
                     Expanded(
-                      child: MainmenuContainer(
-                        borderRadius: 10,
-                        padding: EdgeInsets.symmetric(vertical: 10),
-                        child: Column(
-                          spacing: 10,
-                          children: [
-                            Text("موتورخانه های فعال"),
-                            CircularPercentIndicator(
-                              lineWidth: 7,
-                              animation: true,
-                              progressColor: Theme.of(
-                                context,
-                              ).colorScheme.secondary,
+                      child: GestureDetector(
+                        onTap: () =>
+                            Navigator.of(context).pushNamed("/device_list"),
+                        child: MainmenuContainer(
+                          borderRadius: 10,
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Column(
+                            spacing: 10,
+                            children: [
+                              Text("موتورخانه های فعال"),
+                              CircularPercentIndicator(
+                                lineWidth: 7,
+                                animation: true,
+                                progressColor: Theme.of(
+                                  context,
+                                ).colorScheme.secondary,
 
-                              percent: 25 / 27,
-                              radius: 40,
-                              center: Text("25/27"),
-                            ),
-                          ],
+                                percent: 25 / 27,
+                                radius: 40,
+                                center: Text("25/27"),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -105,7 +115,7 @@ class MyHomePage extends StatelessWidget {
                               fillWidth: true,
                               child: Text(
                                 "افزودن موتورخانه",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: Theme.of(context).textTheme.labelLarge,
                               ),
                               onPressed: () {},
                             ),
@@ -118,7 +128,7 @@ class MyHomePage extends StatelessWidget {
                               fillWidth: true,
                               child: Text(
                                 "افزودن رویداد",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: Theme.of(context).textTheme.labelLarge,
                               ),
                               onPressed: () {},
                             ),
@@ -146,16 +156,11 @@ class MyHomePage extends StatelessWidget {
                         children: [
                           Text(
                             "رویداد ها",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                           InkWell(
-                            onTap: () => Navigator.pushReplacementNamed(
-                              context,
-                              "/events",
-                            ),
+                            onTap: () =>
+                                Navigator.pushNamed(context, "/events"),
                             child: Icon(Icons.chevron_right_rounded),
                           ),
                         ],
@@ -175,7 +180,6 @@ class MyHomePage extends StatelessWidget {
                                   onPressed: () {
                                     print("Navigate to device details");
                                   },
-                                  // padding: EdgeInsets.symmetric(horizontal: 20),
                                   color: null,
                                   child: ListTile(
                                     contentPadding: EdgeInsets.zero,
@@ -190,7 +194,9 @@ class MyHomePage extends StatelessWidget {
                                             event["title"]!,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(fontSize: 14),
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.titleSmall,
                                           ),
                                         ),
                                         Expanded(
@@ -203,9 +209,9 @@ class MyHomePage extends StatelessWidget {
                                                 child: Text(
                                                   textAlign: TextAlign.left,
                                                   event["author"].toString(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                  ),
+                                                  style: Theme.of(
+                                                    context,
+                                                  ).textTheme.labelSmall,
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                 ),
@@ -225,16 +231,9 @@ class MyHomePage extends StatelessWidget {
                                     subtitle: Text(
                                       "دستگاه: ${event["device"]}",
                                     ),
-                                    subtitleTextStyle: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(context).hintColor,
-                                    ),
-                                    // trailing: Row(
-                                    //   children: [
-                                    //     Icon(Icons.person),
-                                    //     Text(event["author"].toString()),
-                                    //   ],
-                                    // ),
+                                    subtitleTextStyle: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
                                   ),
                                 );
                               }).toList(),
@@ -260,23 +259,16 @@ class MyHomePage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           InkWell(
-                            onTap: () => Navigator.pushReplacementNamed(
-                              context,
-                              "/device_list",
-                            ),
+                            onTap: () =>
+                                Navigator.pushNamed(context, "/device_list"),
                             child: Text(
                               "لیست موتورخانه ها",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ),
                           InkWell(
-                            onTap: () => Navigator.pushReplacementNamed(
-                              context,
-                              "/device_list", //TODO: FIX THIS WITH AN ACTUAL ROUTE
-                            ),
+                            onTap: () =>
+                                Navigator.pushNamed(context, "/device_list"),
                             child: Icon(Icons.chevron_right_rounded),
                           ),
                         ],
@@ -304,12 +296,16 @@ class MyHomePage extends StatelessWidget {
                                   color: null,
                                   child: ListTile(
                                     contentPadding: EdgeInsets.zero,
-                                    title: Text(device["name"]!),
-                                    subtitle: Text("شهر: ${device["city"]}"),
-                                    subtitleTextStyle: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(context).hintColor,
+                                    title: Text(
+                                      device["name"]!,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleSmall,
                                     ),
+                                    subtitle: Text("شهر: ${device["city"]}"),
+                                    subtitleTextStyle: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
                                     trailing: Tooltip(
                                       message:
                                           "موتورخانه ${device["status"]} است.",
@@ -335,20 +331,18 @@ class MyHomePage extends StatelessWidget {
                       child: ContainerButton(
                         fillWidth: true,
                         onPressed: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            "/add_device",
-                          );
+                          Navigator.pushNamed(context, "/add_device");
                         },
                         padding: EdgeInsets.all(10),
                         color: Theme.of(context).primaryColor,
                         child: Row(
+                          spacing: 5,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add, color: Colors.white, size: 18),
                             Text(
                               "افزودن موتورخانه",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.labelLarge,
                             ),
                           ],
                         ),

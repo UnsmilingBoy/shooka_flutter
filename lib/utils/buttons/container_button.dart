@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class ContainerButton extends StatefulWidget {
   final double? borderRadius;
+  final EdgeInsets? margin;
   final Widget child;
   final Color? color;
   final VoidCallback? onPressed;
@@ -15,6 +16,7 @@ class ContainerButton extends StatefulWidget {
     this.padding,
     this.color,
     this.fillWidth,
+    this.margin,
   });
 
   @override
@@ -25,6 +27,9 @@ class _ContainerButtonState extends State<ContainerButton> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // height: 40,
+      padding: EdgeInsets.all(0),
+      margin: widget.margin,
       width: widget.fillWidth == true ? double.infinity : null,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.borderRadius ?? 10),

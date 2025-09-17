@@ -8,7 +8,7 @@ class MyAppbar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       title: GestureDetector(
-        onTap: () => Navigator.of(context).pushReplacementNamed("/profile"),
+        onTap: () => Navigator.of(context).pushNamed("/profile"),
         child: Row(
           spacing: 7,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -19,13 +19,13 @@ class MyAppbar extends StatelessWidget implements PreferredSizeWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("s.shafizadeh", style: TextStyle(fontSize: 16)),
+                Text(
+                  "s.shafizadeh",
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
                 Text(
                   "سپنتا شفیع زاده",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).hintColor,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
             ),

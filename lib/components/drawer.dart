@@ -20,7 +20,12 @@ class MyDrawer extends StatelessWidget {
             SizedBox(height: 60),
             Container(
               margin: const EdgeInsets.only(right: 10, left: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+              padding: const EdgeInsets.only(
+                left: 5,
+                right: 5,
+                bottom: 20,
+                top: 5,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -40,18 +45,11 @@ class MyDrawer extends StatelessWidget {
                     children: [
                       Text(
                         'پنل شوکا',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
                         'نسخه 1.0.0',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).hintColor,
-                        ),
+                        style: Theme.of(context).textTheme.labelSmall,
                       ),
                     ],
                   ),
@@ -64,6 +62,7 @@ class MyDrawer extends StatelessWidget {
             //
             Expanded(
               child: ListView(
+                padding: EdgeInsets.zero,
                 children: tabsList.map<Widget>((tab) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -72,7 +71,7 @@ class MyDrawer extends StatelessWidget {
                           ? Theme.of(context).primaryColor
                           : null,
                       borderRadius: 10,
-                      padding: EdgeInsets.all(17),
+                      padding: EdgeInsets.all(15),
                       onPressed: () {
                         Navigator.pop(context);
                         Navigator.of(
@@ -86,12 +85,7 @@ class MyDrawer extends StatelessWidget {
                           Icon(tab["icon"] as IconData, size: 22),
                           Text(
                             tab["label"] as String,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: routeName == tab["href"]
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
+                            style: Theme.of(context).textTheme.labelLarge,
                           ),
                         ],
                       ),
