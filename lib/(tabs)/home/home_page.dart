@@ -94,166 +94,45 @@ class MyHomePage extends StatelessWidget {
                     // Quick Access Tile
                     //
                     Expanded(
-                      child: MainmenuContainer(
-                        borderRadius: 10,
-                        padding: EdgeInsets.symmetric(vertical: 10),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("دسترسی سریع"),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10.0,
-                              ),
-                              child: Column(
-                                spacing: 5,
-                                children: [
-                                  ContainerButton(
-                                    padding: EdgeInsets.all(15),
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    borderRadius: 5,
-                                    fillWidth: true,
-                                    child: Text("افزودن موتورخانه"),
-                                    onPressed: () {},
-                                  ),
-                                  ContainerButton(
-                                    padding: EdgeInsets.all(15),
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.secondary,
-                                    borderRadius: 5,
-                                    fillWidth: true,
-                                    child: Text("افزودن رویداد"),
-                                    onPressed: () {},
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              //
-              // Brief Device List and Add Device Button
-              //
-              MainmenuContainer(
-                borderRadius: 10,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Column(
-                  spacing: 15,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                      child: Column(
+                        // mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 10,
                         children: [
-                          InkWell(
-                            onTap: () => Navigator.pushReplacementNamed(
-                              context,
-                              "/device_list",
-                            ),
-                            child: Text(
-                              "لیست موتورخانه ها",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                          Expanded(
+                            child: ContainerButton(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: 10,
+                              fillWidth: true,
+                              child: Text(
+                                "افزودن موتورخانه",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
+                              onPressed: () {},
                             ),
                           ),
-                          InkWell(
-                            onTap: () => Navigator.pushReplacementNamed(
-                              context,
-                              "/device_list", //TODO: FIX THIS WITH AN ACTUAL ROUTE
+                          Expanded(
+                            child: ContainerButton(
+                              padding: EdgeInsets.all(10),
+                              color: Theme.of(context).colorScheme.secondary,
+                              borderRadius: 10,
+                              fillWidth: true,
+                              child: Text(
+                                "افزودن رویداد",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              onPressed: () {},
                             ),
-                            child: Icon(Icons.chevron_right_rounded),
                           ),
                         ],
                       ),
                     ),
-
-                    //
-                    // Device List
-                    //
-                    devicesSampleData.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 50),
-                            child: Text("موتورخانه ای وجود ندارد."),
-                          )
-                        : Padding(
-                            padding: EdgeInsets.zero,
-                            child: Column(
-                              children: devicesSampleData.map((device) {
-                                return ContainerButton(
-                                  borderRadius: 0,
-                                  onPressed: () {
-                                    print("Navigate to device details");
-                                  },
-                                  padding: EdgeInsets.symmetric(horizontal: 20),
-                                  color: null,
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(device["name"]!),
-                                    subtitle: Text("شهر: ${device["city"]}"),
-                                    subtitleTextStyle: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(context).hintColor,
-                                    ),
-                                    trailing: Tooltip(
-                                      message:
-                                          "موتورخانه ${device["status"]} است.",
-                                      child: Icon(
-                                        size: 15,
-                                        Icons.circle,
-                                        color: device["status"] == "فعال"
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-
-                    //
-                    // Add Device Button
-                    //
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ContainerButton(
-                        fillWidth: true,
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            "/add_device",
-                          );
-                        },
-                        padding: EdgeInsets.all(20),
-                        color: Theme.of(context).primaryColor,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add, color: Colors.white, size: 18),
-                            Text(
-                              "افزودن موتورخانه",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
 
+              //
               // Brief Organization List and Add Organization Button
+              //
               MainmenuContainer(
                 padding: EdgeInsets.symmetric(vertical: 20),
                 borderRadius: 10,
@@ -361,6 +240,120 @@ class MyHomePage extends StatelessWidget {
                               }).toList(),
                             ),
                           ),
+                  ],
+                ),
+              ),
+
+              //
+              // Brief Device List and Add Device Button
+              //
+              MainmenuContainer(
+                borderRadius: 10,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  spacing: 15,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap: () => Navigator.pushReplacementNamed(
+                              context,
+                              "/device_list",
+                            ),
+                            child: Text(
+                              "لیست موتورخانه ها",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => Navigator.pushReplacementNamed(
+                              context,
+                              "/device_list", //TODO: FIX THIS WITH AN ACTUAL ROUTE
+                            ),
+                            child: Icon(Icons.chevron_right_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    //
+                    // Device List
+                    //
+                    devicesSampleData.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 50),
+                            child: Text("موتورخانه ای وجود ندارد."),
+                          )
+                        : Padding(
+                            padding: EdgeInsets.zero,
+                            child: Column(
+                              children: devicesSampleData.map((device) {
+                                return ContainerButton(
+                                  borderRadius: 0,
+                                  onPressed: () {
+                                    print("Navigate to device details");
+                                  },
+                                  padding: EdgeInsets.symmetric(horizontal: 20),
+                                  color: null,
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(device["name"]!),
+                                    subtitle: Text("شهر: ${device["city"]}"),
+                                    subtitleTextStyle: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context).hintColor,
+                                    ),
+                                    trailing: Tooltip(
+                                      message:
+                                          "موتورخانه ${device["status"]} است.",
+                                      child: Icon(
+                                        size: 15,
+                                        Icons.circle,
+                                        color: device["status"] == "فعال"
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+
+                    //
+                    // Add Device Button
+                    //
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: ContainerButton(
+                        fillWidth: true,
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            "/add_device",
+                          );
+                        },
+                        padding: EdgeInsets.all(10),
+                        color: Theme.of(context).primaryColor,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add, color: Colors.white, size: 18),
+                            Text(
+                              "افزودن موتورخانه",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

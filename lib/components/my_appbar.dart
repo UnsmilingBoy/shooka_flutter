@@ -6,6 +6,7 @@ class MyAppbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       title: GestureDetector(
         onTap: () => Navigator.of(context).pushReplacementNamed("/profile"),
         child: Row(

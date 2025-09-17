@@ -40,10 +40,12 @@ class AppTheme {
     appBarTheme: AppBarTheme(
       backgroundColor: Color.fromARGB(255, 24, 27, 41),
       foregroundColor: Colors.white,
-      titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
+      titleTextStyle: GoogleFonts.vazirmatn(
+        textStyle: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
       ),
     ),
     textTheme: GoogleFonts.vazirmatnTextTheme().apply(

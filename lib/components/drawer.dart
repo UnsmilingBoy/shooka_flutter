@@ -19,7 +19,7 @@ class MyDrawer extends StatelessWidget {
             //
             SizedBox(height: 60),
             Container(
-              margin: const EdgeInsets.only(right: 10, left: 10, bottom: 10),
+              margin: const EdgeInsets.only(right: 10, left: 10),
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
