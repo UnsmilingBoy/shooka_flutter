@@ -2,21 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:shooka_flutter/components/drawer.dart';
 import 'package:shooka_flutter/components/my_appbar.dart';
 
-class BasePage extends StatefulWidget {
+class ProfileScaffold extends StatefulWidget {
   final Widget body;
-  const BasePage({super.key, required this.body});
+  const ProfileScaffold({super.key, required this.body});
 
   @override
-  State<BasePage> createState() => _BasePageState();
+  State<ProfileScaffold> createState() => _ProfileScaffoldState();
 }
 
-class _BasePageState extends State<BasePage> {
+class _ProfileScaffoldState extends State<ProfileScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MyAppbar(),
       endDrawer: MyDrawer(),
       body: SingleChildScrollView(
+        padding: EdgeInsets.all(15),
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: widget.body,

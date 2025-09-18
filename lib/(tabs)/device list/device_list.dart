@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shooka_flutter/utils/layouts/base_page.dart';
+import 'package:shooka_flutter/utils/layouts/back_scaffold.dart';
 
 class DeviceList extends StatefulWidget {
   final bool openAddDevice;
@@ -13,11 +13,13 @@ class DeviceList extends StatefulWidget {
 class _DeviceListState extends State<DeviceList> {
   @override
   Widget build(BuildContext context) {
-    return BasePage(
+    return BackScaffold(
+      label: "موتورخانه ها",
+      backLabel: "خانه",
+      backRoute: "/home",
       body: Column(
         children: [
-          Text("Device List Page"),
-          Text("Modal is ${widget.openAddDevice}"),
+          Row(children: [Text("لیست موتورخانه ها")]),
         ],
       ),
     );

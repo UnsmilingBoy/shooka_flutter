@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shooka_flutter/utils/layouts/base_page.dart';
+import 'package:shooka_flutter/utils/layouts/profile_scaffold.dart';
 
 class EventsTab extends StatefulWidget {
   final bool openAddEvent;
@@ -12,7 +12,7 @@ class EventsTab extends StatefulWidget {
 class _EventsTabState extends State<EventsTab> {
   @override
   Widget build(BuildContext context) {
-    return BasePage(
+    return ProfileScaffold(
       body: Column(
         children: [Text("Events"), Text("add event is ${widget.openAddEvent}")],
       ),

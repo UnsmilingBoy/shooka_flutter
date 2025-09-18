@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
-import 'package:shooka_flutter/utils/layouts/base_page.dart';
+import 'package:shooka_flutter/utils/layouts/profile_scaffold.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
@@ -44,315 +44,309 @@ class MyHomePage extends StatelessWidget {
       },
     ];
 
-    return BasePage(
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: Column(
-            spacing: 15,
-            children: [
-              Row(
+    return ProfileScaffold(
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          spacing: 15,
+          children: [
+            Row(
+              children: [
+                Text(
+                  "خوش آمدید سپنتا شفیع زاده!",
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ],
+            ),
+
+            //
+            // A Row With Two Container Tiles Providing Some Info (Boilers Status and count)
+            //
+            SizedBox(
+              height: 135,
+              child: Row(
+                spacing: 15,
                 children: [
-                  Text(
-                    "خوش آمدید سپنتا شفیع زاده!",
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-
-              //
-              // A Row With Two Container Tiles Providing Some Info (Boilers Status and count)
-              //
-              SizedBox(
-                height: 135,
-                child: Row(
-                  spacing: 15,
-                  children: [
-                    //
-                    // Active Boilers Info Tile
-                    //
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () =>
-                            Navigator.of(context).pushNamed("/device_list"),
-                        child: MainmenuContainer(
-                          borderRadius: 10,
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: Column(
-                            spacing: 10,
-                            children: [
-                              Text("موتورخانه های فعال"),
-                              CircularPercentIndicator(
-                                lineWidth: 7,
-                                animation: true,
-                                progressColor: Theme.of(
-                                  context,
-                                ).colorScheme.secondary,
-
-                                percent: 25 / 27,
-                                radius: 40,
-                                center: Text("25/27"),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    //
-                    // Quick Access Tile
-                    //
-                    Expanded(
-                      child: Column(
-                        // mainAxisAlignment: MainAxisAlignment.center,
-                        spacing: 10,
-                        children: [
-                          Expanded(
-                            child: ContainerButton(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: 10,
-                              fillWidth: true,
-                              child: Text(
-                                "افزودن موتورخانه",
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              onPressed: () {},
-                            ),
-                          ),
-                          Expanded(
-                            child: ContainerButton(
-                              padding: EdgeInsets.all(10),
-                              color: Theme.of(context).colorScheme.secondary,
-                              borderRadius: 10,
-                              fillWidth: true,
-                              child: Text(
-                                "افزودن رویداد",
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              onPressed: () {},
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              //
-              // Brief Organization List and Add Organization Button
-              //
-              MainmenuContainer(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                borderRadius: 10,
-                child: Column(
-                  spacing: 15,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "رویداد ها",
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          InkWell(
-                            onTap: () =>
-                                Navigator.pushNamed(context, "/events"),
-                            child: Icon(Icons.chevron_right_rounded),
-                          ),
-                        ],
-                      ),
-                    ),
-                    logsSampleData.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 50),
-                            child: Text("رویدادی وجود ندارد."),
-                          )
-                        : Padding(
-                            padding: EdgeInsets.zero,
-                            child: Column(
-                              children: logsSampleData.map((event) {
-                                return ContainerButton(
-                                  borderRadius: 0,
-                                  onPressed: () {
-                                    print("Navigate to device details");
-                                  },
-                                  color: null,
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Row(
-                                      spacing: 10,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            event["title"]!,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.titleSmall,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Row(
-                                            spacing: 2,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  textAlign: TextAlign.left,
-                                                  event["author"].toString(),
-                                                  style: Theme.of(
-                                                    context,
-                                                  ).textTheme.labelSmall,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Icon(
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.secondary,
-                                                Icons.person,
-                                                size: 16,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    subtitle: Text(
-                                      "دستگاه: ${event["device"]}",
-                                    ),
-                                    subtitleTextStyle: Theme.of(
-                                      context,
-                                    ).textTheme.labelSmall,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                  ],
-                ),
-              ),
-
-              //
-              // Brief Device List and Add Device Button
-              //
-              MainmenuContainer(
-                borderRadius: 10,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Column(
-                  spacing: 15,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          InkWell(
-                            onTap: () =>
-                                Navigator.pushNamed(context, "/device_list"),
-                            child: Text(
-                              "لیست موتورخانه ها",
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () =>
-                                Navigator.pushNamed(context, "/device_list"),
-                            child: Icon(Icons.chevron_right_rounded),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    //
-                    // Device List
-                    //
-                    devicesSampleData.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 50),
-                            child: Text("موتورخانه ای وجود ندارد."),
-                          )
-                        : Padding(
-                            padding: EdgeInsets.zero,
-                            child: Column(
-                              children: devicesSampleData.map((device) {
-                                return ContainerButton(
-                                  borderRadius: 0,
-                                  onPressed: () {
-                                    print("Navigate to device details");
-                                  },
-                                  padding: EdgeInsets.symmetric(horizontal: 20),
-                                  color: null,
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(
-                                      device["name"]!,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleSmall,
-                                    ),
-                                    subtitle: Text("شهر: ${device["city"]}"),
-                                    subtitleTextStyle: Theme.of(
-                                      context,
-                                    ).textTheme.labelSmall,
-                                    trailing: Tooltip(
-                                      message:
-                                          "موتورخانه ${device["status"]} است.",
-                                      child: Icon(
-                                        size: 15,
-                                        Icons.circle,
-                                        color: device["status"] == "فعال"
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-
-                    //
-                    // Add Device Button
-                    //
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ContainerButton(
-                        fillWidth: true,
-                        onPressed: () {
-                          Navigator.pushNamed(context, "/add_device");
-                        },
-                        padding: EdgeInsets.all(10),
-                        color: Theme.of(context).primaryColor,
-                        child: Row(
-                          spacing: 5,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                  //
+                  // Active Boilers Info Tile
+                  //
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () =>
+                          Navigator.of(context).pushNamed("/device_list"),
+                      child: MainmenuContainer(
+                        borderRadius: 10,
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Column(
+                          spacing: 10,
                           children: [
-                            Icon(Icons.add, color: Colors.white, size: 18),
-                            Text(
-                              "افزودن موتورخانه",
-                              style: Theme.of(context).textTheme.labelLarge,
+                            Text("موتورخانه های فعال"),
+                            CircularPercentIndicator(
+                              lineWidth: 7,
+                              animation: true,
+                              progressColor: Theme.of(
+                                context,
+                              ).colorScheme.secondary,
+
+                              percent: 25 / 27,
+                              radius: 40,
+                              center: Text("25/27"),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  //
+                  // Quick Access Tile
+                  //
+                  Expanded(
+                    child: Column(
+                      spacing: 10,
+                      children: [
+                        Expanded(
+                          child: ContainerButton(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: 10,
+                            fillWidth: true,
+                            child: Text(
+                              "افزودن موتورخانه",
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            onPressed: () =>
+                                Navigator.of(context).pushNamed("/add_device"),
+                          ),
+                        ),
+                        Expanded(
+                          child: ContainerButton(
+                            padding: EdgeInsets.all(10),
+                            color: Theme.of(context).colorScheme.secondary,
+                            borderRadius: 10,
+                            fillWidth: true,
+                            child: Text(
+                              "افزودن رویداد",
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            onPressed: () =>
+                                Navigator.of(context).pushNamed("/add_event"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+
+            //
+            // Brief Organization List and Add Organization Button
+            //
+            MainmenuContainer(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              borderRadius: 10,
+              child: Column(
+                spacing: 15,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "رویداد ها",
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        InkWell(
+                          onTap: () => Navigator.pushNamed(context, "/events"),
+                          child: Icon(Icons.chevron_right_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                  logsSampleData.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50),
+                          child: Text("رویدادی وجود ندارد."),
+                        )
+                      : Padding(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            children: logsSampleData.map((event) {
+                              return ContainerButton(
+                                borderRadius: 0,
+                                onPressed: () {
+                                  print("Navigate to device details");
+                                },
+                                color: null,
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Row(
+                                    spacing: 10,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          event["title"]!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.titleSmall,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Row(
+                                          spacing: 2,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                textAlign: TextAlign.left,
+                                                event["author"].toString(),
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.labelSmall,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Icon(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondary,
+                                              Icons.person,
+                                              size: 16,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  subtitle: Text("دستگاه: ${event["device"]}"),
+                                  subtitleTextStyle: Theme.of(
+                                    context,
+                                  ).textTheme.labelSmall,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                ],
+              ),
+            ),
+
+            //
+            // Brief Device List and Add Device Button
+            //
+            MainmenuContainer(
+              borderRadius: 10,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                spacing: 15,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        InkWell(
+                          onTap: () =>
+                              Navigator.pushNamed(context, "/device_list"),
+                          child: Text(
+                            "لیست موتورخانه ها",
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () =>
+                              Navigator.pushNamed(context, "/device_list"),
+                          child: Icon(Icons.chevron_right_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  //
+                  // Device List
+                  //
+                  devicesSampleData.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50),
+                          child: Text("موتورخانه ای وجود ندارد."),
+                        )
+                      : Padding(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            children: devicesSampleData.map((device) {
+                              return ContainerButton(
+                                borderRadius: 0,
+                                onPressed: () {
+                                  print("Navigate to device details");
+                                },
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                color: null,
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    device["name"]!,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleSmall,
+                                  ),
+                                  subtitle: Text("شهر: ${device["city"]}"),
+                                  subtitleTextStyle: Theme.of(
+                                    context,
+                                  ).textTheme.labelSmall,
+                                  trailing: Tooltip(
+                                    message:
+                                        "موتورخانه ${device["status"]} است.",
+                                    child: Icon(
+                                      size: 15,
+                                      Icons.circle,
+                                      color: device["status"] == "فعال"
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+
+                  //
+                  // Add Device Button
+                  //
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: ContainerButton(
+                      fillWidth: true,
+                      onPressed: () {
+                        Navigator.pushNamed(context, "/add_device");
+                      },
+                      padding: EdgeInsets.all(10),
+                      color: Theme.of(context).primaryColor,
+                      child: Row(
+                        spacing: 5,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add, color: Colors.white, size: 18),
+                          Text(
+                            "افزودن موتورخانه",
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
