@@ -6,12 +6,14 @@ class BackScaffold extends StatefulWidget {
   final String label;
   final String backRoute;
   final String backLabel;
+  final Widget? floatingActionButton;
   const BackScaffold({
     super.key,
     required this.body,
     required this.label,
     required this.backRoute,
     required this.backLabel,
+    this.floatingActionButton,
   });
 
   @override
@@ -24,6 +26,8 @@ class _BackScaffoldState extends State<BackScaffold> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        floatingActionButton: widget.floatingActionButton,
         //
         // Appbar
         //
@@ -62,7 +66,7 @@ class _BackScaffoldState extends State<BackScaffold> {
         //
         // Body
         //
-        body: SingleChildScrollView(
+        body: Padding(
           padding: EdgeInsets.all(15),
           child: Directionality(
             textDirection: TextDirection.rtl,

@@ -7,7 +7,7 @@ class MyDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String? routeName = ModalRoute.of(context)?.settings.name;
+    String? routeName = ModalRoute.of(context)?.settings.name ?? "";
 
     return Drawer(
       child: Directionality(
@@ -64,19 +64,19 @@ class MyDrawer extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: tabsList.map<Widget>((tab) {
+                  final hrefs = (tab["href"] as List<dynamic>?)?.cast<String>();
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: ContainerButton(
-                      color: routeName == tab["href"]
+                      color: (hrefs?.contains(routeName) ?? false)
                           ? Theme.of(context).primaryColor
                           : null,
                       borderRadius: 10,
                       padding: EdgeInsets.all(15),
                       onPressed: () {
                         Navigator.pop(context);
-                        Navigator.of(
-                          context,
-                        ).pushReplacementNamed(tab["href"] as String);
+                        Navigator.of(context).pushNamed(hrefs!.first);
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,

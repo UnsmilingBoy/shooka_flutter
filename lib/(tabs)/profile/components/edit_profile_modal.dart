@@ -48,6 +48,7 @@ class EditProfileModal extends StatelessWidget {
               children: [
                 Text(controllerList[index]["label"] as String),
                 Outlinetextfield(
+                  placeholder: controllerList[index]["placeholder"] as String,
                   controller:
                       controllerList[index]["controller"]
                           as TextEditingController,
@@ -76,7 +77,7 @@ class EditProfileModal extends StatelessWidget {
 
             //Close button
             ContainerButton(
-              color: Theme.of(context).hintColor,
+              color: Theme.of(context).colorScheme.errorContainer,
               fillWidth: true,
               child: Text(
                 "بستن",

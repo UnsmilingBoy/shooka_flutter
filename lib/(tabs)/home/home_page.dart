@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:shooka_flutter/components/device_tile.dart';
+import 'package:shooka_flutter/components/event_tile.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
 import 'package:shooka_flutter/utils/layouts/profile_scaffold.dart';
@@ -10,7 +12,12 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const devicesSampleData = [
-      {"name": "موتورخانه 1", "status": "فعال", "city": "تهران"},
+      {
+        "name":
+            "موتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانه 1",
+        "status": "فعال",
+        "city": "تهران",
+      },
       {"name": "موتورخانه 2", "status": "غیرفعال", "city": "آمل"},
       {"name": "موتورخانه 3", "status": "فعال", "city": "زنجان"},
       {"name": "موتورخانه 4", "status": "فعال", "city": "آمل"},
@@ -173,63 +180,10 @@ class MyHomePage extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           child: Column(
                             children: logsSampleData.map((event) {
-                              return ContainerButton(
-                                borderRadius: 0,
-                                onPressed: () {
-                                  print("Navigate to device details");
-                                },
-                                color: null,
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Row(
-                                    spacing: 10,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          event["title"]!,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleSmall,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Row(
-                                          spacing: 2,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                textAlign: TextAlign.left,
-                                                event["author"].toString(),
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.labelSmall,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            Icon(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.secondary,
-                                              Icons.person,
-                                              size: 16,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  subtitle: Text("دستگاه: ${event["device"]}"),
-                                  subtitleTextStyle: Theme.of(
-                                    context,
-                                  ).textTheme.labelSmall,
-                                ),
+                              return EventTile(
+                                author: event["author"] ?? "",
+                                device: event["device"] ?? "",
+                                title: event["title"] ?? "",
                               );
                             }).toList(),
                           ),
@@ -282,37 +236,11 @@ class MyHomePage extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           child: Column(
                             children: devicesSampleData.map((device) {
-                              return ContainerButton(
+                              return DeviceTile(
                                 borderRadius: 0,
-                                onPressed: () {
-                                  print("Navigate to device details");
-                                },
-                                padding: EdgeInsets.symmetric(horizontal: 20),
-                                color: null,
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(
-                                    device["name"]!,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleSmall,
-                                  ),
-                                  subtitle: Text("شهر: ${device["city"]}"),
-                                  subtitleTextStyle: Theme.of(
-                                    context,
-                                  ).textTheme.labelSmall,
-                                  trailing: Tooltip(
-                                    message:
-                                        "موتورخانه ${device["status"]} است.",
-                                    child: Icon(
-                                      size: 15,
-                                      Icons.circle,
-                                      color: device["status"] == "فعال"
-                                          ? Colors.green
-                                          : Colors.red,
-                                    ),
-                                  ),
-                                ),
+                                name: device["name"] ?? "",
+                                city: device["city"] ?? "",
+                                status: device["status"] ?? "",
                               );
                             }).toList(),
                           ),

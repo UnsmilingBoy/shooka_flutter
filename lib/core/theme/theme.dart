@@ -7,6 +7,7 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: Colors.blue[800],
     scaffoldBackgroundColor: Colors.white,
+
     hintColor: Colors.grey,
     colorScheme: ColorScheme.light(
       primary: Colors.blue[800]!,
@@ -38,6 +39,7 @@ class AppTheme {
       secondary: Colors.amber[900]!,
       surface: Color.fromARGB(255, 35, 39, 58),
       error: Colors.red.shade900,
+      errorContainer: Colors.grey[700],
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Color.fromARGB(255, 24, 27, 41),
