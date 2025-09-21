@@ -3,37 +3,25 @@ import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
-class EditProfileModal extends StatelessWidget {
-  const EditProfileModal({super.key});
+class AddLocationModal extends StatelessWidget {
+  const AddLocationModal({super.key});
 
   @override
   Widget build(BuildContext context) {
-    //
-    // Controllers
-    //
-    TextEditingController name = TextEditingController();
-    TextEditingController phoneNumber = TextEditingController();
-    TextEditingController email = TextEditingController();
+    TextEditingController city = TextEditingController();
+    TextEditingController province = TextEditingController();
 
     final controllerList = [
-      {
-        "controller": name,
-        "label": "نام و نام خانوادگی:",
-        "placeholder": "نام",
-      },
-      {
-        "controller": phoneNumber,
-        "label": "شماره همراه:",
-        "placeholder": "شماره همراه",
-      },
-      {"controller": email, "label": "ایمیل:", "placeholder": "ایمیل"},
+      {"controller": city, "label": "شهر:", "placeholder": "شهر"},
+      {"controller": province, "label": "استان:", "placeholder": "استان"},
     ];
 
     //
-    // Body
+    //Body
     //
+
     return BottomModalTemplate(
-      title: "ویرایش حساب کاربری",
+      title: "مکان جدید",
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),

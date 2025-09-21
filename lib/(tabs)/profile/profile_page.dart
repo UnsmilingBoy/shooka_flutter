@@ -3,7 +3,7 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/change_password_modal.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/edit_profile_modal.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
-import 'package:shooka_flutter/utils/layouts/back_scaffold.dart';
+import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/components/drawer.dart';
-import 'package:shooka_flutter/components/my_appbar.dart';
+import 'package:shooka_flutter/components/appbar_with_profile.dart';
 
 class ProfileScaffold extends StatefulWidget {
   final Widget body;
@@ -14,7 +14,7 @@ class _ProfileScaffoldState extends State<ProfileScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MyAppbar(),
+      appBar: ProfileAppbar(),
       endDrawer: MyDrawer(),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(15),

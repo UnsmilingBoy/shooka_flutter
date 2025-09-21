@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:shooka_flutter/components/device_tile.dart';
-import 'package:shooka_flutter/components/event_tile.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
+import 'package:shooka_flutter/(tabs)/events/components/event_tile.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
-import 'package:shooka_flutter/utils/layouts/profile_scaffold.dart';
+import 'package:shooka_flutter/utils/scaffolds/profile_scaffold.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});

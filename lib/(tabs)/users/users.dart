@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shooka_flutter/utils/layouts/back_scaffold.dart';
+import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class UsersTab extends StatelessWidget {
   const UsersTab({super.key});

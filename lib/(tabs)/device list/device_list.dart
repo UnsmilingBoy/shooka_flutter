@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/add_device_modal.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/filter_device_modal.dart';
-import 'package:shooka_flutter/components/device_tile.dart';
-import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
-import 'package:shooka_flutter/utils/layouts/back_scaffold.dart';
-import 'package:shooka_flutter/utils/textfields/OutlineTextfield.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
+import 'package:shooka_flutter/components/tab_header.dart';
+import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
+import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class DeviceList extends StatefulWidget {
   final bool openAddDevice;
@@ -70,22 +70,7 @@ class _DeviceListState extends State<DeviceList> {
       //
       // Floating Action Button
       //
-      floatingActionButton: InkWell(
-        borderRadius: BorderRadius.circular(1000),
-        onTap: () => showMaterialModalBottomSheet(
-          enableDrag: false,
-          context: context,
-          builder: (context) => AddDeviceModal(),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Theme.of(context).primaryColor,
-          ),
-          padding: EdgeInsets.all(20),
-          child: Icon(Icons.add),
-        ),
-      ),
+      floatingActionButton: AddFloatingButton(addModal: AddDeviceModal()),
 
       //
       // Body
@@ -97,34 +82,11 @@ class _DeviceListState extends State<DeviceList> {
             //
             // Header (Search and Filter)
             //
-            Row(
-              spacing: 10,
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 50,
-                    child: Outlinetextfield(
-                      controller: searchController,
-                      placeholder: "جستجوی موتوخانه...",
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 50,
-                  width: 50,
-                  child: MyIconButton(
-                    onPressed: () => showMaterialModalBottomSheet(
-                      enableDrag: false,
-                      context: context,
-                      builder: (context) => FilterDeviceModal(),
-                    ),
-                    color: Theme.of(context).colorScheme.secondary,
-                    child: Icon(Icons.filter_alt_rounded),
-                  ),
-                ),
-              ],
+            TabHeader(
+              searchController: searchController,
+              filterModal: FilterDeviceModal(),
+              searchPlaceholder: "جستجوی موتورخانه...",
             ),
-
             //
             // Device List
             //

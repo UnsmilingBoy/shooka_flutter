@@ -3,37 +3,29 @@ import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
-class EditProfileModal extends StatelessWidget {
-  const EditProfileModal({super.key});
+class AddOrgModal extends StatelessWidget {
+  const AddOrgModal({super.key});
 
   @override
   Widget build(BuildContext context) {
-    //
-    // Controllers
-    //
-    TextEditingController name = TextEditingController();
-    TextEditingController phoneNumber = TextEditingController();
-    TextEditingController email = TextEditingController();
+    TextEditingController orgName = TextEditingController();
+    TextEditingController orgParent = TextEditingController();
 
     final controllerList = [
       {
-        "controller": name,
-        "label": "نام و نام خانوادگی:",
-        "placeholder": "نام",
+        "controller": orgName,
+        "label": "نام سازمان:",
+        "placeholder": "نام سازمان",
       },
-      {
-        "controller": phoneNumber,
-        "label": "شماره همراه:",
-        "placeholder": "شماره همراه",
-      },
-      {"controller": email, "label": "ایمیل:", "placeholder": "ایمیل"},
+      {"controller": orgParent, "label": "نهاد:", "placeholder": "نهاد"},
     ];
 
     //
-    // Body
+    //Body
     //
+
     return BottomModalTemplate(
-      title: "ویرایش حساب کاربری",
+      title: "سازمان جدید",
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),
@@ -52,7 +44,6 @@ class EditProfileModal extends StatelessWidget {
         ),
 
         SizedBox(height: 15),
-
         //
         // Buttons
         //

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:shooka_flutter/components/event_tile.dart';
+import 'package:shooka_flutter/(tabs)/events/components/event_tile.dart';
 import 'package:shooka_flutter/(tabs)/events/components/add_event_modal.dart';
 import 'package:shooka_flutter/(tabs)/events/components/filter_event_modal.dart';
-import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
-import 'package:shooka_flutter/utils/layouts/back_scaffold.dart';
-import 'package:shooka_flutter/utils/textfields/OutlineTextfield.dart';
+import 'package:shooka_flutter/components/tab_header.dart';
+import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
+import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class EventsTab extends StatefulWidget {
   final bool openAddEvent;
@@ -122,22 +122,7 @@ class _EventsTabState extends State<EventsTab> {
       //
       // Floating action button
       //
-      floatingActionButton: InkWell(
-        borderRadius: BorderRadius.circular(1000),
-        onTap: () => showMaterialModalBottomSheet(
-          enableDrag: false,
-          context: context,
-          builder: (context) => AddEventModal(),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Theme.of(context).primaryColor,
-          ),
-          padding: EdgeInsets.all(20),
-          child: Icon(Icons.add),
-        ),
-      ),
+      floatingActionButton: AddFloatingButton(addModal: AddEventModal()),
 
       //
       // Body
@@ -149,32 +134,10 @@ class _EventsTabState extends State<EventsTab> {
             //
             // Header (Search and Filter)
             //
-            Row(
-              spacing: 10,
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 50,
-                    child: Outlinetextfield(
-                      controller: searchController,
-                      placeholder: "جستجوی موتوخانه...",
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 50,
-                  width: 50,
-                  child: MyIconButton(
-                    onPressed: () => showMaterialModalBottomSheet(
-                      enableDrag: false,
-                      context: context,
-                      builder: (context) => FilterEventModal(),
-                    ),
-                    color: Theme.of(context).colorScheme.secondary,
-                    child: Icon(Icons.filter_alt_rounded),
-                  ),
-                ),
-              ],
+            TabHeader(
+              searchController: searchController,
+              filterModal: FilterEventModal(),
+              searchPlaceholder: "جستجوی رویداد...",
             ),
 
             //
