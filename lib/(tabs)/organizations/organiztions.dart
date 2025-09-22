@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shooka_flutter/(tabs)/organizations/components/add_org_modal.dart';
 import 'package:shooka_flutter/(tabs)/organizations/components/filter_org_modal.dart';
 import 'package:shooka_flutter/(tabs)/organizations/components/org_tile.dart';
@@ -81,7 +82,9 @@ class OrganiztionsTab extends StatelessWidget {
       //
       // Floating Action Button
       //
-      floatingActionButton: AddFloatingButton(addModal: AddOrgModal()),
+      floatingActionButton: AddFloatingButton(
+        addModal: AddOrgModal(isEdit: false),
+      ),
 
       //
       // Body
@@ -109,6 +112,15 @@ class OrganiztionsTab extends StatelessWidget {
               itemBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.only(top: 10.0),
                 child: OrgTile(
+                  onPressed: () => showMaterialModalBottomSheet(
+                    enableDrag: false,
+                    context: context,
+                    builder: (context) => AddOrgModal(
+                      isEdit: true,
+                      name: orgSampleData[index]["name"],
+                      parent: orgSampleData[index]["parent"],
+                    ),
+                  ),
                   color: Theme.of(context).colorScheme.surface,
                   orgName: orgSampleData[index]["name"] ?? "",
                   orgParent: orgSampleData[index]["parent"] ?? "",

@@ -7,21 +7,21 @@ class LocationTile extends StatelessWidget {
   final String city;
   final String province;
   final Color? color;
+  final VoidCallback? onPressed;
   const LocationTile({
     super.key,
     this.borderRadius,
     this.color,
     required this.city,
     required this.province,
+    this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return ContainerButton(
       borderRadius: borderRadius,
-      onPressed: () {
-        print("Navigate to device details");
-      },
+      onPressed: onPressed,
       color: color,
       child: ListTile(
         contentPadding: EdgeInsets.zero,

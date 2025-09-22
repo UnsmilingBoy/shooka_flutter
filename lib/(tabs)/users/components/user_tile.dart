@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
-import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 
-class OrgTile extends StatelessWidget {
+class UserTile extends StatelessWidget {
   final double? borderRadius;
-  final String orgName;
-  final String orgParent;
+  final String name;
+  final String role;
   final Color? color;
+  final String status;
   final VoidCallback? onPressed;
-  const OrgTile({
+  const UserTile({
     super.key,
     this.borderRadius,
-    required this.orgName,
-    required this.orgParent,
     required this.color,
     this.onPressed,
+    required this.name,
+    required this.role,
+    required this.status,
   });
 
   @override
   Widget build(BuildContext context) {
     return ContainerButton(
       borderRadius: borderRadius,
-      onPressed: onPressed,
+      onPressed: onPressed ?? () => print("cat"),
       color: color,
       child: ListTile(
         contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(
+          backgroundImage: AssetImage("assets/images/black_profile.webp"),
+        ),
         title: Row(
           spacing: 10,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -32,7 +36,7 @@ class OrgTile extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Text(
-                orgName,
+                name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleSmall,
@@ -40,14 +44,15 @@ class OrgTile extends StatelessWidget {
             ),
           ],
         ),
-        trailing: MyIconButton(
-          padding: EdgeInsets.all(3),
+        trailing: Tooltip(
+          message: "کاربر $status است.",
           child: Icon(
-            Icons.delete_forever_rounded,
-            color: Theme.of(context).colorScheme.error,
+            size: 15,
+            Icons.circle,
+            color: status == "فعال" ? Colors.green : Colors.red,
           ),
         ),
-        subtitle: Text("نهاد: $orgParent"),
+        subtitle: Text("نقش: $role"),
         subtitleTextStyle: Theme.of(
           context,
         ).textTheme.labelSmall?.apply(overflow: TextOverflow.ellipsis),

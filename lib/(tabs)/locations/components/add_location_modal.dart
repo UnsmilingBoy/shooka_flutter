@@ -3,14 +3,36 @@ import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
-class AddLocationModal extends StatelessWidget {
-  const AddLocationModal({super.key});
+class AddLocationModal extends StatefulWidget {
+  final bool isEdit;
+  final String? city;
+  final String? province;
+  const AddLocationModal({
+    super.key,
+    required this.isEdit,
+    this.city,
+    this.province,
+  });
+
+  @override
+  State<AddLocationModal> createState() => _AddLocationModalState();
+}
+
+class _AddLocationModalState extends State<AddLocationModal> {
+  TextEditingController city = TextEditingController();
+  TextEditingController province = TextEditingController();
+
+  @override
+  void initState() {
+    if (widget.isEdit) {
+      city.text = widget.city ?? "";
+      province.text = widget.province ?? "";
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController city = TextEditingController();
-    TextEditingController province = TextEditingController();
-
     final controllerList = [
       {"controller": city, "label": "شهر:", "placeholder": "شهر"},
       {"controller": province, "label": "استان:", "placeholder": "استان"},
@@ -19,9 +41,8 @@ class AddLocationModal extends StatelessWidget {
     //
     //Body
     //
-
     return BottomModalTemplate(
-      title: "مکان جدید",
+      title: widget.isEdit ? "ویرایش مکان" : "مکان جدید",
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),

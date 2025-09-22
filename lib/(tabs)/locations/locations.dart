@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shooka_flutter/(tabs)/locations/components/add_location_modal.dart';
 import 'package:shooka_flutter/(tabs)/locations/components/filter_locations_modal.dart';
 import 'package:shooka_flutter/(tabs)/locations/components/location_tile.dart';
@@ -40,13 +41,16 @@ class LocationsTab extends StatelessWidget {
       //
       // Add Floating Button
       //
-      floatingActionButton: AddFloatingButton(addModal: AddLocationModal()),
+      floatingActionButton: AddFloatingButton(
+        addModal: AddLocationModal(isEdit: false),
+      ),
 
       //
       // Body
       //
       body: SingleChildScrollView(
         child: Column(
+          spacing: 10,
           children: [
             //
             // Header (Search and filter)
@@ -67,6 +71,16 @@ class LocationsTab extends StatelessWidget {
               itemBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.only(top: 10.0),
                 child: LocationTile(
+                  onPressed: () => showMaterialModalBottomSheet(
+                    enableDrag: false,
+                    context: context,
+                    builder: (context) => AddLocationModal(
+                      isEdit: true,
+                      city: locationsSampleData[index]["city"] ?? "",
+                      province: locationsSampleData[index]["province"] ?? "",
+                    ),
+                  ),
+
                   color: Theme.of(context).colorScheme.surface,
                   city: locationsSampleData[index]["city"] ?? "",
                   province: locationsSampleData[index]["province"] ?? "",

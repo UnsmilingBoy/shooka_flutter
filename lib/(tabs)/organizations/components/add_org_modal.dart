@@ -3,14 +3,31 @@ import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
-class AddOrgModal extends StatelessWidget {
-  const AddOrgModal({super.key});
+class AddOrgModal extends StatefulWidget {
+  final bool isEdit;
+  final String? name;
+  final String? parent;
+  const AddOrgModal({super.key, required this.isEdit, this.name, this.parent});
+
+  @override
+  State<AddOrgModal> createState() => _AddOrgModalState();
+}
+
+class _AddOrgModalState extends State<AddOrgModal> {
+  TextEditingController orgName = TextEditingController();
+  TextEditingController orgParent = TextEditingController();
+
+  @override
+  void initState() {
+    if (widget.isEdit) {
+      orgName.text = widget.name ?? "";
+      orgParent.text = widget.parent ?? "";
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController orgName = TextEditingController();
-    TextEditingController orgParent = TextEditingController();
-
     final controllerList = [
       {
         "controller": orgName,
@@ -23,9 +40,8 @@ class AddOrgModal extends StatelessWidget {
     //
     //Body
     //
-
     return BottomModalTemplate(
-      title: "سازمان جدید",
+      title: widget.isEdit ? "ویرایش سازمان" : "سازمان جدید",
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),
