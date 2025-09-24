@@ -13,12 +13,12 @@ final tabsList = [
   },
   {
     'label': 'موتورخانه‌ها',
-    "href": ['/device_list', '/add_device'],
+    "href": ['/device_list', '/add_device', '/device_page'],
     "icon": Icons.devices,
   },
   {
     'label': 'رویداد‌ها',
-    "href": ["/events", "/add_event"],
+    "href": ["/events", "/add_event", '/event_page'],
     "icon": Icons.event,
   },
   {

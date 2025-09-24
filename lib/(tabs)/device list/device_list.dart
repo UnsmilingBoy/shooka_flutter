@@ -5,6 +5,7 @@ import 'package:shooka_flutter/(tabs)/device%20list/components/filter_device_mod
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
+import 'package:shooka_flutter/utils/sample_datas.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class DeviceList extends StatefulWidget {
@@ -35,31 +36,6 @@ class _DeviceListState extends State<DeviceList> {
 
   @override
   Widget build(BuildContext context) {
-    const devicesSampleData = [
-      {
-        "name":
-            "موتورخانه 1موتورخانه 1موتورخانه 1موتورخانه 1موتورخانه 1موتورخانه 1موتورخانه 1 1",
-        "status": "فعال",
-        "city": "تهران",
-      },
-      {
-        "name": "موتورخانه 2",
-        "status": "غیرفعال",
-        "city": "آملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآمل",
-      },
-      {"name": "موتورخانه 3", "status": "فعال", "city": "زنجان"},
-      {"name": "موتورخانه 4", "status": "فعال", "city": "آمل"},
-      {
-        "name": "موتورخانه 2",
-        "status": "غیرفعال",
-        "city": "آملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآملآمل",
-      },
-      {"name": "موتورخانه 3", "status": "فعال", "city": "زنجان"},
-      {"name": "موتورخانه 4", "status": "فعال", "city": "آمل"},
-      {"name": "موتورخانه 3", "status": "فعال", "city": "زنجان"},
-      {"name": "موتورخانه 4", "status": "فعال", "city": "آمل"},
-    ];
-
     TextEditingController searchController = TextEditingController();
 
     return BackScaffold(
@@ -100,9 +76,10 @@ class _DeviceListState extends State<DeviceList> {
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: DeviceTile(
-                      name: devicesSampleData[index]["name"] ?? "",
-                      city: devicesSampleData[index]["city"] ?? "",
-                      status: devicesSampleData[index]["status"] ?? "",
+                      deviceId: devicesSampleData[index]["device_id"] as int,
+                      name: devicesSampleData[index]["name"] as String,
+                      city: devicesSampleData[index]["city"] as String,
+                      status: devicesSampleData[index]["status"] as String,
                       color: Theme.of(context).colorScheme.surface,
                     ),
                   ),

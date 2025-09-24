@@ -87,41 +87,70 @@ class ViewsTab extends StatelessWidget {
           crossAxisCount: 2,
         ),
         itemCount: imageList.length,
-        itemBuilder: (context, index) => Stack(
-          children: [
+        itemBuilder: (context, index) =>
             //
-            // View Image
+            // Dialog for opening images
             //
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  imageList[index]["path"] as String,
-                  fit: BoxFit.cover,
+            GestureDetector(
+              onTap: () => showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  content: Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(),
+                    child: Column(
+                      spacing: 15,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image(
+                          image: AssetImage(imageList[index]["path"] as String),
+                        ),
+                        Text(imageList[index]["name"] as String),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+              child: Stack(
+                children: [
+                  //
+                  // View Image
+                  //
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        imageList[index]["path"] as String,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
 
-            //
-            // View Name
-            //
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0, // <-- fill width
-              child: Container(
-                padding: const EdgeInsets.all(8), // optional padding
-                color: Colors.black.withAlpha(150),
-                child: Text(
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  imageList[index]["name"] as String,
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
+                  //
+                  // View Name
+                  //
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0, // <-- fill width
+                    child: Container(
+                      padding: const EdgeInsets.all(8), // optional padding
+                      color: Colors.black.withAlpha(150),
+                      child: Text(
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        imageList[index]["name"] as String,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
       ),
     );
   }

@@ -19,11 +19,12 @@ class _OutlinetextfieldState extends State<Outlinetextfield> {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      style: Theme.of(context).textTheme.labelMedium,
       decoration: InputDecoration(
         hintStyle: Theme.of(context).textTheme.labelSmall,
         hintText: widget.placeholder,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
-        contentPadding: EdgeInsets.all(13),
+        contentPadding: EdgeInsets.symmetric(vertical: 13, horizontal: 5),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
             color: Colors.grey.shade700,

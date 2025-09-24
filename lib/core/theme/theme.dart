@@ -7,7 +7,6 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: Colors.blue[800],
     scaffoldBackgroundColor: Colors.white,
-
     hintColor: Colors.grey,
     colorScheme: ColorScheme.light(
       primary: Colors.blue[800]!,

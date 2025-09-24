@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shooka_flutter/(tabs)/organizations/components/add_org_modal.dart';
-import 'package:shooka_flutter/(tabs)/organizations/components/filter_org_modal.dart';
 import 'package:shooka_flutter/(tabs)/organizations/components/org_tile.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
@@ -98,7 +97,7 @@ class OrganiztionsTab extends StatelessWidget {
             //
             TabHeader(
               searchController: searchController,
-              filterModal: FilterOrgModal(),
+              noFilter: true,
               searchPlaceholder: "جستجوی سازمان...",
             ),
 

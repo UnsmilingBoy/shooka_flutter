@@ -64,7 +64,7 @@ class _AddUserModalState extends State<AddUserModal> {
                     width: 2,
                   ),
                   shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
                 child: Icon(Icons.edit, size: 15),
               ),

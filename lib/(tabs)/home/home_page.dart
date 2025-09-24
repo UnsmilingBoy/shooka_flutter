@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
-import 'package:shooka_flutter/(tabs)/events/components/event_tile.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
+import 'package:shooka_flutter/utils/sample_datas.dart';
 import 'package:shooka_flutter/utils/scaffolds/profile_scaffold.dart';
 
 class MyHomePage extends StatelessWidget {
@@ -11,46 +12,6 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const devicesSampleData = [
-      {
-        "name":
-            "موتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانهموتورخانه 1",
-        "status": "فعال",
-        "city": "تهران",
-      },
-      {"name": "موتورخانه 2", "status": "غیرفعال", "city": "آمل"},
-      {"name": "موتورخانه 3", "status": "فعال", "city": "زنجان"},
-      {"name": "موتورخانه 4", "status": "فعال", "city": "آمل"},
-    ];
-
-    const logsSampleData = [
-      {
-        "title": "پیام ادمینپیام ادمینپیام ادمینپیام ادمینپیام ادمینپیام ادمین",
-        "message": "سنسور دمای برگشت باید تعویض گردد",
-        "author": "سپنتا شفیع زاده",
-        "device": "دانشگاه مازندران - پردیس - سالن ورزشی قائم",
-      },
-      {
-        "title": "بازدید، سرویس، راه‌اندازی سالیانه",
-        "message":
-            "سنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گرددسنسور دمای برگشت باید تعویض گردد",
-        "author": "admin",
-        "device": "شرکت گاز مازندران - اداره خلیل شهر",
-      },
-      {
-        "title": "پیام ادمین",
-        "message": "سنسور دمای برگشت باید تعویض گردد",
-        "author": "admin",
-        "device": "دانشگاه مازندران - پردیس - سالن ورزشی قائم",
-      },
-      {
-        "title": "پیام ادمین",
-        "message": "سنسور دمای برگشت باید تعویض گردد",
-        "author": "admin",
-        "device": "دانشگاه مازندران - پردیس - سالن ورزشی قائم",
-      },
-    ];
-
     return ProfileScaffold(
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -171,21 +132,26 @@ class MyHomePage extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  //
+                  // Events List
+                  //
                   logsSampleData.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 50),
                           child: Text("رویدادی وجود ندارد."),
                         )
-                      : Padding(
-                          padding: EdgeInsets.zero,
-                          child: Column(
-                            children: logsSampleData.map((event) {
-                              return EventTile(
-                                author: event["author"] ?? "",
-                                device: event["device"] ?? "",
-                                title: event["title"] ?? "",
-                              );
-                            }).toList(),
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.all(0),
+                          itemCount: 5,
+                          itemBuilder: (context, index) => EventTile(
+                            borderRadius: 0,
+                            eventId: logsSampleData[index]["event_id"] as int,
+                            author: logsSampleData[index]["author"] as String,
+                            device: logsSampleData[index]["device"] as String,
+                            title: logsSampleData[index]["title"] as String,
                           ),
                         ),
                 ],
@@ -234,15 +200,20 @@ class MyHomePage extends StatelessWidget {
                         )
                       : Padding(
                           padding: EdgeInsets.zero,
-                          child: Column(
-                            children: devicesSampleData.map((device) {
-                              return DeviceTile(
-                                borderRadius: 0,
-                                name: device["name"] ?? "",
-                                city: device["city"] ?? "",
-                                status: device["status"] ?? "",
-                              );
-                            }).toList(),
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.all(0),
+                            itemCount: 5,
+                            itemBuilder: (context, index) => DeviceTile(
+                              deviceId:
+                                  devicesSampleData[index]["device_id"] as int,
+                              borderRadius: 0,
+                              name: devicesSampleData[index]["name"] as String,
+                              city: devicesSampleData[index]["city"] as String,
+                              status:
+                                  devicesSampleData[index]["status"] as String,
+                            ),
                           ),
                         ),
 

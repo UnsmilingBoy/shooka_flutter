@@ -5,13 +5,15 @@ import 'package:shooka_flutter/utils/textfields/outline_textfield.dart';
 
 class TabHeader extends StatelessWidget {
   final TextEditingController searchController;
-  final Widget filterModal;
+  final Widget? filterModal;
   final String searchPlaceholder;
+  final bool? noFilter;
   const TabHeader({
     super.key,
     required this.searchController,
-    required this.filterModal,
+    this.filterModal,
     required this.searchPlaceholder,
+    this.noFilter,
   });
 
   @override
@@ -28,19 +30,20 @@ class TabHeader extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(
-          height: 50,
-          width: 50,
-          child: MyIconButton(
-            onPressed: () => showMaterialModalBottomSheet(
-              enableDrag: false,
-              context: context,
-              builder: (context) => filterModal,
+        if (noFilter != true)
+          SizedBox(
+            height: 50,
+            width: 50,
+            child: MyIconButton(
+              onPressed: () => showMaterialModalBottomSheet(
+                enableDrag: false,
+                context: context,
+                builder: (context) => filterModal ?? SizedBox(),
+              ),
+              color: Theme.of(context).colorScheme.secondary,
+              child: Icon(Icons.filter_alt_rounded),
             ),
-            color: Theme.of(context).colorScheme.secondary,
-            child: Icon(Icons.filter_alt_rounded),
           ),
-        ),
       ],
     );
   }

@@ -39,6 +39,7 @@ dependencies:
   percent_indicator: ^4.2.5
   flutter_launcher_icons: ^0.14.4
   modal_bottom_sheet: ^3.0.0
+  persian_datetime_picker: ^3.2.0
 
 dev_dependencies:
   flutter_test:

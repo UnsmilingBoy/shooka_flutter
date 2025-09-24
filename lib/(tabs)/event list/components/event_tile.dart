@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shooka_flutter/(tabs)/event%20page/event_page.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 
 class EventTile extends StatelessWidget {
@@ -7,11 +8,13 @@ class EventTile extends StatelessWidget {
   final String device;
   final Color? color;
   final double? borderRadius;
+  final int eventId;
   const EventTile({
     super.key,
     required this.title,
     required this.author,
     required this.device,
+    required this.eventId,
     this.color,
     this.borderRadius,
   });
@@ -20,10 +23,20 @@ class EventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ContainerButton(
       borderRadius: borderRadius,
-      onPressed: () {
-        print("Navigate to device details");
-      },
       color: color,
+
+      // Navigates to the event page and passes the event id.
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          settings: RouteSettings(name: "/event_page"),
+          builder: (_) => EventPage(eventId: eventId),
+        ),
+      ),
+
+      //
+      // The actual tile.
+      //
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         title: Row(

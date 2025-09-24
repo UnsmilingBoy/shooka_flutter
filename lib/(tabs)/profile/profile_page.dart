@@ -217,7 +217,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ],
                           ),
-                          onPressed: () => print("signout"),
+                          onPressed: () =>
+                              Navigator.pushReplacementNamed(context, '/login'),
                         ),
                       ),
                     ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shooka_flutter/(tabs)/locations/components/add_location_modal.dart';
-import 'package:shooka_flutter/(tabs)/locations/components/filter_locations_modal.dart';
 import 'package:shooka_flutter/(tabs)/locations/components/location_tile.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
@@ -57,7 +56,7 @@ class LocationsTab extends StatelessWidget {
             //
             TabHeader(
               searchController: searchController,
-              filterModal: FilterLocationsModal(),
+              noFilter: true,
               searchPlaceholder: "جستجوی مکان...",
             ),
 

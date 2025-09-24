@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
+import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 
-class FilterDeviceModal extends StatefulWidget {
-  const FilterDeviceModal({super.key});
+class FilterEventModal extends StatefulWidget {
+  const FilterEventModal({super.key});
 
   @override
-  State<FilterDeviceModal> createState() => _FilterDeviceModalState();
+  State<FilterEventModal> createState() => _FilterEventModalState();
 }
 
-class _FilterDeviceModalState extends State<FilterDeviceModal> {
+class _FilterEventModalState extends State<FilterEventModal> {
+  String? date;
+
   @override
   Widget build(BuildContext context) {
-    String? orgInitialValue;
-    String? installerInitialValue;
-    String? parentInitialValue;
-    String? provinceInitialValue;
-    String? cityInitialValue;
+    String? titlesInitialValue;
+    String? createrInitialValue;
+    String? deviceInitialValue;
 
     final filterOptions = [
       {
-        "label": "نصاب",
+        "label": "عناوین:",
         "items": [
           DropdownMenuItem(
             value: "سرپرست",
@@ -34,10 +37,10 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
             child: Text("نصاب"),
           ),
         ],
-        "initialValue": installerInitialValue,
+        "initialValue": titlesInitialValue,
       },
       {
-        "label": "سازمان",
+        "label": "ایجاد کننده:",
         "items": [
           DropdownMenuItem(
             value: "سرپرست",
@@ -50,10 +53,10 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
             child: Text("نصاب"),
           ),
         ],
-        "initialValue": orgInitialValue,
+        "initialValue": createrInitialValue,
       },
       {
-        "label": "وزارت‌خانه",
+        "label": "دستگاه:",
         "items": [
           DropdownMenuItem(
             value: "سرپرست",
@@ -66,39 +69,7 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
             child: Text("نصاب"),
           ),
         ],
-        "initialValue": parentInitialValue,
-      },
-      {
-        "label": "استان",
-        "items": [
-          DropdownMenuItem(
-            value: "سرپرست",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("سرپرست"),
-          ),
-          DropdownMenuItem(
-            value: "نصاب",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("نصاب"),
-          ),
-        ],
-        "initialValue": provinceInitialValue,
-      },
-      {
-        "label": "شهر",
-        "items": [
-          DropdownMenuItem(
-            value: "سرپرست",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("سرپرست"),
-          ),
-          DropdownMenuItem(
-            value: "نصاب",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("نصاب"),
-          ),
-        ],
-        "initialValue": cityInitialValue,
+        "initialValue": deviceInitialValue,
       },
     ];
 
@@ -106,7 +77,7 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
     // Body
     //
     return BottomModalTemplate(
-      title: "فیلتر موتورخانه ها",
+      title: "فیلتر رویداد ها",
       children: [
         //
         // Filter options
@@ -125,6 +96,61 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
             label: filterOptions[index]["label"] as String,
             placeholder: "انتخاب کنید",
             initialValue: filterOptions[index]["initialValue"] as String?,
+          ),
+        ),
+
+        //
+        // Date range picker
+        //
+        Padding(
+          padding: const EdgeInsets.only(top: 5.0, bottom: 10),
+          child: Row(
+            spacing: 10,
+            children: [
+              Text("بازه زمانی:"),
+              if (date != null)
+                Expanded(
+                  child: Text(
+                    date.toString(),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: Colors.white),
+                  ),
+                ),
+              MyIconButton(
+                //
+                // Date Range Picker
+                //
+                onPressed: () async {
+                  var picked = await myRangePicker(context);
+
+                  if (picked != null) {
+                    setState(() {
+                      date = date =
+                          "${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}";
+                    });
+                  }
+                },
+                border: Border.all(color: Colors.grey.shade700),
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                child: Row(
+                  spacing: 5,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.date_range_rounded,
+                      size: 15,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    if (date == null)
+                      Text(
+                        "انتخاب بازه",
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
 

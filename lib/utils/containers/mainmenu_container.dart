@@ -28,7 +28,6 @@ class _MainmenuContainerState extends State<MainmenuContainer> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(widget.borderRadius ?? 10),
       ),
-
       child: widget.child,
     );
   }

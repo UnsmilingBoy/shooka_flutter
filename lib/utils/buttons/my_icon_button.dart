@@ -5,11 +5,13 @@ class MyIconButton extends StatelessWidget {
   final GestureTapCallback? onPressed;
   final EdgeInsetsGeometry? padding;
   final double? borderRadius;
+  final BoxBorder? border;
   final Color? color;
   const MyIconButton({
     super.key,
     required this.child,
     this.padding,
+    this.border,
     this.color,
     this.borderRadius,
     this.onPressed,
@@ -23,6 +25,7 @@ class MyIconButton extends StatelessWidget {
       onLongPress: () => print("Filter"),
       child: Ink(
         decoration: BoxDecoration(
+          border: border,
           color: color,
           borderRadius: BorderRadius.circular(borderRadius ?? 5),
         ),
