@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class BottomModalTemplate extends StatefulWidget {
   final String title;
+  final bool? isLongList;
   final List<Widget> children;
   const BottomModalTemplate({
     super.key,
     required this.title,
     required this.children,
+    this.isLongList,
   });
 
   @override
@@ -20,11 +22,11 @@ class _BottomModalTemplateState extends State<BottomModalTemplate> {
       textDirection: TextDirection.rtl,
       child: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.only(
+          padding: EdgeInsets.only(
             bottom: 30.0,
             left: 15,
             right: 15,
-            top: 5,
+            top: widget.isLongList == true ? 15 : 5,
           ),
           child: Column(
             children: [

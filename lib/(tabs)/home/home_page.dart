@@ -148,7 +148,8 @@ class MyHomePage extends StatelessWidget {
                           itemCount: 5,
                           itemBuilder: (context, index) => EventTile(
                             borderRadius: 0,
-                            eventId: logsSampleData[index]["event_id"] as int,
+                            // eventId: logsSampleData[index]["event_id"] as int,
+                            eventId: index,
                             author: logsSampleData[index]["author"] as String,
                             device: logsSampleData[index]["device"] as String,
                             title: logsSampleData[index]["title"] as String,

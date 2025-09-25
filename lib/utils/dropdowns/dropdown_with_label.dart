@@ -41,11 +41,14 @@ class DropdownWithLabel extends StatelessWidget {
                   width: 1,
                 ), // default border
               ),
-              contentPadding: EdgeInsets.all(13),
+              contentPadding: EdgeInsets.symmetric(vertical: 13, horizontal: 5),
             ),
             items: items,
             onChanged: onChanged,
-            hint: Text(placeholder),
+            hint: Text(
+              placeholder,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
             style: Theme.of(context).textTheme.labelMedium,
           ),
         ),

@@ -73,7 +73,8 @@ class _EventsTabState extends State<EventsTab> {
               itemBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.only(top: 10.0),
                 child: EventTile(
-                  eventId: logsSampleData[index]["event_id"] as int,
+                  // eventId: logsSampleData[index]["event_id"] as int,
+                  eventId: index,
                   title: logsSampleData[index]["title"] as String,
                   author: logsSampleData[index]["author"] as String,
                   device: logsSampleData[index]["device"] as String,
