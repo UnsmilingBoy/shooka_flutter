@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
-import 'package:shooka_flutter/utils/buttons/container_button.dart';
+import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
 class AddOrgModal extends StatefulWidget {
@@ -43,6 +43,9 @@ class _AddOrgModalState extends State<AddOrgModal> {
     return BottomModalTemplate(
       title: widget.isEdit ? "ویرایش سازمان" : "سازمان جدید",
       children: [
+        //
+        // TextFields
+        //
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -59,35 +62,12 @@ class _AddOrgModalState extends State<AddOrgModal> {
           ),
         ),
 
-        SizedBox(height: 15),
         //
         // Buttons
         //
-        Column(
-          spacing: 7,
-          children: [
-            //Save button
-            ContainerButton(
-              color: Theme.of(context).primaryColor,
-              fillWidth: true,
-              child: Text(
-                "ثبت تغییرات",
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              onPressed: () => print("save"),
-            ),
-
-            //Close button
-            ContainerButton(
-              color: Theme.of(context).colorScheme.errorContainer,
-              fillWidth: true,
-              child: Text(
-                "بستن",
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+        ModalBottomButtons(
+          saveText: widget.isEdit ? "ویرایش سازمان" : "افزودن سازمان",
+          onSave: () => print("add org"),
         ),
       ],
     );

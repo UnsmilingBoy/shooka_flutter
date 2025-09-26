@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
-import 'package:shooka_flutter/utils/buttons/container_button.dart';
+import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
@@ -154,36 +154,12 @@ class _FilterEventModalState extends State<FilterEventModal> {
           ),
         ),
 
-        SizedBox(height: 15),
-
         //
         // Buttons
         //
-        Column(
-          spacing: 7,
-          children: [
-            //Save button
-            ContainerButton(
-              color: Theme.of(context).primaryColor,
-              fillWidth: true,
-              child: Text(
-                "اعمال فیلتر",
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              onPressed: () => print("save"),
-            ),
-
-            //Close button
-            ContainerButton(
-              color: Theme.of(context).colorScheme.errorContainer,
-              fillWidth: true,
-              child: Text(
-                "بستن",
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+        ModalBottomButtons(
+          saveText: "فیلتر",
+          onSave: () => print("filter event"),
         ),
       ],
     );

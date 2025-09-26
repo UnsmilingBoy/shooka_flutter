@@ -128,3 +128,22 @@ const logsSampleData = [
     "date": "25 مهر 1403 - 15:56",
   },
 ];
+
+const locationsSampleData = [
+  {"city": "بوئین زهرا", "province": "قزوین"},
+  {"city": "ساوه", "province": "مرکزی"},
+  {"city": "بندرگز", "province": "گلستان"},
+  {"city": "آمل", "province": "مازندران"},
+  {"city": "بوئین زهرا", "province": "قزوین"},
+  {"city": "ساوه", "province": "مرکزی"},
+  {"city": "بندرگز", "province": "گلستان"},
+  {"city": "آمل", "province": "مازندران"},
+  {"city": "بوئین زهرا", "province": "قزوین"},
+  {"city": "ساوه", "province": "مرکزی"},
+  {"city": "بندرگز", "province": "گلستان"},
+  {"city": "آمل", "province": "مازندران"},
+  {"city": "بوئین زهرا", "province": "قزوین"},
+  {"city": "ساوه", "province": "مرکزی"},
+  {"city": "بندرگز", "province": "گلستان"},
+  {"city": "آمل", "province": "مازندران"},
+];

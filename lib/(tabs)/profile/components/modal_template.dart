@@ -18,27 +18,30 @@ class BottomModalTemplate extends StatefulWidget {
 class _BottomModalTemplateState extends State<BottomModalTemplate> {
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: SingleChildScrollView(
-        child: Container(
+    return SafeArea(
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Padding(
           padding: EdgeInsets.only(
-            bottom: 30.0,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 30.0,
             left: 15,
             right: 15,
-            top: widget.isLongList == true ? 15 : 5,
+            // top: widget.isLongList == true ? 15 : 0,
           ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Text(
-                  widget.title,
-                  style: Theme.of(context).textTheme.titleMedium,
+          child: SingleChildScrollView(
+            // This ensures the scroll view resizes when the keyboard appears
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: Text(
+                    widget.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-              ),
-              Column(children: widget.children),
-            ],
+                Column(children: widget.children),
+              ],
+            ),
           ),
         ),
       ),

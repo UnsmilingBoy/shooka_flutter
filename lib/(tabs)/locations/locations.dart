@@ -4,6 +4,7 @@ import 'package:shooka_flutter/(tabs)/locations/components/add_location_modal.da
 import 'package:shooka_flutter/(tabs)/locations/components/location_tile.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
+import 'package:shooka_flutter/utils/sample_datas.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class LocationsTab extends StatelessWidget {
@@ -11,25 +12,6 @@ class LocationsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const locationsSampleData = [
-      {"city": "بوئین زهرا", "province": "قزوین"},
-      {"city": "ساوه", "province": "مرکزی"},
-      {"city": "بندرگز", "province": "گلستان"},
-      {"city": "آمل", "province": "مازندران"},
-      {"city": "بوئین زهرا", "province": "قزوین"},
-      {"city": "ساوه", "province": "مرکزی"},
-      {"city": "بندرگز", "province": "گلستان"},
-      {"city": "آمل", "province": "مازندران"},
-      {"city": "بوئین زهرا", "province": "قزوین"},
-      {"city": "ساوه", "province": "مرکزی"},
-      {"city": "بندرگز", "province": "گلستان"},
-      {"city": "آمل", "province": "مازندران"},
-      {"city": "بوئین زهرا", "province": "قزوین"},
-      {"city": "ساوه", "province": "مرکزی"},
-      {"city": "بندرگز", "province": "گلستان"},
-      {"city": "آمل", "province": "مازندران"},
-    ];
-
     TextEditingController searchController = TextEditingController();
 
     return BackScaffold(
