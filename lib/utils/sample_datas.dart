@@ -240,3 +240,12 @@ const userSampleData = [
     "pfp": "assets/images/profile.jpg",
   },
 ];
+
+const devicePageSampleData = [
+  {
+    'orgName': 'آموزش و پرورش مازندران',
+    'nahadName': 'وزارت آموزش و پرورش',
+    'installerName': 'm.biabani',
+    'status': 'on',
+  },
+];
