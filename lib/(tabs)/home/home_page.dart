@@ -80,7 +80,8 @@ class MyHomePage extends StatelessWidget {
                             fillWidth: true,
                             child: Text(
                               "افزودن موتورخانه",
-                              style: Theme.of(context).textTheme.labelLarge,
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.apply(color: Colors.white),
                             ),
                             onPressed: () =>
                                 Navigator.of(context).pushNamed("/add_device"),
@@ -94,7 +95,8 @@ class MyHomePage extends StatelessWidget {
                             fillWidth: true,
                             child: Text(
                               "افزودن رویداد",
-                              style: Theme.of(context).textTheme.labelLarge,
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.apply(color: Colors.white),
                             ),
                             onPressed: () =>
                                 Navigator.of(context).pushNamed("/add_event"),
@@ -237,7 +239,9 @@ class MyHomePage extends StatelessWidget {
                           Icon(Icons.add, color: Colors.white, size: 18),
                           Text(
                             "افزودن موتورخانه",
-                            style: Theme.of(context).textTheme.labelLarge,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.labelLarge?.apply(color: Colors.white),
                           ),
                         ],
                       ),

@@ -5,22 +5,70 @@ import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
 class AddUserModal extends StatefulWidget {
-  const AddUserModal({super.key});
+  final bool? editMode;
+  final String? imageHref;
+  final String? userName;
+  final String? password;
+  final String? repeatPassword;
+  final String? role;
+  final String? email;
+  final String? phoneNumber;
+  final String? name;
+  const AddUserModal({
+    super.key,
+    this.editMode,
+    this.imageHref,
+    this.userName,
+    this.password,
+    this.repeatPassword,
+    this.role,
+    this.email,
+    this.phoneNumber,
+    this.name,
+  });
 
   @override
   State<AddUserModal> createState() => _AddUserModalState();
 }
 
 class _AddUserModalState extends State<AddUserModal> {
+  //
+  // Controllers
+  //
+  TextEditingController nameController = TextEditingController();
   TextEditingController userNameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController repeatPasswordController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
 
   String? selectedRole;
+
+  //
+  // InitState for edit mode
+  //
+  @override
+  void initState() {
+    if (widget.editMode == true) {
+      userNameController.text = widget.userName ?? "";
+      passwordController.text = widget.password ?? "";
+      repeatPasswordController.text = widget.repeatPassword ?? "";
+      emailController.text = widget.email ?? "";
+      phoneNumberController.text = widget.phoneNumber ?? "";
+      nameController.text = widget.name ?? "";
+      selectedRole = widget.role;
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final controllerList = [
+      {
+        "controller": userNameController,
+        "label": "نام و نام خانوادگی:",
+        "placeholder": "نام و نام خانوادگی",
+      },
       {
         "controller": userNameController,
         "label": "نام کاربری:",
@@ -36,13 +84,23 @@ class _AddUserModalState extends State<AddUserModal> {
         "label": "تکرار رمزعبور:",
         "placeholder": "تکرار رمزعبور",
       },
+      {
+        "controller": emailController,
+        "label": "ایمیل:",
+        "placeholder": "ایمیل",
+      },
+      {
+        "controller": phoneNumberController,
+        "label": "شماره همراه:",
+        "placeholder": "شماره همراه",
+      },
     ];
 
     //
     //Body
     //
     return BottomModalTemplate(
-      title: "کاربر جدید",
+      title: widget.editMode == true ? "ویرایش کاربر" : "کاربر جدید",
       children: [
         //
         //  Profile Picture
@@ -83,6 +141,9 @@ class _AddUserModalState extends State<AddUserModal> {
           itemBuilder: (context, index) => Container(
             margin: EdgeInsets.only(bottom: 10),
             child: Outlinetextfieldwithlabel(
+              isPassword: (controllerList[index]["label"] as String).contains(
+                "رمزعبور",
+              ),
               label: controllerList[index]["label"] as String,
               controller:
                   controllerList[index]["controller"] as TextEditingController,
@@ -121,7 +182,7 @@ class _AddUserModalState extends State<AddUserModal> {
         // Buttons
         //
         ModalBottomButtons(
-          saveText: "افزودن کاربر",
+          saveText: widget.editMode == true ? "ویرایش کاربر" : "افزودن کاربر",
           onSave: () => print("add user"),
         ),
       ],

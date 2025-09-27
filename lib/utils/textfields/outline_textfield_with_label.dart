@@ -5,11 +5,13 @@ class Outlinetextfieldwithlabel extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final String placeHolder;
+  final bool? isPassword;
   const Outlinetextfieldwithlabel({
     super.key,
     required this.label,
     required this.controller,
     required this.placeHolder,
+    this.isPassword,
   });
 
   @override
@@ -19,7 +21,11 @@ class Outlinetextfieldwithlabel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label),
-        Outlinetextfield(placeholder: placeHolder, controller: controller),
+        Outlinetextfield(
+          placeholder: placeHolder,
+          controller: controller,
+          isPassword: isPassword,
+        ),
       ],
     );
   }

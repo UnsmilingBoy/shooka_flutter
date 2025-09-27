@@ -154,10 +154,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       spacing: 5,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.edit, size: 18),
+                        Icon(Icons.edit, size: 18, color: Colors.white),
                         Text(
                           "ویرایش",
-                          style: Theme.of(context).textTheme.labelLarge,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelLarge?.apply(color: Colors.white),
                         ),
                       ],
                     ),
@@ -183,10 +185,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             spacing: 5,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.password_outlined, size: 18),
+                              Icon(
+                                Icons.password_outlined,
+                                size: 18,
+                                color: Colors.white,
+                              ),
                               Text(
                                 "تغییر رمز عبور",
-                                style: Theme.of(context).textTheme.labelLarge,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.apply(color: Colors.white),
                               ),
                             ],
                           ),
@@ -210,10 +217,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             spacing: 5,
                             children: [
-                              Icon(Icons.logout, size: 18),
+                              Icon(Icons.logout, size: 18, color: Colors.white),
                               Text(
                                 "خروج از حساب",
-                                style: Theme.of(context).textTheme.labelLarge,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.apply(color: Colors.white),
                               ),
                             ],
                           ),

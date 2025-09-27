@@ -41,7 +41,7 @@ class TabHeader extends StatelessWidget {
                 builder: (context) => filterModal ?? SizedBox(),
               ),
               color: Theme.of(context).colorScheme.secondary,
-              child: Icon(Icons.filter_alt_rounded),
+              child: Icon(Icons.filter_alt_rounded, color: Colors.white),
             ),
           ),
       ],

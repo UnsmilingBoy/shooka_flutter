@@ -20,7 +20,9 @@ class ModalBottomButtons extends StatelessWidget {
               color: Theme.of(context).colorScheme.errorContainer,
               child: Text(
                 "بستن",
-                style: Theme.of(context).textTheme.labelLarge,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.apply(color: Colors.white),
               ),
               onPressed: () => Navigator.pop(context),
             ),
@@ -34,7 +36,9 @@ class ModalBottomButtons extends StatelessWidget {
               onPressed: onSave,
               child: Text(
                 saveText,
-                style: Theme.of(context).textTheme.labelLarge,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.apply(color: Colors.white),
               ),
             ),
           ),

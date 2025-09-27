@@ -20,7 +20,7 @@ class AddFloatingButton extends StatelessWidget {
           color: Theme.of(context).primaryColor,
         ),
         padding: EdgeInsets.all(20),
-        child: Icon(Icons.add),
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }

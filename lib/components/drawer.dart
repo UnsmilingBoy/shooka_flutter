@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/tabs_list.dart';
+import 'package:shooka_flutter/core/theme/theme_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
+import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    ThemeProvider themeProvider = Provider.of<ThemeProvider>(
+      context,
+      listen: false,
+    ); // FIXED
+
     String? routeName = ModalRoute.of(context)?.settings.name ?? "";
 
     return Drawer(
@@ -17,9 +25,8 @@ class MyDrawer extends StatelessWidget {
             //
             // Drawer Header
             //
-            SizedBox(height: 60),
             Container(
-              margin: const EdgeInsets.only(right: 10, left: 10),
+              margin: const EdgeInsets.only(right: 10, left: 10, top: 60),
               padding: const EdgeInsets.only(
                 left: 5,
                 right: 5,
@@ -28,30 +35,47 @@ class MyDrawer extends StatelessWidget {
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.start,
-                spacing: 5,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.transparent,
-                    radius: 27,
-                    child: Image.asset(
-                      'assets/icons/romak-logo-blue.png',
-                      color: Colors.blue,
-                      colorBlendMode: BlendMode.srcATop, // Blend mode
-                    ),
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    spacing: 5,
                     children: [
-                      Text(
-                        'پنل شوکا',
-                        style: Theme.of(context).textTheme.titleMedium,
+                      CircleAvatar(
+                        backgroundColor: Colors.transparent,
+                        radius: 27,
+                        child: Image.asset(
+                          'assets/icons/romak-logo-blue.png',
+                          color: Colors.blue,
+                          colorBlendMode: BlendMode.srcATop, // Blend mode
+                        ),
                       ),
-                      Text(
-                        'نسخه 1.0.0',
-                        style: Theme.of(context).textTheme.labelSmall,
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'پنل شوکا',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            'نسخه 1.0.0',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ],
                       ),
                     ],
+                  ),
+
+                  //
+                  // Light/Dark Mode Toggle
+                  //
+                  MyIconButton(
+                    padding: EdgeInsets.all(5),
+                    borderRadius: 1000,
+                    child: Icon(Icons.brightness_4_rounded),
+                    onPressed: () =>
+                        themeProvider.toggleTheme(!themeProvider.isDarkMode),
                   ),
                 ],
               ),
@@ -82,10 +106,21 @@ class MyDrawer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         spacing: 5,
                         children: [
-                          Icon(tab["icon"] as IconData, size: 22),
+                          Icon(
+                            tab["icon"] as IconData,
+                            size: 22,
+                            color: hrefs?.contains(routeName) ?? false
+                                ? Colors.white
+                                : null,
+                          ),
                           Text(
                             tab["label"] as String,
-                            style: Theme.of(context).textTheme.labelLarge,
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.apply(
+                                  color: hrefs?.contains(routeName) ?? false
+                                      ? Colors.white
+                                      : null,
+                                ),
                           ),
                         ],
                       ),

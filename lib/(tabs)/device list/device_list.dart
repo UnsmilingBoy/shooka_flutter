@@ -70,20 +70,15 @@ class _DeviceListState extends State<DeviceList> {
               physics: NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: devicesSampleData.length,
-              itemBuilder: (context, index) => Column(
-                spacing: 20,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: DeviceTile(
-                      deviceId: devicesSampleData[index]["device_id"] as int,
-                      name: devicesSampleData[index]["name"] as String,
-                      city: devicesSampleData[index]["city"] as String,
-                      status: devicesSampleData[index]["status"] as String,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                ],
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.only(top: 10.0),
+                child: DeviceTile(
+                  deviceId: devicesSampleData[index]["device_id"] as int,
+                  name: devicesSampleData[index]["name"] as String,
+                  city: devicesSampleData[index]["city"] as String,
+                  status: devicesSampleData[index]["status"] as String,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
               ),
             ),
           ],

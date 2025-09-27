@@ -23,10 +23,9 @@ class _BottomModalTemplateState extends State<BottomModalTemplate> {
         textDirection: TextDirection.rtl,
         child: Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 30.0,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 10.0,
             left: 15,
             right: 15,
-            // top: widget.isLongList == true ? 15 : 0,
           ),
           child: SingleChildScrollView(
             // This ensures the scroll view resizes when the keyboard appears
