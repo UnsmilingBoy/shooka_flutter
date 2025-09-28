@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/change_password_modal.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/edit_profile_modal.dart';
+import 'package:shooka_flutter/services/auth_service.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
@@ -225,8 +227,18 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ],
                           ),
-                          onPressed: () =>
-                              Navigator.pushReplacementNamed(context, '/login'),
+                          onPressed: () async {
+                            final auth = Provider.of<AuthService>(
+                              context,
+                              listen: false,
+                            );
+                            await auth.logout();
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/login',
+                              (route) => false,
+                            );
+                          },
                         ),
                       ),
                     ],

@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/device_list.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/events.dart';
@@ -8,15 +10,29 @@ import 'package:shooka_flutter/(tabs)/organizations/organiztions.dart';
 import 'package:shooka_flutter/(tabs)/profile/profile_page.dart';
 import 'package:shooka_flutter/(tabs)/users/users.dart';
 import 'package:shooka_flutter/(tabs)/views/views.dart';
+import 'package:shooka_flutter/components/splash_screen.dart';
 import 'package:shooka_flutter/core/theme/theme.dart';
 import 'package:shooka_flutter/core/theme/theme_provider.dart';
 import 'package:shooka_flutter/(tabs)/home/home_page.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
+import 'package:shooka_flutter/services/auth_interceptor.dart';
+import 'package:shooka_flutter/services/auth_service.dart';
 
 void main() {
+  final baseUrl = 'https://shouka-test.romaksystem.com';
+  final storage = const FlutterSecureStorage();
+  final dio = Dio(BaseOptions(baseUrl: baseUrl));
+
+  final authService = AuthService(dio: dio, storage: storage, baseUrl: baseUrl);
+  dio.interceptors.add(AuthInterceptor(authService));
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        Provider<AuthService>.value(value: authService),
+        Provider<Dio>.value(value: dio),
+      ],
       child: const MyApp(),
     ),
   );
@@ -30,9 +46,9 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Directionality(
-      textDirection: TextDirection.rtl, // Set RTL for the whole app
+      textDirection: TextDirection.rtl,
       child: MaterialApp(
-        initialRoute: "/home",
+        home: SplashPage(),
         routes: {
           '/login': (context) => const LoginPage(),
           '/home': (context) => const MyHomePage(),

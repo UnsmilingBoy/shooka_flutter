@@ -40,6 +40,9 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   modal_bottom_sheet: ^3.0.0
   persian_datetime_picker: ^3.2.0
+  flutter_secure_storage: ^9.2.4
+  dio: ^5.9.0
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:
