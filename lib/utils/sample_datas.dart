@@ -148,7 +148,15 @@ const locationsSampleData = [
   {"city": "آمل", "province": "مازندران"},
 ];
 
-const userSampleData = [
+const userSampleData = {
+  "name": "سپنتا",
+  "role": "سرپرست",
+  "username": "s.shafizadeh",
+  "phone_number": "09911254099",
+  "email": "sepantashafizadeh@gmail.com",
+};
+
+const usersSampleData = [
   {
     "name": "محمد تقی‌ زاده",
     "username": "m.taghizade",

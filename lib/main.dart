@@ -17,6 +17,8 @@ import 'package:shooka_flutter/(tabs)/home/home_page.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:shooka_flutter/services/auth_interceptor.dart';
 import 'package:shooka_flutter/services/auth_service.dart';
+import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 
 void main() {
   final baseUrl = 'https://shouka-test.romaksystem.com';
@@ -26,12 +28,16 @@ void main() {
   final authService = AuthService(dio: dio, storage: storage, baseUrl: baseUrl);
   dio.interceptors.add(AuthInterceptor(authService));
 
+  final apiService = ApiService(dio: dio, auth: authService, storage: storage);
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         Provider<AuthService>.value(value: authService),
         Provider<Dio>.value(value: dio),
+        Provider<ApiService>.value(value: apiService),
+        ChangeNotifierProvider(create: (_) => UserProvider(api: apiService)),
       ],
       child: const MyApp(),
     ),

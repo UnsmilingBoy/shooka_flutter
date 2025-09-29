@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
+import 'package:shooka_flutter/utils/loadings/loading.dart';
 
-class ModalBottomButtons extends StatelessWidget {
+class ModalBottomButtons extends StatefulWidget {
   final VoidCallback? onSave;
   final String saveText;
-  const ModalBottomButtons({super.key, this.onSave, required this.saveText});
+  final bool? loading;
+  const ModalBottomButtons({
+    super.key,
+    this.onSave,
+    required this.saveText,
+    this.loading,
+  });
 
+  @override
+  State<ModalBottomButtons> createState() => _ModalBottomButtonsState();
+}
+
+class _ModalBottomButtonsState extends State<ModalBottomButtons> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -33,13 +45,15 @@ class ModalBottomButtons extends StatelessWidget {
             child: ContainerButton(
               padding: EdgeInsets.all(14),
               color: Theme.of(context).primaryColor,
-              onPressed: onSave,
-              child: Text(
-                saveText,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.apply(color: Colors.white),
-              ),
+              onPressed: widget.onSave,
+              child: widget.loading == true
+                  ? Loading()
+                  : Text(
+                      widget.saveText,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.apply(color: Colors.white),
+                    ),
             ),
           ),
         ],

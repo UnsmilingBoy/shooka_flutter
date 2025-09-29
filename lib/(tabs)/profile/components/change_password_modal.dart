@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
 class ChangePasswordModal extends StatelessWidget {
@@ -8,6 +10,8 @@ class ChangePasswordModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = context.watch<UserProvider>();
+
     //
     // Controllers
     //
@@ -47,6 +51,7 @@ class ChangePasswordModal extends StatelessWidget {
           itemBuilder: (context, index) => Container(
             margin: EdgeInsets.only(bottom: 10),
             child: Outlinetextfieldwithlabel(
+              isPassword: true,
               label: controllerList[index]["label"] as String,
               controller:
                   controllerList[index]["controller"] as TextEditingController,
@@ -58,7 +63,26 @@ class ChangePasswordModal extends StatelessWidget {
         //
         // Buttons
         //
-        ModalBottomButtons(saveText: "ثبت", onSave: () => print("change pw")),
+        ModalBottomButtons(
+          saveText: "ثبت",
+          loading: userProvider.changePasswordLoading,
+          onSave: () async {
+            int status = await userProvider.changePassword(
+              prevPassword.text,
+              newPassword.text,
+            );
+            if (status == 200) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("رمز عبور با موفقیت تغییر کرد")),
+              );
+            } else {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text("خطایی رخ داده است.")));
+            }
+            Navigator.pop(context);
+          },
+        ),
       ],
     );
   }

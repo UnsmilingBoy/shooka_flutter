@@ -70,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       //Password
                       Outlinetextfieldwithlabel(
+                        isPassword: true,
                         controller: passwordController,
                         placeHolder: "رمزعبور",
                         label: "رمزعبور:",

@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 
 class ProfileAppbar extends StatelessWidget implements PreferredSizeWidget {
-  const ProfileAppbar({super.key});
+  final String name;
+  final String username;
+  final String image;
+  const ProfileAppbar({
+    super.key,
+    required this.name,
+    required this.username,
+    required this.image,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,20 +21,12 @@ class ProfileAppbar extends StatelessWidget implements PreferredSizeWidget {
           spacing: 7,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              backgroundImage: AssetImage("assets/images/profile.jpg"),
-            ),
+            CircleAvatar(backgroundImage: NetworkImage(image)),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "s.shafizadeh",
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                Text(
-                  "سپنتا شفیع زاده",
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
+                Text(username, style: Theme.of(context).textTheme.labelLarge),
+                Text(name, style: Theme.of(context).textTheme.labelSmall),
               ],
             ),
           ],

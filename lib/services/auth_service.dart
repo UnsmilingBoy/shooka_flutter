@@ -21,6 +21,7 @@ class AuthService {
   // Keys for secure storage
   static const _kAccess = 'access';
   static const _kRefresh = 'refresh';
+  static const _kUserId = 'userId';
 
   Future<bool> login(String username, String password) async {
     final resp = await dio.post(
@@ -33,6 +34,7 @@ class AuthService {
 
     await storage.write(key: _kAccess, value: data['access']);
     await storage.write(key: _kRefresh, value: data['refresh']);
+    await storage.write(key: _kUserId, value: data['user_id'].toString());
     return true;
   }
 

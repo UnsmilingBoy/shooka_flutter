@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
 import 'package:shooka_flutter/utils/sample_datas.dart';
 import 'package:shooka_flutter/utils/scaffolds/profile_scaffold.dart';
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
   @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>().user;
+    final name = "${user?.firstName} ${user?.lastName}";
+
     return ProfileScaffold(
+      image: user?.profileHref ?? "",
+      name: name,
+      username: user?.username ?? "",
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
@@ -21,7 +35,7 @@ class MyHomePage extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  "خوش آمدید سپنتا شفیع زاده!",
+                  "خوش آمدید $name!",
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ],
