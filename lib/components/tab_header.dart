@@ -8,12 +8,14 @@ class TabHeader extends StatelessWidget {
   final Widget? filterModal;
   final String searchPlaceholder;
   final bool? noFilter;
+  final Function(String value)? onSubmitted;
   const TabHeader({
     super.key,
     required this.searchController,
     this.filterModal,
     required this.searchPlaceholder,
     this.noFilter,
+    this.onSubmitted,
   });
 
   @override
@@ -25,6 +27,7 @@ class TabHeader extends StatelessWidget {
           child: SizedBox(
             height: 50,
             child: Outlinetextfield(
+              onSubmitted: onSubmitted,
               controller: searchController,
               placeholder: searchPlaceholder,
             ),

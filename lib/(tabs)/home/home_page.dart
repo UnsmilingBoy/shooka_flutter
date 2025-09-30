@@ -3,10 +3,12 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
-import 'package:shooka_flutter/utils/sample_datas.dart';
+import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/profile_scaffold.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -18,10 +20,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      context.read<EventProvider>().loadEvents(all: true);
+      context.read<DeviceProvider>().loadDevices();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
     final name = "${user?.firstName} ${user?.lastName}";
+
+    final events = context.watch<EventProvider>().events;
+    bool eventLoading = context.watch<EventProvider>().isLoading;
+
+    final devices = context.watch<DeviceProvider>().devices;
+    bool deviceLoading = context.watch<DeviceProvider>().isLoading;
 
     return ProfileScaffold(
       image: user?.profileHref ?? "",
@@ -152,7 +168,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   //
                   // Events List
                   //
-                  logsSampleData.isEmpty
+                  eventLoading
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50),
+                          child: Loading(),
+                        )
+                      : events.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 50),
                           child: Text("رویدادی وجود ندارد."),
@@ -161,14 +182,14 @@ class _MyHomePageState extends State<MyHomePage> {
                           shrinkWrap: true,
                           physics: NeverScrollableScrollPhysics(),
                           padding: EdgeInsets.all(0),
-                          itemCount: 5,
+                          itemCount: events.length > 5 ? 5 : events.length,
                           itemBuilder: (context, index) => EventTile(
                             borderRadius: 0,
-                            // eventId: logsSampleData[index]["event_id"] as int,
-                            eventId: index,
-                            author: logsSampleData[index]["author"] as String,
-                            device: logsSampleData[index]["device"] as String,
-                            title: logsSampleData[index]["title"] as String,
+                            timeCreated: events[index].timestamp,
+                            message: events[index].eventCategoryDetails,
+                            author: events[index].creator,
+                            device: events[index].deviceName,
+                            title: events[index].title,
                           ),
                         ),
                 ],
@@ -210,27 +231,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   //
                   // Device List
                   //
-                  devicesSampleData.isEmpty
+                  deviceLoading
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50),
+                          child: Loading(),
+                        )
+                      : devices.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 50),
                           child: Text("موتورخانه ای وجود ندارد."),
                         )
-                      : Padding(
-                          padding: EdgeInsets.zero,
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.all(0),
-                            itemCount: 5,
-                            itemBuilder: (context, index) => DeviceTile(
-                              deviceId:
-                                  devicesSampleData[index]["device_id"] as int,
-                              borderRadius: 0,
-                              name: devicesSampleData[index]["name"] as String,
-                              city: devicesSampleData[index]["city"] as String,
-                              status:
-                                  devicesSampleData[index]["status"] as String,
-                            ),
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.all(0),
+                          itemCount: devices.length > 5 ? 5 : devices.length,
+                          itemBuilder: (context, index) => DeviceTile(
+                            deviceId: devices[index].id,
+                            borderRadius: 0,
+                            name: devices[index].name,
+                            org: devices[index].organization,
+                            status: devices[index].status,
                           ),
                         ),
 

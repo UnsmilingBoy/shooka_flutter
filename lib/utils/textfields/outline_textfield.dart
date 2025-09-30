@@ -6,12 +6,14 @@ class Outlinetextfield extends StatefulWidget {
   final String? placeholder;
   final double? height;
   final bool? isPassword;
+  final Function(String value)? onSubmitted;
   const Outlinetextfield({
     super.key,
     required this.controller,
     this.placeholder,
     this.height,
     this.isPassword,
+    this.onSubmitted,
   });
 
   @override
@@ -30,6 +32,7 @@ class _OutlinetextfieldState extends State<Outlinetextfield> {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      onSubmitted: widget.onSubmitted,
       style: Theme.of(context).textTheme.labelMedium,
       obscureText: isPassword == true,
       decoration: InputDecoration(

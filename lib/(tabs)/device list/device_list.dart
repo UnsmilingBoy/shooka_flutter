@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/add_device_modal.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/filter_device_modal.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
-import 'package:shooka_flutter/utils/sample_datas.dart';
+import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class DeviceList extends StatefulWidget {
@@ -22,6 +24,10 @@ class _DeviceListState extends State<DeviceList> {
   void initState() {
     super.initState();
 
+    Future.microtask(() {
+      context.read<DeviceProvider>().loadDevices();
+    });
+
     // Opens the add device modal if the route was "/add_device"
     if (widget.openAddDevice) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -37,6 +43,14 @@ class _DeviceListState extends State<DeviceList> {
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
+
+    final deviceProvider = context.watch<DeviceProvider>();
+
+    if (deviceProvider.isLoading) {
+      return const Scaffold(body: Center(child: Loading()));
+    }
+
+    final devices = deviceProvider.devices;
 
     return BackScaffold(
       label: "موتورخانه ها",
@@ -69,14 +83,14 @@ class _DeviceListState extends State<DeviceList> {
             ListView.builder(
               physics: NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              itemCount: devicesSampleData.length,
+              itemCount: devices.length,
               itemBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.only(top: 10.0),
                 child: DeviceTile(
-                  deviceId: devicesSampleData[index]["device_id"] as int,
-                  name: devicesSampleData[index]["name"] as String,
-                  city: devicesSampleData[index]["city"] as String,
-                  status: devicesSampleData[index]["status"] as String,
+                  deviceId: devices[index].id,
+                  name: devices[index].name,
+                  org: devices[index].organization,
+                  status: devices[index].status,
                   color: Theme.of(context).colorScheme.surface,
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/(tabs)/event%20page/event_page.dart';
+import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 
 class EventTile extends StatelessWidget {
@@ -7,16 +8,18 @@ class EventTile extends StatelessWidget {
   final String author;
   final String device;
   final Color? color;
+  final String timeCreated;
+  final List<EventCategoryDetails> message;
   final double? borderRadius;
-  final int eventId;
   const EventTile({
     super.key,
     required this.title,
     required this.author,
     required this.device,
-    required this.eventId,
     this.color,
     this.borderRadius,
+    required this.timeCreated,
+    required this.message,
   });
 
   @override
@@ -30,7 +33,13 @@ class EventTile extends StatelessWidget {
         context,
         MaterialPageRoute(
           settings: RouteSettings(name: "/event_page"),
-          builder: (_) => EventPage(eventId: eventId),
+          builder: (_) => EventPage(
+            creator: author,
+            device: device,
+            title: title,
+            timeCreated: timeCreated,
+            message: message,
+          ),
         ),
       ),
 

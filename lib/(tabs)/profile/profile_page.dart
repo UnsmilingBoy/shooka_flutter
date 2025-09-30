@@ -115,8 +115,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   itemBuilder: (context, index) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5.0),
                     child: ListTile(
+                      onTap: () => showMaterialModalBottomSheet(
+                        enableDrag: false,
+                        context: context,
+                        builder: (context) => EditProfileModal(
+                          email: user.email,
+                          name: name,
+                          phoneNumber: user.phoneNumber,
+                          profileHref: user.profileHref,
+                          username: user.username,
+                        ),
+                      ),
                       contentPadding: EdgeInsets.symmetric(horizontal: 5),
-                      onTap: () => print("cat"),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

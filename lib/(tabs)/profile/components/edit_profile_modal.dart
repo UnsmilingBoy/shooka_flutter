@@ -106,10 +106,10 @@ class _EditProfileModalState extends State<EditProfileModal> {
           saveText: "ثبت تغییرات",
           onSave: () async {
             await userProvider.updateUserProfile(
-              name.text,
-              username.text,
-              email.text,
-              phoneNumber.text,
+              name: name.text,
+              username: username.text,
+              email: email.text,
+              phoneNumber: phoneNumber.text,
             );
             Navigator.pop(context);
           },

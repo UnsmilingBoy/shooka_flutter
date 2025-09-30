@@ -68,8 +68,8 @@ class ChangePasswordModal extends StatelessWidget {
           loading: userProvider.changePasswordLoading,
           onSave: () async {
             int status = await userProvider.changePassword(
-              prevPassword.text,
-              newPassword.text,
+              prevPassword: prevPassword.text,
+              newPassword: newPassword.text,
             );
             if (status == 200) {
               ScaffoldMessenger.of(context).showSnackBar(

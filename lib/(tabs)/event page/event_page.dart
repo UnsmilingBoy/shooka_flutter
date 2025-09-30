@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:shooka_flutter/utils/sample_datas.dart';
+import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
 class EventPage extends StatelessWidget {
-  final int eventId;
-  const EventPage({super.key, required this.eventId});
+  final String title;
+  final String device;
+  final String creator;
+  final String timeCreated;
+  final List<EventCategoryDetails> message;
+
+  const EventPage({
+    super.key,
+    required this.title,
+    required this.device,
+    required this.creator,
+    required this.timeCreated,
+    required this.message,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +45,7 @@ class EventPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      "عنوان: ${logsSampleData[eventId]["title"]}",
+                      "عنوان: $title",
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
@@ -56,7 +68,7 @@ class EventPage extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          "دستگاه:  ${logsSampleData[eventId]["device"]}",
+                          "دستگاه:  $device",
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
@@ -77,7 +89,7 @@ class EventPage extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          "ایجادکننده:  ${logsSampleData[eventId]["author"]}",
+                          "ایجادکننده:  $creator",
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
@@ -98,7 +110,7 @@ class EventPage extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          "زمان ایجاد:  ${logsSampleData[eventId]["date"]}",
+                          "زمان ایجاد:  $timeCreated",
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
@@ -112,7 +124,7 @@ class EventPage extends StatelessWidget {
               //
               Divider(color: Theme.of(context).hintColor),
               Text(
-                logsSampleData[eventId]["message"] as String,
+                message.toString(),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/device_list.dart';
-import 'package:shooka_flutter/(tabs)/event%20list/events.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/events_list.dart';
 import 'package:shooka_flutter/(tabs)/locations/locations.dart';
 import 'package:shooka_flutter/(tabs)/login%20page/login.dart';
 import 'package:shooka_flutter/(tabs)/organizations/organiztions.dart';
@@ -18,6 +18,8 @@ import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:shooka_flutter/services/auth_interceptor.dart';
 import 'package:shooka_flutter/services/auth_service.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 
 void main() {
@@ -38,6 +40,8 @@ void main() {
         Provider<Dio>.value(value: dio),
         Provider<ApiService>.value(value: apiService),
         ChangeNotifierProvider(create: (_) => UserProvider(api: apiService)),
+        ChangeNotifierProvider(create: (_) => EventProvider(api: apiService)),
+        ChangeNotifierProvider(create: (_) => DeviceProvider(api: apiService)),
       ],
       child: const MyApp(),
     ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shooka_flutter/models/user.dart';
+import 'package:shooka_flutter/models/user_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 
 class UserProvider extends ChangeNotifier {
@@ -40,13 +40,23 @@ class UserProvider extends ChangeNotifier {
   //
   // Update user profile
   //
-  Future<void> updateUserProfile(name, username, email, phoneNumber) async {
+  Future<void> updateUserProfile({
+    required String name,
+    required String username,
+    required String email,
+    required String phoneNumber,
+  }) async {
     _updateUserLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      await api.updateUserProfile(name, username, email, phoneNumber);
+      await api.updateUserProfile(
+        name: name,
+        username: username,
+        email: email,
+        phoneNumber: phoneNumber,
+      );
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -59,13 +69,19 @@ class UserProvider extends ChangeNotifier {
   //
   // ChangePassword
   //
-  Future<int> changePassword(prevPassword, newPassword) async {
+  Future<int> changePassword({
+    required String prevPassword,
+    required String newPassword,
+  }) async {
     _changePasswordLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      int status = await api.changePassword(prevPassword, newPassword);
+      int status = await api.changePassword(
+        prevPassword: prevPassword,
+        newPassword: newPassword,
+      );
       return status;
     } catch (e) {
       _error = e.toString();

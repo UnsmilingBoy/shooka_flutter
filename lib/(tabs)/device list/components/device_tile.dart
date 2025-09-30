@@ -4,8 +4,8 @@ import 'package:shooka_flutter/utils/buttons/container_button.dart';
 
 class DeviceTile extends StatelessWidget {
   final String name;
-  final String city;
-  final String status;
+  final String org;
+  final bool? status;
   final Color? color;
   final double? borderRadius;
   final int deviceId;
@@ -13,7 +13,7 @@ class DeviceTile extends StatelessWidget {
   const DeviceTile({
     super.key,
     required this.name,
-    required this.city,
+    required this.org,
     required this.status,
     this.color,
     this.borderRadius,
@@ -45,17 +45,32 @@ class DeviceTile extends StatelessWidget {
           name,
           style: Theme.of(context).textTheme.titleSmall,
         ),
-        subtitle: Text(overflow: TextOverflow.ellipsis, "شهر: $city"),
+        subtitle: Text(overflow: TextOverflow.ellipsis, "سازمان: $org"),
         subtitleTextStyle: Theme.of(context).textTheme.labelSmall,
         trailing: Tooltip(
-          message: "موتورخانه $status است.",
+          message: "موتورخانه ${deviceStatus(status)} است.",
           child: Icon(
             size: 15,
             Icons.circle,
-            color: status == "فعال" ? Colors.green : Colors.red,
+            color: status == true
+                ? Colors.green
+                : status == false
+                ? Colors.red
+                : Colors.white,
           ),
         ),
       ),
     );
+  }
+}
+
+String deviceStatus(bool? status) {
+  switch (status) {
+    case true:
+      return "فعال";
+    case false:
+      return "غیرفعال";
+    default:
+      return "نامشخص";
   }
 }

@@ -1,7 +1,9 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shooka_flutter/models/user.dart';
+import 'package:shooka_flutter/models/device_data_class.dart';
+import 'package:shooka_flutter/models/event_data_class.dart';
+import 'package:shooka_flutter/models/user_data_class.dart';
 import 'auth_service.dart';
 
 class ApiService {
@@ -30,7 +32,12 @@ class ApiService {
   //
   // Update User
   //
-  Future<void> updateUserProfile(name, username, email, phoneNumber) async {
+  Future<void> updateUserProfile({
+    required String name,
+    required String username,
+    required String email,
+    required String phoneNumber,
+  }) async {
     final userId = await storage.read(key: "userId");
 
     var body = {
@@ -38,7 +45,10 @@ class ApiService {
       "email": email,
       "first_name": name,
       "last_name": "",
+      "phone_number_update": phoneNumber,
     };
+
+    log(body.toString());
 
     try {
       final response = await dio.patch('/api/users/$userId/', data: body);
@@ -53,7 +63,10 @@ class ApiService {
   //
   // Change password
   //
-  Future<int> changePassword(prevPassword, newPassword) async {
+  Future<int> changePassword({
+    required String prevPassword,
+    required String newPassword,
+  }) async {
     final userId = await storage.read(key: "userId");
 
     var body = {"prev_password": prevPassword, "new_password": newPassword};
@@ -67,6 +80,61 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to change password: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Fetch Event List
+  //
+  Future<List<Event>> fetchEventList({
+    required bool all,
+    int? creator,
+    int? device,
+    String? start,
+    String? end,
+    String? title,
+    String? search,
+  }) async {
+    final queryParams = {
+      "all": all == true ? "true" : "false",
+      if (creator != null) "creator": creator,
+      if (device != null) "device": device,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+      if (title != null) "title": title,
+      if (search != null) "search": search,
+    };
+
+    try {
+      final response = await dio.get(
+        '/api/event-history/',
+        queryParameters: queryParams,
+      );
+      log(response.data.toString());
+
+      final List<dynamic> data = all ? response.data : response.data["results"];
+      return data.map((json) => Event.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception("Failed to get user profile: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Fetch Device List
+  //
+  Future<List<Device>> fetchDevices() async {
+    try {
+      final response = await dio.get('/apiv2/devices-list/?all=true');
+      log(response.data.toString());
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Device.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load devices');
+      }
+    } on DioException catch (e) {
+      throw Exception("Failed to get user profile: ${e.response?.statusCode}");
     }
   }
 }
