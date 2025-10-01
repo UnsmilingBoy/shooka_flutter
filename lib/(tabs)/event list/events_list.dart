@@ -39,6 +39,8 @@ class _EventsTabState extends State<EventsTab> {
     }
   }
 
+  String searchValue = "";
+
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
@@ -67,13 +69,34 @@ class _EventsTabState extends State<EventsTab> {
           // Header (Search and Filter)
           //
           TabHeader(
-            onSubmitted: (value) async => await context
-                .read<EventProvider>()
-                .loadEvents(all: true, search: value),
+            onSubmitted: (value) async => {
+              setState(() {
+                searchValue = value;
+              }),
+              await context.read<EventProvider>().loadEvents(
+                all: true,
+                search: value,
+              ),
+            },
             searchController: searchController,
             filterModal: FilterEventModal(),
             searchPlaceholder: "جستجوی رویداد...",
           ),
+
+          //
+          // Searched For (Only appears when the user searches for something)
+          //
+          if (searchValue != "")
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "نتایج جستجو برای موتورخانه ها با نام: $searchValue",
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+              ],
+            ),
 
           //
           // Events List

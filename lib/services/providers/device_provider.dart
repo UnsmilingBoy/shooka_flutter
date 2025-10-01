@@ -12,12 +12,28 @@ class DeviceProvider with ChangeNotifier {
   List<Device> get devices => _devices;
   bool get isLoading => _isLoading;
 
-  Future<void> loadDevices() async {
+  Future<void> loadDevices({
+    required bool all,
+    int? installer,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? search,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _devices = await api.fetchDevices();
+      _devices = await api.fetchDevices(
+        all: all,
+        administration: administration,
+        city: city,
+        installer: installer,
+        organization: organization,
+        province: province,
+        search: search,
+      );
     } catch (e) {
       _devices = [];
       debugPrint("Error fetching devices: $e");

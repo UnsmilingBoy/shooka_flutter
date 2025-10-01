@@ -3,12 +3,12 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
+import 'package:shooka_flutter/components/shimmer_list.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
-import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/profile_scaffold.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -24,7 +24,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     Future.microtask(() {
       context.read<EventProvider>().loadEvents(all: true);
-      context.read<DeviceProvider>().loadDevices();
+      context.read<DeviceProvider>().loadDevices(all: true);
     });
   }
 
@@ -169,10 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Events List
                   //
                   eventLoading
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 50),
-                          child: Loading(),
-                        )
+                      ? ShimmerList()
                       : events.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 50),
@@ -232,10 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Device List
                   //
                   deviceLoading
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 50),
-                          child: Loading(),
-                        )
+                      ? ShimmerList()
                       : devices.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 50),

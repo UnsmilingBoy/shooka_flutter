@@ -20,6 +20,7 @@ import 'package:shooka_flutter/services/auth_service.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 
 void main() {
@@ -42,6 +43,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => UserProvider(api: apiService)),
         ChangeNotifierProvider(create: (_) => EventProvider(api: apiService)),
         ChangeNotifierProvider(create: (_) => DeviceProvider(api: apiService)),
+        ChangeNotifierProvider(create: (_) => GeneralProvider(api: apiService)),
       ],
       child: const MyApp(),
     ),

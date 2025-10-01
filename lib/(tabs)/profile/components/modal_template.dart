@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/utils/loadings/loading.dart';
 
 class BottomModalTemplate extends StatefulWidget {
   final String title;
@@ -18,6 +21,8 @@ class BottomModalTemplate extends StatefulWidget {
 class _BottomModalTemplateState extends State<BottomModalTemplate> {
   @override
   Widget build(BuildContext context) {
+    final generalProvider = context.watch<GeneralProvider>();
+
     return SafeArea(
       child: Directionality(
         textDirection: TextDirection.rtl,
@@ -38,7 +43,16 @@ class _BottomModalTemplateState extends State<BottomModalTemplate> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
-                Column(children: widget.children),
+                Column(
+                  children: generalProvider.isLoading
+                      ? [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 30.0),
+                            child: Loading(),
+                          ),
+                        ]
+                      : widget.children,
+                ),
               ],
             ),
           ),

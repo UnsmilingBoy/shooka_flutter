@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/switches/my_switch.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textformfield.dart';
@@ -32,8 +34,13 @@ class _AddEventModalState extends State<AddEventModal> {
   bool sensorRewiringSwitch = false;
   bool generalInspectionSwitch = false;
 
+  String? selectedDevice;
+  String? selectedEventTitle;
+
   @override
   Widget build(BuildContext context) {
+    final generalProvider = context.watch<GeneralProvider>();
+    print(generalProvider.filters?["devices"]);
     final addEventPrompts = [
       {
         "label": "تعویض سنسور",
@@ -83,7 +90,22 @@ class _AddEventModalState extends State<AddEventModal> {
               // Select Device Dropdown
               //
               DropdownWithLabel(
-                items: [],
+                initialValue: selectedDevice,
+                items: generalProvider.filters?["devices"]
+                    .map<DropdownMenuItem<String>>(
+                      (device) => DropdownMenuItem<String>(
+                        value: device["id"].toString(), // ensure it's a String
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Text(device["name"].toString()),
+                      ),
+                    )
+                    .toList(),
+
+                onChanged: (value) {
+                  setState(() {
+                    selectedDevice = value;
+                  });
+                },
                 label: "موتورخانه",
                 placeholder: "انتخاب موتورخانه...",
               ),
@@ -92,7 +114,22 @@ class _AddEventModalState extends State<AddEventModal> {
               // Select Title Dropdown
               //
               DropdownWithLabel(
-                items: [],
+                initialValue: selectedEventTitle,
+                onChanged: (value) {
+                  setState(() {
+                    selectedEventTitle = value;
+                  });
+                },
+                items: generalProvider.filters?["event_title"]
+                    .map<DropdownMenuItem<String>>(
+                      (eventTitle) => DropdownMenuItem<String>(
+                        value: eventTitle["id"]
+                            .toString(), // ensure it's a String
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Text(eventTitle["title"].toString()),
+                      ),
+                    )
+                    .toList(),
                 label: "عنوان",
                 placeholder: "انتخاب عنوان...",
               ),

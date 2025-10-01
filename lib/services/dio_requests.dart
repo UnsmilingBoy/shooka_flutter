@@ -122,9 +122,30 @@ class ApiService {
   //
   // Fetch Device List
   //
-  Future<List<Device>> fetchDevices() async {
+  Future<List<Device>> fetchDevices({
+    required bool all,
+    int? installer,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? search,
+  }) async {
+    final queryParams = {
+      "all": all == true ? "true" : "false",
+      if (installer != null) "installer": installer,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (search != null) "search": search,
+    };
+
     try {
-      final response = await dio.get('/apiv2/devices-list/?all=true');
+      final response = await dio.get(
+        '/apiv2/devices-list/',
+        queryParameters: queryParams,
+      );
       log(response.data.toString());
 
       if (response.statusCode == 200) {
@@ -135,6 +156,22 @@ class ApiService {
       }
     } on DioException catch (e) {
       throw Exception("Failed to get user profile: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Fetch Filter Options
+  //
+  Future<dynamic> fetchFilters() async {
+    try {
+      final response = await dio.get('/apiv2/get_option_for_insert/');
+
+      log("boooooooooooooooo${response.data}");
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get filter options: ${e.response?.statusCode}",
+      );
     }
   }
 }

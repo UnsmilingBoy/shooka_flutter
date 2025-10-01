@@ -25,7 +25,7 @@ class _DeviceListState extends State<DeviceList> {
     super.initState();
 
     Future.microtask(() {
-      context.read<DeviceProvider>().loadDevices();
+      context.read<DeviceProvider>().loadDevices(all: true);
     });
 
     // Opens the add device modal if the route was "/add_device"
@@ -40,15 +40,13 @@ class _DeviceListState extends State<DeviceList> {
     }
   }
 
+  String searchValue = "";
+
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
 
     final deviceProvider = context.watch<DeviceProvider>();
-
-    if (deviceProvider.isLoading) {
-      return const Scaffold(body: Center(child: Loading()));
-    }
 
     final devices = deviceProvider.devices;
 
@@ -65,38 +63,65 @@ class _DeviceListState extends State<DeviceList> {
       //
       // Body
       //
-      body: SingleChildScrollView(
-        child: Column(
-          spacing: 10,
-          children: [
-            //
-            // Header (Search and Filter)
-            //
-            TabHeader(
-              searchController: searchController,
-              filterModal: FilterDeviceModal(),
-              searchPlaceholder: "جستجوی موتورخانه...",
-            ),
-            //
-            // Device List
-            //
-            ListView.builder(
-              physics: NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: devices.length,
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.only(top: 10.0),
-                child: DeviceTile(
-                  deviceId: devices[index].id,
-                  name: devices[index].name,
-                  org: devices[index].organization,
-                  status: devices[index].status,
-                  color: Theme.of(context).colorScheme.surface,
+      body: Column(
+        spacing: 10,
+        children: [
+          //
+          // Header (Search and Filter)
+          //
+          TabHeader(
+            onSubmitted: (value) async {
+              setState(() {
+                searchValue = value;
+              });
+              await context.read<DeviceProvider>().loadDevices(
+                all: true,
+                search: value,
+              );
+            },
+            searchController: searchController,
+            filterModal: FilterDeviceModal(),
+            searchPlaceholder: "جستجوی موتورخانه...",
+          ),
+
+          //
+          // Searched For (Only appears when the user searches for something)
+          //
+          if (searchValue != "")
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "نتایج جستجو برای موتورخانه ها با نام: $searchValue",
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+
+          //
+          // Device List
+          //
+          deviceProvider.isLoading
+              ? Expanded(child: Center(child: Loading())) // Loading Ui
+              : devices.isEmpty
+              ? Expanded(child: Center(child: Text("موتورخانه ای یافت نشد.")))
+              : Expanded(
+                  child: ListView.builder(
+                    itemCount: devices.length,
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: DeviceTile(
+                        deviceId: devices[index].id,
+                        name: devices[index].name,
+                        org: devices[index].organization,
+                        status: devices[index].status,
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                  ),
+                ),
+        ],
       ),
     );
   }

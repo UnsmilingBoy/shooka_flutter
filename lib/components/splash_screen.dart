@@ -3,6 +3,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/home/home_page.dart';
 import 'package:shooka_flutter/(tabs)/login%20page/login.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import '../services/auth_service.dart';
@@ -64,6 +65,7 @@ class _SplashPageState extends State<SplashPage> {
   //
   Future<void> getHomePageData() async {
     await context.read<UserProvider>().loadUserProfile();
+    await context.read<GeneralProvider>().fetchFilters();
   }
 
   //

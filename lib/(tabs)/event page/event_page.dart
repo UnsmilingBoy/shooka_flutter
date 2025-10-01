@@ -123,9 +123,28 @@ class EventPage extends StatelessWidget {
               // Event (report) Content
               //
               Divider(color: Theme.of(context).hintColor),
-              Text(
-                message.toString(),
-                style: Theme.of(context).textTheme.bodyMedium,
+              Column(
+                spacing: 5,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: message
+                    .map(
+                      (message) => Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 3,
+                        children: [
+                          Icon(
+                            message.text == "" ? Icons.close : Icons.check,
+                            color: message.text == ""
+                                ? Colors.red
+                                : Colors.green,
+                          ),
+                          Expanded(
+                            child: Text("${message.category}: ${message.text}"),
+                          ),
+                        ],
+                      ),
+                    )
+                    .toList(),
               ),
             ],
           ),
