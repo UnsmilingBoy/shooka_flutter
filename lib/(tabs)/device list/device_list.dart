@@ -102,12 +102,12 @@ class _DeviceListState extends State<DeviceList> {
           //
           // Device List
           //
-          deviceProvider.isLoading
-              ? Expanded(child: Center(child: Loading())) // Loading Ui
-              : devices.isEmpty
-              ? Expanded(child: Center(child: Text("موتورخانه ای یافت نشد.")))
-              : Expanded(
-                  child: ListView.builder(
+          Expanded(
+            child: deviceProvider.isLoading
+                ? Center(child: Loading()) // Loading Ui
+                : devices.isEmpty
+                ? Center(child: Text("موتورخانه ای یافت نشد."))
+                : ListView.builder(
                     itemCount: devices.length,
                     itemBuilder: (context, index) => Padding(
                       padding: const EdgeInsets.only(top: 10.0),
@@ -120,7 +120,7 @@ class _DeviceListState extends State<DeviceList> {
                       ),
                     ),
                   ),
-                ),
+          ),
         ],
       ),
     );

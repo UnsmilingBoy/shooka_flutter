@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/event_provider.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
@@ -15,63 +18,26 @@ class FilterEventModal extends StatefulWidget {
 
 class _FilterEventModalState extends State<FilterEventModal> {
   String? date;
+  String? selectedTitle;
+  String? selectedCreator;
+  String? selectedDevice;
+  String? startDate;
+  String? endDate;
+
+  @override
+  void initState() {
+    super.initState();
+    final eventProvider = Provider.of<EventProvider>(context, listen: false);
+    // Use provider fields for last selected values (if you add them)
+    selectedCreator = eventProvider.lastSelectedCreator?.toString();
+    selectedDevice = eventProvider.lastSelectedDevice?.toString();
+    selectedTitle = eventProvider.lastSelectedTitle;
+  }
 
   @override
   Widget build(BuildContext context) {
-    String? titlesInitialValue;
-    String? createrInitialValue;
-    String? deviceInitialValue;
-
-    final filterOptions = [
-      {
-        "label": "عناوین:",
-        "items": [
-          DropdownMenuItem(
-            value: "سرپرست",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("سرپرست"),
-          ),
-          DropdownMenuItem(
-            value: "نصاب",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("نصاب"),
-          ),
-        ],
-        "initialValue": titlesInitialValue,
-      },
-      {
-        "label": "ایجاد کننده:",
-        "items": [
-          DropdownMenuItem(
-            value: "سرپرست",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("سرپرست"),
-          ),
-          DropdownMenuItem(
-            value: "نصاب",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("نصاب"),
-          ),
-        ],
-        "initialValue": createrInitialValue,
-      },
-      {
-        "label": "دستگاه:",
-        "items": [
-          DropdownMenuItem(
-            value: "سرپرست",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("سرپرست"),
-          ),
-          DropdownMenuItem(
-            value: "نصاب",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("نصاب"),
-          ),
-        ],
-        "initialValue": deviceInitialValue,
-      },
-    ];
+    final generalProvider = context.watch<GeneralProvider>();
+    final eventProvider = context.watch<EventProvider>();
 
     //
     // Body
@@ -82,21 +48,71 @@ class _FilterEventModalState extends State<FilterEventModal> {
         //
         // Filter options
         //
-        ListView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.all(0),
-          itemCount: filterOptions.length,
-          itemBuilder: (context, index) => DropdownWithLabel(
-            onChanged: (value) => setState(() {
-              filterOptions[index]["initialValue"] = value;
-            }),
-            items:
-                filterOptions[index]["items"] as List<DropdownMenuItem<String>>,
-            label: filterOptions[index]["label"] as String,
-            placeholder: "انتخاب کنید",
-            initialValue: filterOptions[index]["initialValue"] as String?,
-          ),
+
+        // Title Dropdown
+        DropdownWithLabel(
+          onChanged: (value) => setState(() {
+            selectedTitle = value;
+          }),
+          iconOnPressed: () => setState(() {
+            selectedTitle = null;
+          }),
+          items: (generalProvider.filters?["event_title"] ?? [])
+              .map<DropdownMenuItem<String>>(
+                (title) => DropdownMenuItem<String>(
+                  value: title["title"].toString(),
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(title["title"].toString()),
+                ),
+              )
+              .toList(),
+          label: "عناوین:",
+          placeholder: "انتخاب کنید",
+          initialValue: selectedTitle,
+        ),
+
+        // Creator Dropdown
+        DropdownWithLabel(
+          onChanged: (value) => setState(() {
+            selectedCreator = value;
+          }),
+          items: (generalProvider.filters?["installers"] ?? [])
+              .map<DropdownMenuItem<String>>(
+                (creator) => DropdownMenuItem<String>(
+                  value: creator["id"].toString(),
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(creator["installer"].toString()),
+                ),
+              )
+              .toList(),
+          label: "ایجاد کننده:",
+          placeholder: "انتخاب کنید",
+          iconOnPressed: () => setState(() {
+            selectedCreator = null;
+          }),
+          initialValue: selectedCreator,
+        ),
+
+        // Device Dropdown
+        DropdownWithLabel(
+          onChanged: (value) => setState(() {
+            selectedDevice = value;
+          }),
+          iconOnPressed: () => setState(() {
+            selectedDevice = null;
+          }),
+          items: (generalProvider.filters?["devices"] ?? [])
+              .map<DropdownMenuItem<String>>(
+                (device) => DropdownMenuItem<String>(
+                  value: device["id"].toString(),
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(device["name"].toString()),
+                ),
+              )
+              .toList(),
+          label: "دستگاه:",
+          placeholder: "انتخاب کنید",
+          initialValue: selectedDevice,
         ),
 
         //
@@ -126,7 +142,9 @@ class _FilterEventModalState extends State<FilterEventModal> {
 
                   if (picked != null) {
                     setState(() {
-                      date = date =
+                      startDate = picked.start.formatCompactDate();
+                      endDate = picked.end.formatCompactDate();
+                      date =
                           "${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}";
                     });
                   }
@@ -159,7 +177,23 @@ class _FilterEventModalState extends State<FilterEventModal> {
         //
         ModalBottomButtons(
           saveText: "فیلتر",
-          onSave: () => print("filter event"),
+          onSave: () {
+            eventProvider.loadEvents(
+              all: true,
+              search: eventProvider.lastSearchedText,
+              start: startDate,
+              end: endDate,
+              title: selectedTitle,
+              creator: selectedCreator != null
+                  ? int.tryParse(selectedCreator ?? "-1")
+                  : null,
+              device: selectedDevice != null
+                  ? int.tryParse(selectedDevice ?? "-1")
+                  : null,
+            );
+
+            Navigator.pop(context);
+          },
         ),
       ],
     );

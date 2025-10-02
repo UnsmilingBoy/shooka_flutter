@@ -22,6 +22,7 @@ import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
   final baseUrl = 'https://shouka-test.romaksystem.com';
@@ -59,34 +60,36 @@ class MyApp extends StatelessWidget {
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: MaterialApp(
-        home: SplashPage(),
-        routes: {
-          '/login': (context) => const LoginPage(),
-          '/home': (context) => const MyHomePage(),
-          '/profile': (context) => const ProfilePage(),
-          '/device_list': (context) => const DeviceList(openAddDevice: false),
-          // I handle '/device_page' in DeviceTile with MaterialPageRoute and set its RouteSetting name to '/device_page' for passing device id.
-          '/add_device': (context) => const DeviceList(openAddDevice: true),
-          '/events': (context) => const EventsTab(openAddEvent: false),
-          // I handle '/event_page' in EventTile Just like /device_page.
-          '/add_event': (context) => const EventsTab(openAddEvent: true),
-          '/organizations': (context) => const OrganiztionsTab(),
-          '/views': (context) => const ViewsTab(),
-          '/locations': (context) => const LocationsTab(),
-          '/users': (context) => const UsersTab(),
-        },
-        locale: const Locale("fa", "IR"),
-        supportedLocales: const [Locale("fa", "IR"), Locale("en", "US")],
-        localizationsDelegates: const [
-          PersianMaterialLocalizations.delegate,
-          PersianCupertinoLocalizations.delegate,
-        ],
-        debugShowCheckedModeBanner: false,
-        title: 'Shooka',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: themeProvider.themeMode,
+      child: ToastificationWrapper(
+        child: MaterialApp(
+          home: SplashPage(),
+          routes: {
+            '/login': (context) => const LoginPage(),
+            '/home': (context) => const MyHomePage(),
+            '/profile': (context) => const ProfilePage(),
+            '/device_list': (context) => const DeviceList(openAddDevice: false),
+            // I handle '/device_page' in DeviceTile with MaterialPageRoute and set its RouteSetting name to '/device_page' for passing device id.
+            '/add_device': (context) => const DeviceList(openAddDevice: true),
+            '/events': (context) => const EventsTab(openAddEvent: false),
+            // I handle '/event_page' in EventTile Just like /device_page.
+            '/add_event': (context) => const EventsTab(openAddEvent: true),
+            '/organizations': (context) => const OrganiztionsTab(),
+            '/views': (context) => const ViewsTab(),
+            '/locations': (context) => const LocationsTab(),
+            '/users': (context) => const UsersTab(),
+          },
+          locale: const Locale("fa", "IR"),
+          supportedLocales: const [Locale("fa", "IR"), Locale("en", "US")],
+          localizationsDelegates: const [
+            PersianMaterialLocalizations.delegate,
+            PersianCupertinoLocalizations.delegate,
+          ],
+          debugShowCheckedModeBanner: false,
+          title: 'Shooka',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+        ),
       ),
     );
   }

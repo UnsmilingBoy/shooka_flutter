@@ -44,6 +44,7 @@ dependencies:
   dio: ^5.9.0
   jwt_decoder: ^2.0.1
   shimmer: ^3.0.0
+  toastification: ^3.0.3
 
 dev_dependencies:
   flutter_test:

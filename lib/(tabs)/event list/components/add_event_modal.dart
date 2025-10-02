@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/switches/my_switch.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textformfield.dart';
+import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class AddEventModal extends StatefulWidget {
   const AddEventModal({super.key});
@@ -15,69 +17,58 @@ class AddEventModal extends StatefulWidget {
 }
 
 class _AddEventModalState extends State<AddEventModal> {
-  //List of TextEditingControllers
-  TextEditingController sensorChangeController = TextEditingController();
-  TextEditingController deviceRepairController = TextEditingController();
-  TextEditingController wiringIssueController = TextEditingController();
-  TextEditingController communicationIssueController = TextEditingController();
-  TextEditingController sensorConnectionCheckController =
-      TextEditingController();
-  TextEditingController sensorRewiringController = TextEditingController();
-  TextEditingController generalInspectionController = TextEditingController();
-
-  //List of switches
-  bool sensorChangeSwitch = false;
-  bool deviceRepairSwitch = false;
-  bool wiringIssueSwitch = false;
-  bool communicationIssueSwitch = false;
-  bool sensorConnectionCheckSwitch = false;
-  bool sensorRewiringSwitch = false;
-  bool generalInspectionSwitch = false;
+  // List of prompts with controller and switch state
+  final List<Map<String, dynamic>> addEventPrompts = [];
 
   String? selectedDevice;
   String? selectedEventTitle;
 
   @override
-  Widget build(BuildContext context) {
-    final generalProvider = context.watch<GeneralProvider>();
-    print(generalProvider.filters?["devices"]);
-    final addEventPrompts = [
+  void initState() {
+    super.initState();
+    addEventPrompts.addAll([
       {
         "label": "تعویض سنسور",
-        "controller": sensorChangeController,
-        "switchValue": sensorRewiringSwitch,
+        "controller": TextEditingController(),
+        "switchValue": false,
       },
       {
         "label": "تعمیر دستگاه",
-        "controller": deviceRepairController,
-        "switchValue": deviceRepairSwitch,
+        "controller": TextEditingController(),
+        "switchValue": false,
       },
       {
         "label": "برطرف کردن مشکل سیم‌کشی تابلو",
-        "controller": wiringIssueController,
-        "switchValue": wiringIssueSwitch,
+        "controller": TextEditingController(),
+        "switchValue": false,
       },
       {
         "label": "برطرف کردن مشکل ارتباطی",
-        "controller": communicationIssueController,
-        "switchValue": communicationIssueSwitch,
+        "controller": TextEditingController(),
+        "switchValue": false,
       },
       {
         "label": "چک کردن اتصال سنسور به لوله‌ها",
-        "controller": sensorConnectionCheckController,
-        "switchValue": sensorConnectionCheckSwitch,
+        "controller": TextEditingController(),
+        "switchValue": false,
       },
       {
         "label": "سیم‌کشی مجدد سنسور",
-        "controller": sensorRewiringController,
-        "switchValue": sensorRewiringSwitch,
+        "controller": TextEditingController(),
+        "switchValue": false,
       },
       {
         "label": "بازدید کلی",
-        "controller": generalInspectionController,
-        "switchValue": generalInspectionSwitch,
+        "controller": TextEditingController(),
+        "switchValue": false,
       },
-    ];
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final generalProvider = context.watch<GeneralProvider>();
+    final eventProvider = context.watch<EventProvider>();
 
     return BottomModalTemplate(
       title: "رویداد جدید",
@@ -94,7 +85,8 @@ class _AddEventModalState extends State<AddEventModal> {
                 items: generalProvider.filters?["devices"]
                     .map<DropdownMenuItem<String>>(
                       (device) => DropdownMenuItem<String>(
-                        value: device["id"].toString(), // ensure it's a String
+                        value: device["name"]
+                            .toString(), // ensure it's a String
                         alignment: AlignmentDirectional.centerEnd,
                         child: Text(device["name"].toString()),
                       ),
@@ -123,7 +115,7 @@ class _AddEventModalState extends State<AddEventModal> {
                 items: generalProvider.filters?["event_title"]
                     .map<DropdownMenuItem<String>>(
                       (eventTitle) => DropdownMenuItem<String>(
-                        value: eventTitle["id"]
+                        value: eventTitle["title"]
                             .toString(), // ensure it's a String
                         alignment: AlignmentDirectional.centerEnd,
                         child: Text(eventTitle["title"].toString()),
@@ -148,6 +140,11 @@ class _AddEventModalState extends State<AddEventModal> {
                       addEventPrompts[index]["controller"]
                           as TextEditingController,
                   switchValue: addEventPrompts[index]["switchValue"] as bool,
+                  onSwitchChanged: (value) {
+                    setState(() {
+                      addEventPrompts[index]["switchValue"] = value;
+                    });
+                  },
                 ),
               ),
 
@@ -156,7 +153,53 @@ class _AddEventModalState extends State<AddEventModal> {
               //
               ModalBottomButtons(
                 saveText: "افزودن گزارش",
-                onSave: () => print("add event"),
+                loading: eventProvider.addLoading,
+                onSave: () async {
+                  // Checking if atleast one of the switches is selected.
+                  final allFalse = addEventPrompts.every(
+                    (item) => item["switchValue"] == false,
+                  );
+
+                  // Ensure every required parameter is selected and provided.
+                  if (selectedDevice == null) {
+                    flatErrorToast(title: "موتورخانه ای انتخاب نشده است.");
+                  } else if (selectedEventTitle == null) {
+                    flatErrorToast(title: "عنوانی انتخاب نشده است.");
+                  } else if (allFalse) {
+                    flatErrorToast(
+                      title: "حداقل یکی از گزینه های گزارش را انتخاب کنید.",
+                    );
+                  } else {
+                    //
+                    // Reading and adding events
+                    //
+                    List eventsList = [];
+                    for (var event in addEventPrompts) {
+                      if (event["switchValue"] == true) {
+                        eventsList.add({
+                          "category": event["label"],
+                          "is_checked": true,
+                          "text": event["controller"].text,
+                        });
+                      }
+                    }
+
+                    final status = await eventProvider.addEvent(
+                      device: selectedDevice ?? "",
+                      title: selectedEventTitle ?? "",
+                      events: eventsList,
+                    );
+
+                    if (status == 201) {
+                      filledSuccessToast(title: 'رویداد با موفقیت اضافه شد.');
+                    } else {
+                      filledErrorToast(
+                        title: 'خطایی در اضافه کردن رویداد رخ داده است.',
+                      );
+                    }
+                    Navigator.pop(context);
+                  }
+                },
               ),
             ],
           ),
@@ -173,11 +216,13 @@ class AddEventPromptTiles extends StatefulWidget {
   final String label;
   final TextEditingController controller;
   final bool switchValue;
+  final ValueChanged<bool> onSwitchChanged;
   const AddEventPromptTiles({
     super.key,
     required this.label,
     required this.controller,
     required this.switchValue,
+    required this.onSwitchChanged,
   });
 
   @override
@@ -185,39 +230,22 @@ class AddEventPromptTiles extends StatefulWidget {
 }
 
 class _AddEventPromptTilesState extends State<AddEventPromptTiles> {
-  late bool _switchValue;
-
-  @override
-  void initState() {
-    super.initState();
-    _switchValue = widget.switchValue;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        //
         // Label and Switch Row
-        //
         Row(
           children: [
             Expanded(child: Text(widget.label)),
             MySwitch(
-              switchValue: _switchValue,
-              onChanged: (value) {
-                setState(() {
-                  _switchValue = value;
-                });
-              },
+              switchValue: widget.switchValue,
+              onChanged: widget.onSwitchChanged,
             ),
           ],
         ),
-
-        //
         // Textformfield if switch is ON
-        //
-        if (_switchValue)
+        if (widget.switchValue)
           OutlineTextformfield(
             controller: widget.controller,
             placeholder: "توضیحات...",

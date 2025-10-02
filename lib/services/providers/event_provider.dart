@@ -5,13 +5,23 @@ import 'package:shooka_flutter/services/dio_requests.dart';
 class EventProvider with ChangeNotifier {
   final ApiService api;
   List<Event> _events = [];
-  bool _isLoading = false;
+  bool _fetchLoading = false;
+  bool _addLoading = false;
+  int? lastSelectedCreator;
+  int? lastSelectedDevice;
+  String? lastSearchedText;
+  String? lastSelectedTitle;
+  int filterCount = 0;
 
   EventProvider({required this.api});
 
   List<Event> get events => _events;
-  bool get isLoading => _isLoading;
+  bool get fetchLoading => _fetchLoading;
+  bool get addLoading => _addLoading;
 
+  //
+  // Load Events
+  //
   Future<void> loadEvents({
     required bool all,
     int? creator,
@@ -21,7 +31,37 @@ class EventProvider with ChangeNotifier {
     String? title,
     String? search,
   }) async {
-    _isLoading = true;
+    _fetchLoading = true;
+    filterCount = 0;
+
+    // For fitering state
+    if (creator != null) {
+      lastSelectedCreator = creator;
+      filterCount++;
+    } else {
+      lastSelectedCreator = null;
+    }
+    if (device != null) {
+      lastSelectedDevice = device;
+      filterCount++;
+    } else {
+      lastSelectedDevice = null;
+    }
+    if (title != null) {
+      lastSelectedTitle = title;
+      filterCount++;
+    } else {
+      lastSelectedTitle = null;
+    }
+
+    if (search != null) {
+      lastSearchedText = search;
+    }
+
+    if (filterCount == 0) {
+      lastSearchedText = null;
+    }
+
     notifyListeners();
 
     try {
@@ -38,7 +78,36 @@ class EventProvider with ChangeNotifier {
       _events = [];
       debugPrint("Error fetching events: $e");
     } finally {
-      _isLoading = false;
+      _fetchLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Add Event
+  //
+  Future<int> addEvent({
+    required String device,
+    required String title,
+    required List<dynamic> events,
+  }) async {
+    _addLoading = true;
+
+    notifyListeners();
+
+    try {
+      int status = await api.addEvent(
+        device: device,
+        events: events,
+        title: title,
+      );
+      return status;
+    } catch (e) {
+      print(e);
+      return -1;
+    } finally {
+      loadEvents(all: true);
+      _addLoading = false;
       notifyListeners();
     }
   }

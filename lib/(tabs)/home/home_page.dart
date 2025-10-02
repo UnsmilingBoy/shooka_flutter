@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final name = "${user?.firstName} ${user?.lastName}";
 
     final events = context.watch<EventProvider>().events;
-    bool eventLoading = context.watch<EventProvider>().isLoading;
+    bool eventLoading = context.watch<EventProvider>().fetchLoading;
 
     final devices = context.watch<DeviceProvider>().devices;
     bool deviceLoading = context.watch<DeviceProvider>().isLoading;

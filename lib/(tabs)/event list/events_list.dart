@@ -101,7 +101,7 @@ class _EventsTabState extends State<EventsTab> {
           //
           // Events List
           //
-          eventsProvider.isLoading
+          eventsProvider.fetchLoading
               ? Expanded(child: Center(child: Loading())) // Loading Ui
               : events.isEmpty
               ? Expanded(child: Center(child: Text("رویدادی یافت نشد.")))

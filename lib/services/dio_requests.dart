@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
+import 'package:shooka_flutter/models/location_data_class.dart';
+import 'package:shooka_flutter/models/org_data_class.dart';
 import 'package:shooka_flutter/models/user_data_class.dart';
 import 'auth_service.dart';
 
@@ -105,6 +107,8 @@ class ApiService {
       if (search != null) "search": search,
     };
 
+    log(queryParams.toString());
+
     try {
       final response = await dio.get(
         '/api/event-history/',
@@ -116,6 +120,26 @@ class ApiService {
       return data.map((json) => Event.fromJson(json)).toList();
     } on DioException catch (e) {
       throw Exception("Failed to get user profile: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Add Event
+  //
+  Future<int> addEvent({
+    required String device,
+    required String title,
+    required List<dynamic> events,
+  }) async {
+    var body = {"device": device, "title": title, "events": events};
+
+    log(body.toString());
+    try {
+      final response = await dio.post('/api/event-history/', data: body);
+      log(response.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to add event: ${e.response}");
     }
   }
 
@@ -172,6 +196,146 @@ class ApiService {
       throw Exception(
         "Failed to get filter options: ${e.response?.statusCode}",
       );
+    }
+  }
+
+  //
+  // Fetch Organization List
+  //
+  Future<List<Organization>> fetchOrganizationList({
+    required int page,
+    String? search,
+  }) async {
+    final queryParams = {"page": page, if (search != null) "search": search};
+
+    try {
+      final response = await dio.get(
+        '/apiv2/objects/organization/',
+        queryParameters: queryParams,
+      );
+
+      log("${response.data}");
+
+      final List<dynamic> data = response.data["results"];
+      return data.map((json) => Organization.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get filter options: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Edit Organization
+  //
+  Future<int> editOrganization({
+    String? name,
+    String? administration,
+    required int id,
+  }) async {
+    var body = {
+      "id": id,
+      "organization": name,
+      "administration": administration,
+    };
+    print(body);
+
+    try {
+      final response = await dio.post(
+        '/apiv2/objects/organization/edit/',
+        data: body,
+      );
+      log(response.data.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to edit org: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Add Organization
+  //
+  Future<int> addOrganization({
+    required String name,
+    required String administration,
+  }) async {
+    var body = {"organization": name, "administration": administration};
+
+    try {
+      final response = await dio.post(
+        '/apiv2/objects/organization/add/',
+        data: body,
+      );
+      log(response.data.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to add org: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Fetch Locations List
+  //
+  Future<List<Location>> fetchLocationsList({
+    required int page,
+    String? search,
+  }) async {
+    final queryParams = {"page": page, if (search != null) "search": search};
+
+    try {
+      final response = await dio.get(
+        '/apiv2/objects/location/',
+        queryParameters: queryParams,
+      );
+
+      log("${response.data}");
+      final List<dynamic> data = response.data["results"];
+      return data.map((json) => Location.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception("Failed to fetch Locations: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Edit Locations
+  //
+  Future<int> editLocation({
+    String? city,
+    String? province,
+    required int id,
+  }) async {
+    var body = {"id": id, "city": city, "province": province};
+
+    try {
+      final response = await dio.post(
+        '/apiv2/objects/location/edit/',
+        data: body,
+      );
+      log(response.data.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to edit location: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Add Organization
+  //
+  Future<int> addLocaiton({
+    required String city,
+    required String province,
+  }) async {
+    var body = {"city": city, "province": province};
+
+    try {
+      final response = await dio.post(
+        '/apiv2/objects/location/add/',
+        data: body,
+      );
+      log(response.data.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to add location: ${e.response?.statusCode}");
     }
   }
 }
