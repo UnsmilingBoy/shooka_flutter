@@ -8,6 +8,7 @@ class LocationTile extends StatelessWidget {
   final String province;
   final Color? color;
   final VoidCallback? onPressed;
+  final VoidCallback? iconOnPressed;
   const LocationTile({
     super.key,
     this.borderRadius,
@@ -15,6 +16,7 @@ class LocationTile extends StatelessWidget {
     required this.city,
     required this.province,
     this.onPressed,
+    this.iconOnPressed,
   });
 
   @override
@@ -41,6 +43,7 @@ class LocationTile extends StatelessWidget {
           ],
         ),
         trailing: MyIconButton(
+          onPressed: iconOnPressed,
           padding: EdgeInsets.all(3),
           child: Icon(
             Icons.delete_forever_rounded,

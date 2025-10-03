@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
-import 'package:shooka_flutter/(tabs)/home/home_page.dart';
-import 'package:shooka_flutter/(tabs)/login%20page/login.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
@@ -34,30 +32,21 @@ class _SplashPageState extends State<SplashPage> {
       if (!JwtDecoder.isExpired(token)) {
         // Token still valid → go to home
         await getHomePageData();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MyHomePage()),
-        );
+        Navigator.pushReplacementNamed(context, "/home");
         return;
       } else {
         // Token expired → try to refresh
         final ok = await auth.tryRefreshToken();
         if (ok) {
           await getHomePageData();
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const MyHomePage()),
-          );
+          Navigator.pushReplacementNamed(context, "/home");
           return;
         }
       }
     }
 
     // No token OR refresh failed → go to login
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
+    Navigator.pushReplacementNamed(context, "/login");
   }
 
   //

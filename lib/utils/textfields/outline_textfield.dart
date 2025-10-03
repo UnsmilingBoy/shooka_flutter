@@ -38,12 +38,11 @@ class _OutlinetextfieldState extends State<Outlinetextfield> {
       decoration: InputDecoration(
         hintStyle: Theme.of(context).textTheme.labelSmall,
         hintText: widget.placeholder,
-        suffix: widget.isPassword == true
+        suffixIcon: widget.isPassword == true
             ? MyIconButton(
                 onPressed: () => setState(() {
                   isPassword = !isPassword!;
                 }),
-                padding: EdgeInsets.symmetric(horizontal: 3),
                 child: Icon(Icons.remove_red_eye_rounded, size: 17),
               )
             : null,

@@ -202,7 +202,7 @@ class ApiService {
   //
   // Fetch Organization List
   //
-  Future<List<Organization>> fetchOrganizationList({
+  Future<dynamic> fetchOrganizationList({
     required int page,
     String? search,
   }) async {
@@ -217,7 +217,11 @@ class ApiService {
       log("${response.data}");
 
       final List<dynamic> data = response.data["results"];
-      return data.map((json) => Organization.fromJson(json)).toList();
+      final int totalPages = response.data["total_pages"];
+      return {
+        "pages": totalPages,
+        "results": data.map((json) => Organization.fromJson(json)).toList(),
+      };
     } on DioException catch (e) {
       throw Exception(
         "Failed to get filter options: ${e.response?.statusCode}",
@@ -276,7 +280,7 @@ class ApiService {
   //
   // Fetch Locations List
   //
-  Future<List<Location>> fetchLocationsList({
+  Future<dynamic> fetchLocationsList({
     required int page,
     String? search,
   }) async {
@@ -290,7 +294,11 @@ class ApiService {
 
       log("${response.data}");
       final List<dynamic> data = response.data["results"];
-      return data.map((json) => Location.fromJson(json)).toList();
+      final int totalPages = response.data["total_pages"];
+      return {
+        "pages": totalPages,
+        "results": data.map((json) => Location.fromJson(json)).toList(),
+      };
     } on DioException catch (e) {
       throw Exception("Failed to fetch Locations: ${e.response?.statusCode}");
     }

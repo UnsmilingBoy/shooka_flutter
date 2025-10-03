@@ -17,12 +17,32 @@ class OrganiztionsTab extends StatefulWidget {
 }
 
 class _OrganiztionsTabState extends State<OrganiztionsTab> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       context.read<GeneralProvider>().fetchOrganizations(page: 1);
     });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      // Trigger next page when near the end
+      final provider = context.read<GeneralProvider>();
+      if (!provider.fetchOrganizationsLoading) {
+        provider.orgNextPage();
+      }
+    }
   }
 
   String searchValue = "";
@@ -30,6 +50,9 @@ class _OrganiztionsTabState extends State<OrganiztionsTab> {
   @override
   Widget build(BuildContext context) {
     final organizations = context.watch<GeneralProvider>().organizations;
+    final generalProvider = context.watch<GeneralProvider>();
+
+    bool nextPageLoading = generalProvider.orgNextPageLoading;
     bool getLoading = context
         .watch<GeneralProvider>()
         .fetchOrganizationsLoading;
@@ -94,28 +117,40 @@ class _OrganiztionsTabState extends State<OrganiztionsTab> {
             child: getLoading
                 ? Center(child: Loading())
                 : organizations.isEmpty
-                ? Center(child: Text("مکانی یافت نشد."))
+                ? Center(child: Text("سازمانی یافت نشد."))
                 : ListView.builder(
-                    itemCount: organizations.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: OrgTile(
-                        onPressed: () => showMaterialModalBottomSheet(
-                          enableDrag: false,
-                          context: context,
-                          builder: (context) => AddOrgModal(
-                            isEdit: true,
-                            id: organizations[index].id,
-                            name: organizations[index].name,
-                            parent: organizations[index].administration,
+                    controller: _scrollController,
+                    itemCount: nextPageLoading
+                        ? organizations.length + 1
+                        : organizations.length,
+                    itemBuilder: (context, index) {
+                      if (index == organizations.length && nextPageLoading) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Center(child: Loading()),
+                        );
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: OrgTile(
+                          onPressed: () => showMaterialModalBottomSheet(
+                            enableDrag: false,
+                            context: context,
+                            builder: (context) => AddOrgModal(
+                              isEdit: true,
+                              id: organizations[index].id,
+                              name: organizations[index].name,
+                              parent: organizations[index].administration,
+                            ),
                           ),
+                          color: Theme.of(context).colorScheme.surface,
+                          orgName: organizations[index].name,
+                          orgParent: organizations[index].administration,
+                          borderRadius: 10,
                         ),
-                        color: Theme.of(context).colorScheme.surface,
-                        orgName: organizations[index].name,
-                        orgParent: organizations[index].administration,
-                        borderRadius: 10,
-                      ),
-                    ),
+                      );
+                    },
                   ),
           ),
         ],

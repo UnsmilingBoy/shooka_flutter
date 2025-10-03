@@ -17,20 +17,42 @@ class LocationsTab extends StatefulWidget {
 }
 
 class _LocationsTabState extends State<LocationsTab> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       context.read<GeneralProvider>().fetchLocations(page: 1);
     });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      // Trigger next page when near the end
+      final provider = context.read<GeneralProvider>();
+      if (!provider.fetchLocationsLoading) {
+        provider.locationsNextPage();
+      }
+    }
   }
 
   String searchValue = "";
 
   @override
   Widget build(BuildContext context) {
-    final locations = context.watch<GeneralProvider>().locations;
-    bool getLoading = context.watch<GeneralProvider>().fetchLocationsLoading;
+    final generalProvider = context.watch<GeneralProvider>();
+    final locations = generalProvider.locations;
+    bool getLoading = generalProvider.fetchLocationsLoading;
+    bool nextPageLoading = generalProvider.locationNextPageLoading;
 
     TextEditingController searchController = TextEditingController();
 
@@ -94,27 +116,38 @@ class _LocationsTabState extends State<LocationsTab> {
                 : locations.isEmpty
                 ? Center(child: Text("مکانی یافت نشد."))
                 : ListView.builder(
-                    itemCount: locations.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: LocationTile(
-                        onPressed: () => showMaterialModalBottomSheet(
-                          enableDrag: false,
-                          context: context,
-                          builder: (context) => AddLocationModal(
-                            isEdit: true,
-                            id: locations[index].id,
-                            city: locations[index].city,
-                            province: locations[index].province,
+                    controller: _scrollController,
+                    itemCount: nextPageLoading
+                        ? locations.length + 1
+                        : locations.length,
+                    itemBuilder: (context, index) {
+                      if (index == locations.length && nextPageLoading) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Center(child: Loading()),
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: LocationTile(
+                          onPressed: () => showMaterialModalBottomSheet(
+                            enableDrag: false,
+                            context: context,
+                            builder: (context) => AddLocationModal(
+                              isEdit: true,
+                              id: locations[index].id,
+                              city: locations[index].city,
+                              province: locations[index].province,
+                            ),
                           ),
-                        ),
 
-                        color: Theme.of(context).colorScheme.surface,
-                        city: locations[index].city,
-                        province: locations[index].province,
-                        borderRadius: 10,
-                      ),
-                    ),
+                          color: Theme.of(context).colorScheme.surface,
+                          city: locations[index].city,
+                          province: locations[index].province,
+                          borderRadius: 10,
+                        ),
+                      );
+                    },
                   ),
           ),
         ],
