@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -34,6 +35,7 @@ class AuthService {
 
     await storage.write(key: _kAccess, value: data['access']);
     await storage.write(key: _kRefresh, value: data['refresh']);
+    log("User id is: ${data["user_id"]}");
     await storage.write(key: _kUserId, value: data['user_id'].toString());
     return true;
   }

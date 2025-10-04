@@ -107,8 +107,6 @@ class ApiService {
       if (search != null) "search": search,
     };
 
-    log(queryParams.toString());
-
     try {
       final response = await dio.get(
         '/api/event-history/',
@@ -146,7 +144,7 @@ class ApiService {
   //
   // Fetch Device List
   //
-  Future<List<Device>> fetchDevices({
+  Future<dynamic> fetchDevices({
     required bool all,
     int? installer,
     String? organization,
@@ -174,7 +172,10 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
-        return data.map((json) => Device.fromJson(json)).toList();
+        return {
+          "data": data.map((json) => Device.fromJson(json)).toList(),
+          "headers": response.headers,
+        };
       } else {
         throw Exception('Failed to load devices');
       }

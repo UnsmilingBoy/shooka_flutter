@@ -37,6 +37,10 @@ class _MyHomePageState extends State<MyHomePage> {
     bool eventLoading = context.watch<EventProvider>().fetchLoading;
 
     final devices = context.watch<DeviceProvider>().devices;
+    final activeDevicesPercentage = context
+        .watch<DeviceProvider>()
+        .activeDevicesPercentage;
+
     bool deviceLoading = context.watch<DeviceProvider>().isLoading;
 
     return ProfileScaffold(
@@ -86,9 +90,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                 context,
                               ).colorScheme.secondary,
 
-                              percent: 25 / 27,
+                              percent: activeDevicesPercentage / 100,
                               radius: 40,
-                              center: Text("25/27"),
+                              center: Text("$activeDevicesPercentage%"),
                             ),
                           ],
                         ),

@@ -5,6 +5,7 @@ import 'package:shooka_flutter/services/dio_requests.dart';
 class DeviceProvider with ChangeNotifier {
   final ApiService api;
   List<Device> _devices = [];
+  int activeDevicesPercentage = 0;
   bool _isLoading = false;
 
   DeviceProvider({required this.api});
@@ -25,7 +26,7 @@ class DeviceProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _devices = await api.fetchDevices(
+      final response = await api.fetchDevices(
         all: all,
         administration: administration,
         city: city,
@@ -34,6 +35,15 @@ class DeviceProvider with ChangeNotifier {
         province: province,
         search: search,
       );
+
+      _devices = response["data"];
+      final percentHeader = response["headers"]?["device-connectivity-percent"];
+      if (percentHeader != null && percentHeader.isNotEmpty) {
+        activeDevicesPercentage =
+            double.tryParse(percentHeader[0])?.round() ?? 0;
+      } else {
+        activeDevicesPercentage = 0;
+      }
     } catch (e) {
       _devices = [];
       debugPrint("Error fetching devices: $e");
