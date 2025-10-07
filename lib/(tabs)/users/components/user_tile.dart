@@ -5,6 +5,7 @@ class UserTile extends StatelessWidget {
   final double? borderRadius;
   final String name;
   final String role;
+  final String imagePath;
   final Color? color;
   final String status;
   final VoidCallback? onPressed;
@@ -16,6 +17,7 @@ class UserTile extends StatelessWidget {
     required this.name,
     required this.role,
     required this.status,
+    required this.imagePath,
   });
 
   @override
@@ -26,9 +28,7 @@ class UserTile extends StatelessWidget {
       color: color,
       child: ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(
-          backgroundImage: AssetImage("assets/images/black_profile.webp"),
-        ),
+        leading: CircleAvatar(backgroundImage: NetworkImage(imagePath)),
         title: Row(
           spacing: 10,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

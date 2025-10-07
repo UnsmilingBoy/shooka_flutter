@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
+import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class AddUserModal extends StatefulWidget {
   final bool? editMode;
+  final int? id;
   final String? imageHref;
   final String? userName;
   final String? password;
@@ -25,6 +28,7 @@ class AddUserModal extends StatefulWidget {
     this.email,
     this.phoneNumber,
     this.name,
+    this.id,
   });
 
   @override
@@ -32,6 +36,49 @@ class AddUserModal extends StatefulWidget {
 }
 
 class _AddUserModalState extends State<AddUserModal> {
+  onPressedAdd(UserProvider userProvider) async {
+    if (nameController.text == "" ||
+        userNameController.text == "" ||
+        phoneNumberController.text == "" ||
+        passwordController.text == "" ||
+        repeatPasswordController.text == "") {
+      flatErrorToast(title: "لطفا همه ی مقادیر را وارد کنید.");
+    } else if (passwordController.text != repeatPasswordController.text) {
+      flatErrorToast(title: "تکرار رمزعبور اشتباه است.");
+    } else {
+      final status = await userProvider.addUser(
+        isActive: true,
+        name: nameController.text,
+        password: passwordController.text,
+        username: userNameController.text,
+      );
+
+      if (status >= 200 && status < 300) {
+        filledSuccessToast(title: "مکان با موفقیت اضافه شد.");
+      } else {
+        filledErrorToast(title: "خطایی در افزودن مکان رخ داد.");
+      }
+      Navigator.pop(context);
+    }
+  }
+
+  onPressedEdit(UserProvider userProvider) async {
+    final status = await userProvider.updateUserProfile(
+      id: widget.id ?? -1,
+      email: emailController.text,
+      name: nameController.text,
+      phoneNumber: phoneNumberController.text,
+      username: userNameController.text,
+    );
+
+    if (status >= 200 && status < 300) {
+      filledSuccessToast(title: "مکان با موفقیت ویرایش شد.");
+    } else {
+      filledErrorToast(title: "خطایی در ویرایش مکان رخ داد.");
+    }
+    Navigator.pop(context);
+  }
+
   //
   // Controllers
   //
@@ -63,9 +110,11 @@ class _AddUserModalState extends State<AddUserModal> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = context.watch<UserProvider>();
+
     final controllerList = [
       {
-        "controller": userNameController,
+        "controller": nameController,
         "label": "نام و نام خانوادگی:",
         "placeholder": "نام و نام خانوادگی",
       },
@@ -138,52 +187,64 @@ class _AddUserModalState extends State<AddUserModal> {
           padding: EdgeInsets.zero,
           itemCount: controllerList.length,
           shrinkWrap: true,
-          itemBuilder: (context, index) => Container(
-            margin: EdgeInsets.only(bottom: 10),
-            child: Outlinetextfieldwithlabel(
-              isPassword: (controllerList[index]["label"] as String).contains(
-                "رمزعبور",
+          itemBuilder: (context, index) {
+            if (widget.editMode == true &&
+                (controllerList[index]["label"] as String).contains("رمز")) {
+              return Container();
+            }
+            return Container(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Outlinetextfieldwithlabel(
+                isPassword: (controllerList[index]["label"] as String).contains(
+                  "رمزعبور",
+                ),
+                label: controllerList[index]["label"] as String,
+                controller:
+                    controllerList[index]["controller"]
+                        as TextEditingController,
+                placeHolder: controllerList[index]["placeholder"] as String,
               ),
-              label: controllerList[index]["label"] as String,
-              controller:
-                  controllerList[index]["controller"] as TextEditingController,
-              placeHolder: controllerList[index]["placeholder"] as String,
-            ),
-          ),
+            );
+          },
         ),
 
         //
         // Dropdown for role
         //
-        DropdownWithLabel(
-          placeholder: "انتخاب نقش",
-          label: "نقش کاربر:",
-          initialValue: selectedRole,
-          items: [
-            DropdownMenuItem(
-              value: "سرپرست",
-              alignment: AlignmentDirectional.centerEnd,
-              child: Text("سرپرست"),
-            ),
-            DropdownMenuItem(
-              value: "نصاب",
-              alignment: AlignmentDirectional.centerEnd,
-              child: Text("نصاب"),
-            ),
-          ],
-          onChanged: (value) {
-            setState(() {
-              selectedRole = value;
-            });
-          },
-        ),
+        // DropdownWithLabel(
+        //   placeholder: "انتخاب نقش",
+        //   label: "نقش کاربر:",
+        //   initialValue: selectedRole,
+        //   items: [
+        //     DropdownMenuItem(
+        //       value: "سرپرست",
+        //       alignment: AlignmentDirectional.centerEnd,
+        //       child: Text("سرپرست"),
+        //     ),
+        //     DropdownMenuItem(
+        //       value: "نصاب",
+        //       alignment: AlignmentDirectional.centerEnd,
+        //       child: Text("نصاب"),
+        //     ),
+        //   ],
+        //   onChanged: (value) {
+        //     setState(() {
+        //       selectedRole = value;
+        //     });
+        //   },
+        // ),
 
         //
         // Buttons
         //
         ModalBottomButtons(
+          loading: widget.editMode == true
+              ? userProvider.updateUserLoading
+              : userProvider.addLoading,
           saveText: widget.editMode == true ? "ویرایش کاربر" : "افزودن کاربر",
-          onSave: () => print("add user"),
+          onSave: widget.editMode == true
+              ? () => onPressedEdit(userProvider)
+              : () => onPressedAdd(userProvider),
         ),
       ],
     );

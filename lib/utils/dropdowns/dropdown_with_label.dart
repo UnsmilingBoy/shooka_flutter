@@ -37,36 +37,34 @@ class _DropdownWithLabelState extends State<DropdownWithLabel> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Container(
-                child: DropdownButtonFormField<String>(
-                  initialValue: widget.initialValue,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade700,
-                        width: 1,
-                      ), // default border
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade700,
-                        width: 1,
-                      ), // default border
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 13,
-                      horizontal: 5,
-                    ),
+              child: DropdownButtonFormField<String>(
+                initialValue: widget.initialValue,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade700,
+                      width: 1,
+                    ), // default border
                   ),
-                  items: widget.items,
-                  onChanged: widget.onChanged,
-                  hint: Text(
-                    widget.placeholder,
-                    style: Theme.of(context).textTheme.labelSmall,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade700,
+                      width: 1,
+                    ), // default border
                   ),
-                  style: Theme.of(context).textTheme.labelMedium,
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 13,
+                    horizontal: 5,
+                  ),
                 ),
+                items: widget.items,
+                onChanged: widget.onChanged,
+                hint: Text(
+                  widget.placeholder,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+                style: Theme.of(context).textTheme.labelMedium,
               ),
             ),
             if (widget.initialValue != null)

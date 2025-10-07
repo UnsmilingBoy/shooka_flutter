@@ -7,17 +7,146 @@ class UserProvider extends ChangeNotifier {
 
   UserProvider({required this.api});
 
+  // User / Users Variables
   User? _user;
   bool _loadUserLoading = false;
   bool _updateUserLoading = false;
   bool _changePasswordLoading = false;
+  bool _addLoading = false;
+  List<User> _users = [];
+  bool _fetchUsersLoading = false;
+  final bool _editUserLoading = false;
+  bool _usersNextPageLoading = false;
   String? _error;
+  int _usersTotalPages = 1;
+  int _usersPage = 1;
+  String? lastSearchedUser;
+  String? lastSelectedRole;
+  String? lastSelectedStatus;
 
+  // User / Users Getters
   User? get user => _user;
   bool get loadUserLoading => _loadUserLoading;
   bool get updateUserLoading => _updateUserLoading;
   bool get changePasswordLoading => _changePasswordLoading;
   String? get error => _error;
+  List<User> get users => _users;
+  bool get fetchUsersLoading => _fetchUsersLoading;
+  bool get editUserLoading => _editUserLoading;
+  bool get usersNextPageLoading => _usersNextPageLoading;
+  int get usersTotalPages => _usersTotalPages;
+  int get usersPage => _usersPage;
+  bool get addLoading => _addLoading;
+
+  //
+  // Fetch Locations
+  //
+  Future<void> fetchUsers({
+    required int page,
+    String? search,
+    String? role,
+    String? status,
+  }) async {
+    _usersPage = 1;
+    _fetchUsersLoading = true;
+
+    if (search != null) {
+      lastSearchedUser = search;
+    } else {
+      lastSearchedUser = null;
+    }
+
+    if (role != null) {
+      lastSelectedRole = role;
+    } else {
+      lastSelectedRole = null;
+    }
+
+    if (status != null) {
+      lastSelectedStatus = status;
+    } else {
+      lastSelectedStatus = null;
+    }
+
+    notifyListeners();
+
+    try {
+      print(search);
+      final result = await api.fetchUsersList(
+        page: page,
+        search: search,
+        role: role,
+        status: status,
+      );
+      _users = result["results"];
+      _usersTotalPages = result["pages"];
+    } catch (e) {
+      _users = [];
+      debugPrint("Error fetching users: $e");
+    } finally {
+      _fetchUsersLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Users Next Page
+  //
+  Future<void> usersNextPage() async {
+    if (_usersPage < _usersTotalPages) {
+      _usersPage++;
+      _usersNextPageLoading = true;
+      notifyListeners();
+
+      try {
+        final nextPageUsers = await api.fetchLocationsList(
+          page: _usersPage,
+          search: lastSearchedUser,
+        );
+        _users.addAll(
+          nextPageUsers["results"],
+        ); // append results to existing list
+      } catch (e) {
+        _users = [];
+        debugPrint("Error fetching users: $e");
+      } finally {
+        _usersNextPageLoading = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  //
+  // Add User
+  //
+  Future<int> addUser({
+    required String name,
+    required String username,
+    required String password,
+    required bool
+    isActive, //TODO: Need to add more parameters (apparently it has 2 apis)
+  }) async {
+    _addLoading = true;
+
+    notifyListeners();
+
+    try {
+      int status = await api.addUser(
+        name: name,
+        isActive: true,
+        password: password,
+        username: username,
+      );
+      return status;
+    } catch (e) {
+      print(e);
+      return -1;
+    } finally {
+      fetchUsers(page: 1);
+      _addLoading = false;
+      notifyListeners();
+    }
+  }
 
   //
   // Load user profile
@@ -40,27 +169,36 @@ class UserProvider extends ChangeNotifier {
   //
   // Update user profile
   //
-  Future<void> updateUserProfile({
+  Future<int> updateUserProfile({
     required String name,
     required String username,
     required String email,
     required String phoneNumber,
+    int? id,
   }) async {
     _updateUserLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      await api.updateUserProfile(
+      int status = await api.updateUserProfile(
         name: name,
+        id: id,
         username: username,
         email: email,
         phoneNumber: phoneNumber,
       );
+      return status;
     } catch (e) {
       _error = e.toString();
+      return -1;
     } finally {
-      loadUserProfile();
+      if (id == null) {
+        loadUserProfile();
+      } else {
+        fetchUsers(page: 1);
+      }
+
       _updateUserLoading = false;
       notifyListeners();
     }

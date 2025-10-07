@@ -37,8 +37,8 @@ class User {
       role: json['role'] ?? "بدون نقش",
       profileHref: json['profile_image'] ?? "",
       isActive: json['is_active'],
-      dateJoined: json['date_joined'],
-      lastLogin: json['last_login'],
+      dateJoined: json['date_joined'] ?? "",
+      lastLogin: json['last_login'] ?? "",
       phoneNumber: json["phone_number"] ?? "بدون شماره همراه",
     );
   }

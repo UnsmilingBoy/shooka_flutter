@@ -16,6 +16,43 @@ class ApiService {
   ApiService({required this.dio, required this.auth, required this.storage});
 
   //
+  // Fetch Users List
+  //
+  Future<dynamic> fetchUsersList({
+    required int page,
+    String? search,
+    String? role,
+    String? status,
+  }) async {
+    final queryParams = {
+      "page": page,
+      if (search != null) "search": search,
+      if (role != null) "role": role,
+      if (status != null) "status": status,
+    };
+
+    try {
+      final response = await dio.get(
+        '/api/users/',
+        queryParameters: queryParams,
+      );
+
+      log("${response.data}");
+
+      final List<dynamic> data = response.data["results"];
+
+      final int totalPages = response.data["total_pages"];
+
+      final usersList = data.map((json) => User.fromJson(json)).toList();
+      log("UUUUUUUUUUUUSEEEEEEEEEEEEERS:");
+
+      return {"pages": totalPages, "results": usersList};
+    } on DioException catch (e) {
+      throw Exception("Failed to Get Users List: ${e.response?.statusCode}");
+    }
+  }
+
+  //
   // Fetch User
   //
   Future<User> fetchUserProfile() async {
@@ -32,15 +69,43 @@ class ApiService {
   }
 
   //
+  // Add User
+  //
+  Future<int> addUser({
+    required String name,
+    required String username,
+    required String password,
+    required bool
+    isActive, //TODO: Need to add more parameters (apparently it has 2 apis)
+  }) async {
+    var body = {
+      "first_name": name,
+      "username": username,
+      "password": password,
+      "is_active": isActive,
+    };
+
+    log(body.toString());
+    try {
+      final response = await dio.post('/api/users/', data: body);
+      log(response.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to add user: ${e.response}");
+    }
+  }
+
+  //
   // Update User
   //
-  Future<void> updateUserProfile({
+  Future<int> updateUserProfile({
     required String name,
     required String username,
     required String email,
     required String phoneNumber,
+    int? id,
   }) async {
-    final userId = await storage.read(key: "userId");
+    final userId = id ?? await storage.read(key: "userId");
 
     var body = {
       "username": username,
@@ -55,6 +120,7 @@ class ApiService {
     try {
       final response = await dio.patch('/api/users/$userId/', data: body);
       log(response.toString());
+      return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception(
         "Failed to update user profile: ${e.response?.statusCode}",
