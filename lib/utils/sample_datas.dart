@@ -26,7 +26,7 @@ const devicesSampleData = [
   {"name": "موتورخانه 4", "status": "فعال", "city": "آمل", "device_id": 8},
 ];
 
-const logsSampleData = [
+const eventsSampleData = [
   {
     "title": "پیام ادمینپیام ادمینپیام ادمینپیام ادمینپیام ادمینپیام ادمین",
     "message": "سنسور دمای برگشت باید تعویض گردد",

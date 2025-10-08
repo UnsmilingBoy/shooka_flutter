@@ -4,11 +4,13 @@ class MyExpansionTile extends StatelessWidget {
   final String title;
   final List<Widget> children;
   final bool? initiallyExpanded;
+  final EdgeInsets? padding;
   const MyExpansionTile({
     super.key,
     required this.title,
     required this.children,
     this.initiallyExpanded,
+    this.padding,
   });
 
   @override
@@ -21,7 +23,8 @@ class MyExpansionTile extends StatelessWidget {
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded == true,
         tilePadding: EdgeInsets.symmetric(horizontal: 5),
-        childrenPadding: EdgeInsets.only(bottom: 10),
+        childrenPadding:
+            padding ?? EdgeInsets.only(bottom: 10, left: 15, right: 15),
         iconColor: Theme.of(context).colorScheme.secondary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),

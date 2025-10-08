@@ -288,6 +288,23 @@ class ApiService {
     }
   }
 
+  // //
+  // // Fetch Device Page Info
+  // //
+  // Future<Device> fetchDevicePageInfo({
+  //   required int id,
+  //   required String objectType,
+  // }) async {
+  //   try {
+  //     final response = await dio.get('/apiv2/device/retrieve-info/');
+
+  //     log(response.data.toString());
+  //     return Device.fromJson(response.data);
+  //   } on DioException catch (e) {
+  //     throw Exception("Failed to get user profile: ${e.response?.statusCode}");
+  //   }
+  // }
+
   //
   // Fetch Filter Options
   //
