@@ -7,11 +7,20 @@ class DeviceProvider with ChangeNotifier {
   List<Device> _devices = [];
   int activeDevicesPercentage = 0;
   bool _isLoading = false;
+  bool _addLoading = false;
+  int? lastSelectedInstaller;
+  String? lastSearchedText;
+  String? lastSelectedOrg;
+  String? lastSelectedAdmin;
+  String? lastSelectedProvince;
+  String? lastSelectedCity;
+  int filterCount = 0;
 
   DeviceProvider({required this.api});
 
   List<Device> get devices => _devices;
   bool get isLoading => _isLoading;
+  bool get addLoading => _addLoading;
 
   Future<void> loadDevices({
     required bool all,
@@ -23,6 +32,52 @@ class DeviceProvider with ChangeNotifier {
     String? search,
   }) async {
     _isLoading = true;
+
+    filterCount = 0;
+
+    // For fitering state
+    if (installer != null) {
+      lastSelectedInstaller = installer;
+      filterCount++;
+    } else {
+      lastSelectedInstaller = null;
+    }
+
+    if (organization != null) {
+      lastSelectedOrg = organization;
+      filterCount++;
+    } else {
+      lastSelectedOrg = null;
+    }
+
+    if (administration != null) {
+      lastSelectedAdmin = administration;
+      filterCount++;
+    } else {
+      lastSelectedAdmin = null;
+    }
+
+    if (province != null) {
+      lastSelectedProvince = province;
+      filterCount++;
+    } else {
+      lastSelectedProvince = null;
+    }
+
+    if (city != null) {
+      lastSelectedCity = city;
+      filterCount++;
+    } else {
+      lastSelectedCity = null;
+    }
+
+    if (search != null) {
+      lastSearchedText = search;
+    }
+
+    if (filterCount == 0 && search == null) {
+      lastSearchedText = null;
+    }
     notifyListeners();
 
     try {
@@ -49,6 +104,47 @@ class DeviceProvider with ChangeNotifier {
       debugPrint("Error fetching devices: $e");
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Add Device
+  //
+  Future<int> addDevice({
+    required String name,
+    required String serialNumber,
+    required String installationAddress,
+    required String engineRoomFeature,
+    required int location,
+    required int organization,
+    required bool deviceStatus,
+    required int createdBy,
+    required String latLong,
+  }) async {
+    _addLoading = true;
+
+    notifyListeners();
+
+    try {
+      int status = await api.addDevice(
+        createdBy: createdBy,
+        engineRoomFeature: engineRoomFeature,
+        installationAddress: installationAddress,
+        latLong: latLong,
+        location: location,
+        name: name,
+        organization: organization,
+        serialNumber: serialNumber,
+        status: deviceStatus,
+      );
+      return status;
+    } catch (e) {
+      print(e);
+      return -1;
+    } finally {
+      loadDevices(all: true);
+      _addLoading = false;
       notifyListeners();
     }
   }

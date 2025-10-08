@@ -58,7 +58,7 @@ class EventProvider with ChangeNotifier {
       lastSearchedText = search;
     }
 
-    if (filterCount == 0) {
+    if (filterCount == 0 && search == null) {
       lastSearchedText = null;
     }
 

@@ -229,6 +229,8 @@ class ApiService {
       if (search != null) "search": search,
     };
 
+    log("query params for devices are: $queryParams");
+
     try {
       final response = await dio.get(
         '/apiv2/devices-list/',
@@ -247,6 +249,42 @@ class ApiService {
       }
     } on DioException catch (e) {
       throw Exception("Failed to get user profile: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Add Device
+  //
+  Future<int> addDevice({
+    required String name,
+    required String serialNumber,
+    required String installationAddress,
+    required String engineRoomFeature,
+    required int location,
+    required int organization,
+    required bool status,
+    required int createdBy,
+    required String latLong,
+  }) async {
+    var body = {
+      "name": name,
+      "serialNumber": serialNumber,
+      "installationAddress": installationAddress,
+      "engineRoomFeature": engineRoomFeature,
+      "location": location,
+      "organization": organization,
+      "status": status,
+      "createdBy": createdBy,
+      "latLong": latLong,
+    };
+
+    log(body.toString());
+    try {
+      final response = await dio.post('/apiv2/device/add/', data: body);
+      log(response.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to add device: ${e.response}");
     }
   }
 

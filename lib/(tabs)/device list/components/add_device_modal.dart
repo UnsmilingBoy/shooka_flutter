@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
@@ -11,13 +13,22 @@ class AddDeviceModal extends StatefulWidget {
   State<AddDeviceModal> createState() => _AddDeviceModalState();
 }
 
-TextEditingController _nameController = TextEditingController();
-TextEditingController _serialNumberController = TextEditingController();
-TextEditingController locationController = TextEditingController();
-
 class _AddDeviceModalState extends State<AddDeviceModal> {
+  // TextFields
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _serialNumberController = TextEditingController();
+  TextEditingController locationController = TextEditingController();
+
+  // Dropdown Initial values
+  String? orgInitialValue;
+  String? installerInitialValue;
+  String? parentInitialValue;
+  String? provinceInitialValue;
+
   @override
   Widget build(BuildContext context) {
+    final generalProvider = context.watch<GeneralProvider>();
+
     final textfieldList = [
       {"label": "نام موتورخانه", "controller": _nameController},
       {"label": "شماره سریال موتورخانه", "controller": _serialNumberController},
@@ -25,7 +36,18 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
     ];
 
     final dropdownList = [
-      {"label": "نام سازمان", "items": []},
+      {
+        "label": "نام سازمان",
+        "items": (generalProvider.filters?["installers"] ?? [])
+            .map<DropdownMenuItem<String>>(
+              (installer) => DropdownMenuItem<String>(
+                value: installer["id"].toString(),
+                alignment: AlignmentDirectional.centerEnd,
+                child: Text(installer["installer"].toString()),
+              ),
+            )
+            .toList(),
+      },
       {"label": "ویژگی موتورخانه", "items": []},
       {"label": "شهر و استان", "items": []},
       {"label": "نصاب", "items": []},
