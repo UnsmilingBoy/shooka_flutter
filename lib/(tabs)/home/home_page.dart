@@ -252,34 +252,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             status: devices[index].status,
                           ),
                         ),
-
-                  //
-                  // Add Device Button
-                  //
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: ContainerButton(
-                      fillWidth: true,
-                      onPressed: () {
-                        Navigator.pushNamed(context, "/add_device");
-                      },
-                      padding: EdgeInsets.all(10),
-                      color: Theme.of(context).primaryColor,
-                      child: Row(
-                        spacing: 5,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add, color: Colors.white, size: 18),
-                          Text(
-                            "افزودن موتورخانه",
-                            style: Theme.of(
-                              context,
-                            ).textTheme.labelLarge?.apply(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

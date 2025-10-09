@@ -6,13 +6,19 @@ class Device {
   final int engineRoomFeature;
   final int location;
   final DeviceDetails details;
-  final bool? status;
+  final String status;
   final String administration;
   final String creator;
   final bool isConnected;
+  final String? address;
+  final String? city;
+  final String? province;
   final String createdAt; // Jalali date string
 
   Device({
+    required this.address,
+    required this.city,
+    required this.province,
     required this.id,
     required this.name,
     required this.organization,
@@ -20,7 +26,7 @@ class Device {
     required this.engineRoomFeature,
     required this.location,
     required this.details,
-    this.status,
+    required this.status,
     required this.administration,
     required this.creator,
     required this.isConnected,
@@ -36,11 +42,16 @@ class Device {
       engineRoomFeature: json['engine_room_feature'] ?? 0,
       location: json['location'] ?? 0,
       details: DeviceDetails.fromJson(json['details'] ?? {}),
-      status: json['status'], // can be true / false / null
+      status: json['status'] == true
+          ? "فعال"
+          : "غیرفعال", // can be true / false / null
       administration: json['administration'] ?? '',
       creator: json['creator'] ?? '',
       isConnected: json['is_connected'] ?? false,
       createdAt: json['created_at'] ?? '',
+      address: json["installation_address"] ?? "",
+      city: json["city"] ?? "",
+      province: json["province"] ?? "",
     );
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
 
@@ -11,19 +13,21 @@ class InstallationLocationInfo extends StatefulWidget {
 }
 
 class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
-  var installLocationInfoList = [
-    {"title": 'رابط اول', "value": '---'},
-    {"title": 'تلفن رابط اول', "value": 'خیر'},
-    {"title": 'رابط دوم', "value": '---'},
-    {"title": 'تلفن رابط دوم', "value": 'خیر'},
-    {"title": 'متراژ ساختمان', "value": '---'},
-    {"title": 'آدرس', "value": '07/20/1402'},
-    {"title": 'استان', "value": 'خیر'},
-    {"title": 'شهر', "value": 'خیر'},
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final completeData = context.watch<DeviceProvider>().completeDeviceInfo;
+    final basicData = context.watch<DeviceProvider>().device;
+
+    final installLocationInfoList = [
+      {"title": 'رابط اول', "value": completeData?.linkerPerson1},
+      {"title": 'تلفن رابط اول', "value": completeData?.phoneNumber1},
+      {"title": 'رابط دوم', "value": completeData?.linkerPerson2},
+      {"title": 'تلفن رابط دوم', "value": completeData?.phoneNumber2},
+      {"title": 'متراژ ساختمان', "value": completeData?.buildingMetrage},
+      {"title": 'آدرس', "value": basicData?.address},
+      {"title": 'استان', "value": basicData?.province},
+      {"title": 'شهر', "value": basicData?.city},
+    ];
     return MyExpansionTile(
       title: "اطلاعات محل نصب",
       children: [
@@ -55,7 +59,9 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
           width: double.infinity,
           height: 200,
           child: ImageWithCaption(
-            imagepath: "assets/images/views/Hirkan_1Boiler_1Pump_2Coil.png",
+            networkImagePath: completeData?.buildingImage,
+            localImagepath:
+                "assets/images/views/Hirkan_1Boiler_1Pump_2Coil.png",
             caption: "عکس ساختمان",
           ),
         ),

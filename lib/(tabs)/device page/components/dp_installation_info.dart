@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
 
@@ -10,16 +12,21 @@ class InstallationInfo extends StatefulWidget {
 }
 
 class _InstallationInfoState extends State<InstallationInfo> {
-  var installLocationInfoList = [
-    {"title": 'مدل دستگاه نصب شده', "value": '---'},
-    {"title": 'مدل مودم', "value": '---'},
-    {"title": 'نوع ارتباط', "value": '---'},
-    {"title": 'آیا مودم سیم‌کارت دارد؟', "value": 'خیر'},
-    {"title": 'تاریخ نصب', "value": '07/20/1402'},
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final completeData = context.watch<DeviceProvider>().completeDeviceInfo;
+
+    var installLocationInfoList = [
+      {
+        "title": 'مدل دستگاه نصب شده',
+        "value": completeData?.installedDeviceModel,
+      },
+      {"title": 'مدل مودم', "value": completeData?.modemModel},
+      {"title": 'نوع ارتباط', "value": completeData?.connectionType},
+      {"title": 'آیا مودم سیم‌کارت دارد؟', "value": completeData?.hasSimcard},
+      {"title": 'تاریخ نصب', "value": completeData?.installationDate},
+    ];
+
     return MyExpansionTile(
       title: "اطلاعات نصب",
       children: [
@@ -51,7 +58,7 @@ class _InstallationInfoState extends State<InstallationInfo> {
           width: double.infinity,
           height: 200,
           child: ImageWithCaption(
-            imagepath: "assets/images/views/Hirkan_1Boiler_1Pump_2Coil.png",
+            networkImagePath: completeData?.deviceSerialNumberImage,
             caption: "عکس شماره سریال دستگاه",
           ),
         ),

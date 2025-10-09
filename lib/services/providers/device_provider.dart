@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 
 class DeviceProvider with ChangeNotifier {
   final ApiService api;
+  DeviceProvider({required this.api});
+
   List<Device> _devices = [];
+  CompleteDeviceInfo? _completeDeviceInfo;
+  Device? _device;
   int activeDevicesPercentage = 0;
   bool _isLoading = false;
   bool _addLoading = false;
+  bool _completeInfoLoading = false;
   int? lastSelectedInstaller;
   String? lastSearchedText;
   String? lastSelectedOrg;
@@ -16,11 +22,12 @@ class DeviceProvider with ChangeNotifier {
   String? lastSelectedCity;
   int filterCount = 0;
 
-  DeviceProvider({required this.api});
-
   List<Device> get devices => _devices;
   bool get isLoading => _isLoading;
   bool get addLoading => _addLoading;
+  bool get completeInfoLoading => _completeInfoLoading;
+  CompleteDeviceInfo? get completeDeviceInfo => _completeDeviceInfo;
+  Device? get device => _device;
 
   Future<void> loadDevices({
     required bool all,
@@ -145,6 +152,41 @@ class DeviceProvider with ChangeNotifier {
     } finally {
       loadDevices(all: true);
       _addLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Load Basic Device Info
+  //
+  Future<void> loadBasicDeviceInfo({required int id}) async {
+    _completeInfoLoading = true;
+    notifyListeners();
+
+    try {} catch (e) {
+      print(e.toString());
+    } finally {
+      _completeInfoLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Load Complete Device Info
+  //
+  Future<void> loadCompleteDeviceInfo({required int id}) async {
+    _completeInfoLoading = true;
+    notifyListeners();
+
+    try {
+      _completeDeviceInfo = await api.fetchDevicePageInfo(id: id);
+      _device = await api.fetchBasicDeviceInfo(id: id);
+    } catch (e) {
+      print(e.toString());
+      _completeDeviceInfo = null;
+      _device = null;
+    } finally {
+      _completeInfoLoading = false;
       notifyListeners();
     }
   }

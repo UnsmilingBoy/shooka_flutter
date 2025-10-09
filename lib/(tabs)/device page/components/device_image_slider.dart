@@ -32,7 +32,10 @@ class _ImageSliderState extends State<ImageSlider> {
             return Builder(
               builder: (context) => ClipRRect(
                 borderRadius: BorderRadius.circular(5),
-                child: ImageWithCaption(imagepath: item, disableCaption: true),
+                child: ImageWithCaption(
+                  networkImagePath: item,
+                  disableCaption: true,
+                ),
               ),
             );
           }).toList(),

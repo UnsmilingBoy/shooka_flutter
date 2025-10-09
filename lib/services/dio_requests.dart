@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/models/location_data_class.dart';
@@ -178,7 +179,7 @@ class ApiService {
         '/api/event-history/',
         queryParameters: queryParams,
       );
-      log(response.data.toString());
+      log("BOOOOOOOOOOOOOOOOOOOOOOOOO${response.data}");
 
       final List<dynamic> data = all ? response.data : response.data["results"];
       return data.map((json) => Event.fromJson(json)).toList();
@@ -288,22 +289,40 @@ class ApiService {
     }
   }
 
-  // //
-  // // Fetch Device Page Info
-  // //
-  // Future<Device> fetchDevicePageInfo({
-  //   required int id,
-  //   required String objectType,
-  // }) async {
-  //   try {
-  //     final response = await dio.get('/apiv2/device/retrieve-info/');
+  //
+  // Fetch Device Basic Info
+  //
+  Future<Device> fetchBasicDeviceInfo({required int id}) async {
+    try {
+      final response = await dio.get('/apiv2/objects/device/$id/');
 
-  //     log(response.data.toString());
-  //     return Device.fromJson(response.data);
-  //   } on DioException catch (e) {
-  //     throw Exception("Failed to get user profile: ${e.response?.statusCode}");
-  //   }
-  // }
+      log(response.data.toString());
+      return Device.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get Basic Device Info: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Fetch Complete Device Page Info
+  //
+  Future<CompleteDeviceInfo> fetchDevicePageInfo({required int id}) async {
+    try {
+      final response = await dio.post(
+        '/apiv2/device/retrieve-info/',
+        data: {"device_id": id},
+      );
+
+      log(response.data.toString());
+      return CompleteDeviceInfo.fromJson(response.data["data"]);
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get Complete Device Info: ${e.response?.statusCode}",
+      );
+    }
+  }
 
   //
   // Fetch Filter Options

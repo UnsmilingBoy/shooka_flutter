@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/utils/consts/views_list.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
-import 'package:shooka_flutter/utils/sample_datas.dart';
 
 class DeviceInformation extends StatefulWidget {
   const DeviceInformation({super.key});
@@ -11,29 +14,19 @@ class DeviceInformation extends StatefulWidget {
 }
 
 class _DeviceInformationState extends State<DeviceInformation> {
-  var deviceInfoList = [
-    {"title": 'نام سازمان / خصوصی', "value": ''},
-    {"title": 'نام نهاد / خصوصی', "value": ''},
-    {"title": 'نام نصاب', "value": ''},
-    {"title": 'وضعیت', "value": ''},
-  ];
-
-  @override
-  void initState() {
-    deviceInfoList[0]["value"] = devicePageSampleData[0]["orgName"] as String;
-
-    deviceInfoList[1]["value"] = devicePageSampleData[0]["nahadName"] as String;
-
-    deviceInfoList[2]["value"] =
-        devicePageSampleData[0]["installerName"] as String;
-
-    deviceInfoList[3]["value"] = devicePageSampleData[0]["status"] as String;
-
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
+    final basicData = context.watch<DeviceProvider>().device;
+    final features = context.watch<GeneralProvider>().filters["features"];
+
+    var deviceInfoList = [
+      {"title": 'نام', "value": basicData?.name},
+      {"title": 'نام سازمان / خصوصی', "value": basicData?.organization},
+      {"title": 'نام نهاد / خصوصی', "value": basicData?.administration},
+      {"title": 'نام نصاب', "value": basicData?.creator},
+      {"title": 'وضعیت', "value": basicData?.status},
+    ];
+
     return MyExpansionTile(
       initiallyExpanded: true,
       title: "اطلاعات موتورخانه",
@@ -66,7 +59,10 @@ class _DeviceInformationState extends State<DeviceInformation> {
           width: double.infinity,
           height: 200,
           child: ImageWithCaption(
-            imagepath: "assets/images/views/Hirkan_1Boiler_1Pump_2Coil.png",
+            localImagepath: getMain3DViewById(
+              features: features,
+              id: basicData?.engineRoomFeature ?? 1,
+            ),
             caption: "نمای موتورخانه",
           ),
         ),

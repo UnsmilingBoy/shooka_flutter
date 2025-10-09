@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 class ImageWithCaption extends StatelessWidget {
-  final String imagepath;
+  final String? localImagepath;
+  final String? networkImagePath;
   final String? caption;
   final bool? disableCaption;
 
   const ImageWithCaption({
     super.key,
-    required this.imagepath,
     this.caption,
     this.disableCaption,
+    this.localImagepath,
+    this.networkImagePath,
   });
 
   @override
@@ -17,22 +19,18 @@ class ImageWithCaption extends StatelessWidget {
     return GestureDetector(
       onTap: () => showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          insetPadding: EdgeInsets.all(10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          contentPadding: EdgeInsets.zero,
-          content: Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(15),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
-            child: Column(
-              spacing: 15,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image(image: AssetImage(imagepath)),
-                if (disableCaption == null || disableCaption != true)
-                  Text(caption!),
-              ],
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(10),
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: InteractiveViewer(
+              clipBehavior: Clip.none,
+              minScale: 0.5,
+              maxScale: 4,
+              child: networkImagePath != null
+                  ? Image.network(networkImagePath!)
+                  : Image.asset(localImagepath!),
             ),
           ),
         ),
@@ -40,37 +38,41 @@ class ImageWithCaption extends StatelessWidget {
       child: Stack(
         children: [
           //
-          // View Image
+          // Image Preview
           //
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.asset(imagepath, fit: BoxFit.cover),
+              child: networkImagePath != null
+                  ? Image.network(networkImagePath!, fit: BoxFit.cover)
+                  : Image.asset(localImagepath!, fit: BoxFit.cover),
             ),
           ),
 
           //
-          // View Name
+          // Caption Overlay
           //
           if (disableCaption == null || disableCaption != true)
             Positioned(
               bottom: 0,
               left: 0,
-              right: 0, // <-- fill width
+              right: 0,
               child: Container(
-                padding: const EdgeInsets.all(8), // optional padding
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(150),
-                  borderRadius: BorderRadius.only(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(10),
                     bottomRight: Radius.circular(10),
                   ),
                 ),
                 child: Text(
+                  caption ?? '',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  caption!,
-                  style: Theme.of(context).textTheme.labelMedium,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelMedium?.copyWith(color: Colors.white),
                 ),
               ),
             ),

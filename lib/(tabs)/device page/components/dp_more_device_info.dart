@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 
 class MoreDeviceInfo extends StatefulWidget {
@@ -9,18 +11,35 @@ class MoreDeviceInfo extends StatefulWidget {
 }
 
 class _MoreDeviceInfoState extends State<MoreDeviceInfo> {
-  var installLocationInfoList = [
-    {"title": 'کاربری موتورخانه', "value": '---'},
-    {"title": 'آیا مبدل استخر / جکوزی / گرمایش از کف دارد؟', "value": 'خیر'},
-    {"title": 'تعداد دیگ ها', "value": '0'},
-    {"title": 'تعداد پمپ های سیرکوله', "value": '0'},
-    {"title": 'تعداد منابع کوئلی', "value": '0'},
-    {"title": 'تعداد پمپ های منابع کوئلی', "value": '0'},
-    {"title": 'تعداد پمپ های آبگرم مصرفی', "value": '0'},
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final completeData = context.watch<DeviceProvider>().completeDeviceInfo;
+
+    var installLocationInfoList = [
+      {"title": 'کاربری موتورخانه', "value": completeData?.usage},
+      {
+        "title": 'آیا مبدل استخر / جکوزی / گرمایش از کف دارد؟',
+        "value": completeData?.hasExchanger,
+      },
+      {"title": 'تعداد دیگ ها', "value": completeData?.numberOfBoilers},
+      {
+        "title": 'تعداد پمپ های سیرکوله',
+        "value": completeData?.numberOfCirculatingPumps,
+      },
+      {
+        "title": 'تعداد منابع کوئلی',
+        "value": completeData?.numberOfCoilSources,
+      },
+      {
+        "title": 'تعداد پمپ های منابع کوئلی',
+        "value": completeData?.numberOfCoilSourcesPumps,
+      },
+      {
+        "title": 'تعداد پمپ های آبگرم مصرفی',
+        "value": completeData?.numberOfHotWaterPumps,
+      },
+    ];
+
     return MyExpansionTile(
       title: "اطلاعات کاربری موتورخانه",
       children: [
