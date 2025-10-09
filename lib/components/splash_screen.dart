@@ -31,14 +31,14 @@ class _SplashPageState extends State<SplashPage> {
     if (token != null) {
       if (!JwtDecoder.isExpired(token)) {
         // Token still valid → go to home
-        await getHomePageData();
+        await getHomePageData(context);
         Navigator.pushReplacementNamed(context, "/home");
         return;
       } else {
         // Token expired → try to refresh
         final ok = await auth.tryRefreshToken();
         if (ok) {
-          await getHomePageData();
+          await getHomePageData(context);
           Navigator.pushReplacementNamed(context, "/home");
           return;
         }
@@ -47,14 +47,6 @@ class _SplashPageState extends State<SplashPage> {
 
     // No token OR refresh failed → go to login
     Navigator.pushReplacementNamed(context, "/login");
-  }
-
-  //
-  // Get HomePage Data
-  //
-  Future<void> getHomePageData() async {
-    await context.read<UserProvider>().loadUserProfile();
-    await context.read<GeneralProvider>().fetchFilters();
   }
 
   //
@@ -81,4 +73,12 @@ class _SplashPageState extends State<SplashPage> {
       ),
     );
   }
+}
+
+//
+// Get HomePage Data
+//
+Future<void> getHomePageData(BuildContext context) async {
+  await context.read<UserProvider>().loadUserProfile();
+  await context.read<GeneralProvider>().fetchFilters();
 }

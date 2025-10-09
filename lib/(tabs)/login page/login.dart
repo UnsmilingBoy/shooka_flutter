@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/components/splash_screen.dart';
 import 'package:shooka_flutter/services/auth_service.dart';
-import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/consts/error_codes.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
@@ -112,9 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                                     passwordController.text,
                                   );
                                   if (ok) {
-                                    await context
-                                        .read<UserProvider>()
-                                        .loadUserProfile();
+                                    await getHomePageData(context);
                                     Navigator.pushReplacementNamed(
                                       context,
                                       '/home',

@@ -79,6 +79,7 @@ class ApiService {
     required bool isActive,
     required String role,
     String? email,
+    String? profilePic,
   }) async {
     var isSuperUser = false;
     var isStaff = false;
@@ -100,7 +101,8 @@ class ApiService {
       "email": email,
       "is_superuser": isSuperUser,
       "is_staff": isStaff,
-      // "profile_image": "IMAGE"  TODO: ADD THIS
+      if (profilePic != null)
+        "profile_image": "data:image/jpeg;base64,$profilePic",
     };
 
     log(body.toString());
@@ -121,19 +123,25 @@ class ApiService {
     required String username,
     required String email,
     required String phoneNumber,
+    String? profilePic,
     int? id,
     String? role,
   }) async {
     final userId = id ?? await storage.read(key: "userId");
-    var isSuperUser = false;
-    var isStaff = false;
+    bool? isSuperUser;
+    bool? isStaff;
 
-    if (role == "superuser") {
-      isSuperUser = true;
-      isStaff = true;
-    } else if (role == "staff") {
-      isSuperUser = false;
-      isStaff = true;
+    if (role != null) {
+      if (role == "superuser") {
+        isSuperUser = true;
+        isStaff = true;
+      } else if (role == "staff") {
+        isSuperUser = false;
+        isStaff = true;
+      } else {
+        isSuperUser = false;
+        isStaff = false;
+      }
     }
 
     var body = {
@@ -142,11 +150,13 @@ class ApiService {
       "first_name": name,
       "last_name": "",
       "phone_number_update": phoneNumber,
+      if (profilePic != null)
+        "profile_image_base64": "data:image/jpeg;base64,$profilePic",
       "is_superuser": isSuperUser,
       "is_staff": isStaff,
     };
 
-    log(body.toString());
+    log("user update body: $body");
 
     try {
       final response = await dio.patch('/api/users/$userId/', data: body);

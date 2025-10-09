@@ -124,6 +124,7 @@ class UserProvider extends ChangeNotifier {
     required String password,
     required String phoneNumber,
     String? email,
+    String? profilePic,
     required bool isActive,
     required String role,
   }) async {
@@ -140,6 +141,7 @@ class UserProvider extends ChangeNotifier {
         username: username,
         email: email,
         phoneNumber: phoneNumber,
+        profilePic: profilePic,
       );
       return status;
     } catch (e) {
@@ -178,6 +180,7 @@ class UserProvider extends ChangeNotifier {
     required String username,
     required String email,
     required String phoneNumber,
+    String? profilePic,
     int? id,
     String? role,
   }) async {
@@ -192,6 +195,7 @@ class UserProvider extends ChangeNotifier {
         username: username,
         email: email,
         phoneNumber: phoneNumber,
+        profilePic: profilePic,
         role: role,
       );
       return status;

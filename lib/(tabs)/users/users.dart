@@ -139,6 +139,7 @@ class _UsersTabState extends State<UsersTab> {
                               email: users[index].email,
                               phoneNumber: users[index].phoneNumber,
                               name: users[index].firstName,
+                              imageHref: users[index].profileHref,
                               role: users[index].role,
                             ),
                           ),

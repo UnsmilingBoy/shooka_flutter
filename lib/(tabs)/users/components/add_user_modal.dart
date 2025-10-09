@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
@@ -38,6 +40,19 @@ class AddUserModal extends StatefulWidget {
 }
 
 class _AddUserModalState extends State<AddUserModal> {
+  //
+  // Get Image
+  //
+  String? _base64Image;
+  final _imageService = ImageService();
+
+  Future<void> _pickImage() async {
+    final base64 = await _imageService.pickAndConvertToBase64();
+    if (base64 != null) {
+      setState(() => _base64Image = base64);
+    }
+  }
+
   onPressedAdd(UserProvider userProvider) async {
     if (nameController.text == "" ||
         userNameController.text == "" ||
@@ -56,6 +71,7 @@ class _AddUserModalState extends State<AddUserModal> {
         phoneNumber: phoneNumberController.text,
         email: emailController.text,
         role: selectedRole!,
+        profilePic: _base64Image,
       );
 
       if (status >= 200 && status < 300) {
@@ -75,6 +91,7 @@ class _AddUserModalState extends State<AddUserModal> {
       phoneNumber: phoneNumberController.text,
       username: userNameController.text,
       role: selectedRole,
+      profilePic: _base64Image,
     );
 
     if (status >= 200 && status < 300) {
@@ -161,29 +178,38 @@ class _AddUserModalState extends State<AddUserModal> {
         //
         //  Profile Picture
         //
-        Stack(
-          children: [
-            CircleAvatar(
-              backgroundImage: AssetImage("assets/images/black_profile.webp"),
-              radius: 50,
-            ),
-            Positioned(
-              bottom: 2,
-              left: 4,
-              child: Container(
-                padding: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  border: BoxBorder.all(
-                    color: Theme.of(context).colorScheme.surface,
-                    width: 2,
-                  ),
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-                child: Icon(Icons.edit, size: 15),
+        GestureDetector(
+          onTap: () => _pickImage(),
+          child: Stack(
+            children: [
+              CircleAvatar(
+                backgroundImage: widget.editMode == false
+                    ? AssetImage("assets/images/black_profile.webp")
+                    : _base64Image != null
+                    ? MemoryImage(base64Decode(_base64Image!))
+                    : widget.imageHref != null
+                    ? NetworkImage(widget.imageHref!)
+                    : null,
+                radius: 50,
               ),
-            ),
-          ],
+              Positioned(
+                bottom: 2,
+                left: 4,
+                child: Container(
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    border: BoxBorder.all(
+                      color: Theme.of(context).colorScheme.surface,
+                      width: 2,
+                    ),
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                  child: Icon(Icons.edit, size: 15),
+                ),
+              ),
+            ],
+          ),
         ),
 
         //

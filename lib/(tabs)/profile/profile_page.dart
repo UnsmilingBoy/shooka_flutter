@@ -87,9 +87,22 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(bottom: 7.0),
-                          child: CircleAvatar(
-                            backgroundImage: NetworkImage(user!.profileHref),
-                            radius: 60,
+                          child: GestureDetector(
+                            onTap: () => showMaterialModalBottomSheet(
+                              enableDrag: false,
+                              context: context,
+                              builder: (context) => EditProfileModal(
+                                email: user.email,
+                                name: name,
+                                phoneNumber: user.phoneNumber,
+                                profileHref: user.profileHref,
+                                username: user.username,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              backgroundImage: NetworkImage(user!.profileHref),
+                              radius: 60,
+                            ),
                           ),
                         ),
                         Text(

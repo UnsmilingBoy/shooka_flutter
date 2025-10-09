@@ -34,6 +34,7 @@ void main() {
 
   final apiService = ApiService(dio: dio, auth: authService, storage: storage);
 
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
       providers: [
