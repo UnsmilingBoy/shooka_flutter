@@ -6,7 +6,7 @@ class User {
   final String lastName;
   final String role;
   final String profileHref;
-  final bool isActive;
+  final String isActive;
   final String dateJoined;
   final String lastLogin;
   final dynamic phoneNumber;
@@ -36,7 +36,7 @@ class User {
       lastName: json['last_name'] ?? "",
       role: json['role'] ?? "بدون نقش",
       profileHref: json['profile_image'] ?? "",
-      isActive: json['is_active'],
+      isActive: json['is_active'] == true ? "فعال" : "غیرفعال",
       dateJoined: json['date_joined'] ?? "",
       lastLogin: json['last_login'] ?? "",
       phoneNumber: json["phone_number"] ?? "بدون شماره همراه",

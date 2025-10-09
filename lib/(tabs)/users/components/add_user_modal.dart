@@ -54,9 +54,9 @@ class _AddUserModalState extends State<AddUserModal> {
       );
 
       if (status >= 200 && status < 300) {
-        filledSuccessToast(title: "مکان با موفقیت اضافه شد.");
+        filledSuccessToast(title: "کاربر با موفقیت اضافه شد.");
       } else {
-        filledErrorToast(title: "خطایی در افزودن مکان رخ داد.");
+        filledErrorToast(title: "خطایی در افزودن کاربر رخ داد.");
       }
       Navigator.pop(context);
     }
@@ -72,9 +72,9 @@ class _AddUserModalState extends State<AddUserModal> {
     );
 
     if (status >= 200 && status < 300) {
-      filledSuccessToast(title: "مکان با موفقیت ویرایش شد.");
+      filledSuccessToast(title: "کاربر با موفقیت ویرایش شد.");
     } else {
-      filledErrorToast(title: "خطایی در ویرایش مکان رخ داد.");
+      filledErrorToast(title: "خطایی در ویرایش کاربر رخ داد.");
     }
     Navigator.pop(context);
   }
@@ -209,7 +209,7 @@ class _AddUserModalState extends State<AddUserModal> {
         ),
 
         //
-        // Dropdown for role
+        // Dropdown for role //TODO: FIX THIS
         //
         // DropdownWithLabel(
         //   placeholder: "انتخاب نقش",
