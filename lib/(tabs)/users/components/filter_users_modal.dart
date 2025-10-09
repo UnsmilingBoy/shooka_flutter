@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 
 class FilterUsersModal extends StatefulWidget {
@@ -12,42 +15,48 @@ class FilterUsersModal extends StatefulWidget {
 
 class _FilterUsersModalState extends State<FilterUsersModal> {
   @override
+  void initState() {
+    super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    // Use provider fields for last selected values (if you add them)
+    roleInitialValue = userProvider.lastSelectedRole;
+    statusInitialValue = userProvider.lastSelectedStatus;
+  }
+
+  String? roleInitialValue;
+  String? statusInitialValue;
+
+  @override
   Widget build(BuildContext context) {
-    String? provinceInitialValue;
-    String? cityInitialValue;
+    final generalProvider = context.watch<GeneralProvider>();
+    final userProvider = context.read<UserProvider>();
 
     final filterOptions = [
       {
         "label": "نقش",
-        "items": [
-          DropdownMenuItem(
-            value: "سرپرست",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("سرپرست"),
-          ),
-          DropdownMenuItem(
-            value: "نصاب",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("نصاب"),
-          ),
-        ],
-        "initialValue": provinceInitialValue,
+        "items": (generalProvider.filters?["roles"] ?? [])
+            .map<DropdownMenuItem<String>>(
+              (role) => DropdownMenuItem<String>(
+                value: role,
+                alignment: AlignmentDirectional.centerEnd,
+                child: Text(role),
+              ),
+            )
+            .toList(),
+        "initialValue": roleInitialValue,
       },
       {
         "label": "وضعیت",
-        "items": [
-          DropdownMenuItem(
-            value: "سرپرست",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("سرپرست"),
-          ),
-          DropdownMenuItem(
-            value: "نصاب",
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text("نصاب"),
-          ),
-        ],
-        "initialValue": cityInitialValue,
+        "items": (generalProvider.filters?["status"] ?? [])
+            .map<DropdownMenuItem<String>>(
+              (status) => DropdownMenuItem<String>(
+                value: status,
+                alignment: AlignmentDirectional.centerEnd,
+                child: Text(status == "active" ? "فعال" : "غیرفعال"),
+              ),
+            )
+            .toList(),
+        "initialValue": statusInitialValue,
       },
     ];
 
@@ -63,8 +72,22 @@ class _FilterUsersModalState extends State<FilterUsersModal> {
           padding: EdgeInsets.all(0),
           itemCount: filterOptions.length,
           itemBuilder: (context, index) => DropdownWithLabel(
+            iconOnPressed: () => setState(() {
+              if (filterOptions[index]["label"] == "نقش") {
+                roleInitialValue = null;
+              } else if (filterOptions[index]["label"] == "وضعیت") {
+                statusInitialValue = null;
+              }
+            }),
             onChanged: (value) => setState(() {
+              // Update both the filterOptions and the actual state variables
               filterOptions[index]["initialValue"] = value;
+
+              if (filterOptions[index]["label"] == "نقش") {
+                roleInitialValue = value;
+              } else if (filterOptions[index]["label"] == "وضعیت") {
+                statusInitialValue = value;
+              }
             }),
             items:
                 filterOptions[index]["items"] as List<DropdownMenuItem<String>>,
@@ -79,7 +102,15 @@ class _FilterUsersModalState extends State<FilterUsersModal> {
         //
         ModalBottomButtons(
           saveText: "فیلتر",
-          onSave: () => print("filter user"),
+          onSave: () async {
+            Navigator.pop(context);
+            await userProvider.fetchUsers(
+              page: 1,
+              search: userProvider.lastSearchedUser,
+              role: roleInitialValue,
+              status: statusInitialValue,
+            );
+          },
         ),
       ],
     );

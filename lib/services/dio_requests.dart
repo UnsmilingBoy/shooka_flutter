@@ -45,7 +45,6 @@ class ApiService {
       final int totalPages = response.data["total_pages"];
 
       final usersList = data.map((json) => User.fromJson(json)).toList();
-      log("UUUUUUUUUUUUSEEEEEEEEEEEEERS:");
 
       return {"pages": totalPages, "results": usersList};
     } on DioException catch (e) {
@@ -76,14 +75,32 @@ class ApiService {
     required String name,
     required String username,
     required String password,
-    required bool
-    isActive, //TODO: Need to add more parameters (apparently it has 2 apis)
+    required String phoneNumber,
+    required bool isActive,
+    required String role,
+    String? email,
   }) async {
+    var isSuperUser = false;
+    var isStaff = false;
+
+    if (role == "superuser") {
+      isSuperUser = true;
+      isStaff = true;
+    } else if (role == "staff") {
+      isSuperUser = false;
+      isStaff = true;
+    }
+
     var body = {
       "first_name": name,
       "username": username,
       "password": password,
       "is_active": isActive,
+      "phone_number": phoneNumber,
+      "email": email,
+      "is_superuser": isSuperUser,
+      "is_staff": isStaff,
+      // "profile_image": "IMAGE"  TODO: ADD THIS
     };
 
     log(body.toString());
@@ -105,8 +122,19 @@ class ApiService {
     required String email,
     required String phoneNumber,
     int? id,
+    String? role,
   }) async {
     final userId = id ?? await storage.read(key: "userId");
+    var isSuperUser = false;
+    var isStaff = false;
+
+    if (role == "superuser") {
+      isSuperUser = true;
+      isStaff = true;
+    } else if (role == "staff") {
+      isSuperUser = false;
+      isStaff = true;
+    }
 
     var body = {
       "username": username,
@@ -114,6 +142,8 @@ class ApiService {
       "first_name": name,
       "last_name": "",
       "phone_number_update": phoneNumber,
+      "is_superuser": isSuperUser,
+      "is_staff": isStaff,
     };
 
     log(body.toString());

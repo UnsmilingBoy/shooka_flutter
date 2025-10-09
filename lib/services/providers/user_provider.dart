@@ -71,7 +71,6 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print(search);
       final result = await api.fetchUsersList(
         page: page,
         search: search,
@@ -123,8 +122,10 @@ class UserProvider extends ChangeNotifier {
     required String name,
     required String username,
     required String password,
-    required bool
-    isActive, //TODO: Need to add more parameters (apparently it has 2 apis)
+    required String phoneNumber,
+    String? email,
+    required bool isActive,
+    required String role,
   }) async {
     _addLoading = true;
 
@@ -134,8 +135,11 @@ class UserProvider extends ChangeNotifier {
       int status = await api.addUser(
         name: name,
         isActive: true,
+        role: role,
         password: password,
         username: username,
+        email: email,
+        phoneNumber: phoneNumber,
       );
       return status;
     } catch (e) {
@@ -175,6 +179,7 @@ class UserProvider extends ChangeNotifier {
     required String email,
     required String phoneNumber,
     int? id,
+    String? role,
   }) async {
     _updateUserLoading = true;
     _error = null;
@@ -187,6 +192,7 @@ class UserProvider extends ChangeNotifier {
         username: username,
         email: email,
         phoneNumber: phoneNumber,
+        role: role,
       );
       return status;
     } catch (e) {

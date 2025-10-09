@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
@@ -51,6 +53,9 @@ class _AddUserModalState extends State<AddUserModal> {
         name: nameController.text,
         password: passwordController.text,
         username: userNameController.text,
+        phoneNumber: phoneNumberController.text,
+        email: emailController.text,
+        role: selectedRole!,
       );
 
       if (status >= 200 && status < 300) {
@@ -69,6 +74,7 @@ class _AddUserModalState extends State<AddUserModal> {
       name: nameController.text,
       phoneNumber: phoneNumberController.text,
       username: userNameController.text,
+      role: selectedRole,
     );
 
     if (status >= 200 && status < 300) {
@@ -111,6 +117,7 @@ class _AddUserModalState extends State<AddUserModal> {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
+    final generalProvider = context.watch<GeneralProvider>();
 
     final controllerList = [
       {
@@ -211,28 +218,25 @@ class _AddUserModalState extends State<AddUserModal> {
         //
         // Dropdown for role //TODO: FIX THIS
         //
-        // DropdownWithLabel(
-        //   placeholder: "انتخاب نقش",
-        //   label: "نقش کاربر:",
-        //   initialValue: selectedRole,
-        //   items: [
-        //     DropdownMenuItem(
-        //       value: "سرپرست",
-        //       alignment: AlignmentDirectional.centerEnd,
-        //       child: Text("سرپرست"),
-        //     ),
-        //     DropdownMenuItem(
-        //       value: "نصاب",
-        //       alignment: AlignmentDirectional.centerEnd,
-        //       child: Text("نصاب"),
-        //     ),
-        //   ],
-        //   onChanged: (value) {
-        //     setState(() {
-        //       selectedRole = value;
-        //     });
-        //   },
-        // ),
+        DropdownWithLabel(
+          placeholder: "انتخاب نقش",
+          label: "نقش کاربر:",
+          initialValue: selectedRole,
+          items: (generalProvider.filters?["roles"] ?? [])
+              .map<DropdownMenuItem<String>>(
+                (role) => DropdownMenuItem<String>(
+                  value: role,
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(role),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            setState(() {
+              selectedRole = value;
+            });
+          },
+        ),
 
         //
         // Buttons
