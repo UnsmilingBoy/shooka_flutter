@@ -5,6 +5,7 @@ import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 import 'package:shooka_flutter/utils/switches/my_switch.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textformfield.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
@@ -82,13 +83,15 @@ class _AddEventModalState extends State<AddEventModal> {
               //
               DropdownWithLabel(
                 initialValue: selectedDevice,
+                iconOnPressed: () => setState(() {
+                  selectedDevice = null;
+                }),
                 items: generalProvider.filters?["devices"]
                     .map<DropdownMenuItem<String>>(
-                      (device) => DropdownMenuItem<String>(
+                      (device) => myDropDownItem(
                         value: device["name"]
                             .toString(), // ensure it's a String
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: Text(device["name"].toString()),
+                        label: device["name"].toString(),
                       ),
                     )
                     .toList(),
@@ -107,6 +110,9 @@ class _AddEventModalState extends State<AddEventModal> {
               //
               DropdownWithLabel(
                 initialValue: selectedEventTitle,
+                iconOnPressed: () => setState(() {
+                  selectedEventTitle = null;
+                }),
                 onChanged: (value) {
                   setState(() {
                     selectedEventTitle = value;
@@ -114,11 +120,10 @@ class _AddEventModalState extends State<AddEventModal> {
                 },
                 items: generalProvider.filters?["event_title"]
                     .map<DropdownMenuItem<String>>(
-                      (eventTitle) => DropdownMenuItem<String>(
+                      (eventTitle) => myDropDownItem(
                         value: eventTitle["title"]
                             .toString(), // ensure it's a String
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: Text(eventTitle["title"].toString()),
+                        label: eventTitle["title"].toString(),
                       ),
                     )
                     .toList(),

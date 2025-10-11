@@ -7,6 +7,7 @@ import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
@@ -183,7 +184,8 @@ class _AddUserModalState extends State<AddUserModal> {
           child: Stack(
             children: [
               CircleAvatar(
-                backgroundImage: widget.editMode == false
+                backgroundImage:
+                    widget.editMode == false || widget.editMode == null
                     ? AssetImage("assets/images/black_profile.webp")
                     : _base64Image != null
                     ? MemoryImage(base64Decode(_base64Image!))
@@ -247,14 +249,13 @@ class _AddUserModalState extends State<AddUserModal> {
         DropdownWithLabel(
           placeholder: "انتخاب نقش",
           label: "نقش کاربر:",
+          iconOnPressed: () => setState(() {
+            selectedRole = null;
+          }),
           initialValue: selectedRole,
           items: (generalProvider.filters?["roles"] ?? [])
               .map<DropdownMenuItem<String>>(
-                (role) => DropdownMenuItem<String>(
-                  value: role,
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(role),
-                ),
+                (role) => myDropDownItem(value: role, label: role),
               )
               .toList(),
           onChanged: (value) {

@@ -5,6 +5,7 @@ import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 
 class FilterUsersModal extends StatefulWidget {
   const FilterUsersModal({super.key});
@@ -36,11 +37,7 @@ class _FilterUsersModalState extends State<FilterUsersModal> {
         "label": "نقش",
         "items": (generalProvider.filters?["roles"] ?? [])
             .map<DropdownMenuItem<String>>(
-              (role) => DropdownMenuItem<String>(
-                value: role,
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(role),
-              ),
+              (role) => myDropDownItem(value: role, label: role),
             )
             .toList(),
         "initialValue": roleInitialValue,
@@ -49,10 +46,9 @@ class _FilterUsersModalState extends State<FilterUsersModal> {
         "label": "وضعیت",
         "items": (generalProvider.filters?["status"] ?? [])
             .map<DropdownMenuItem<String>>(
-              (status) => DropdownMenuItem<String>(
+              (status) => myDropDownItem(
                 value: status,
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(status == "active" ? "فعال" : "غیرفعال"),
+                label: status == "active" ? "فعال" : "غیرفعال",
               ),
             )
             .toList(),

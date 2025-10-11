@@ -318,19 +318,18 @@ class ApiService {
     required int location,
     required int organization,
     required bool status,
-    required int createdBy,
     required String latLong,
   }) async {
     var body = {
       "name": name,
-      "serialNumber": serialNumber,
-      "installationAddress": installationAddress,
-      "engineRoomFeature": engineRoomFeature,
+      "serial_number": serialNumber,
+      "installation_address": installationAddress,
+      "engine_room_feature": engineRoomFeature,
       "location": location,
       "organization": organization,
       "status": status,
-      "createdBy": createdBy,
-      "latLong": latLong,
+      "lat_long": latLong,
+      "details": {"name": name, "serial_number": serialNumber},
     };
 
     log(body.toString());
@@ -339,7 +338,8 @@ class ApiService {
       log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
-      throw Exception("Failed to add device: ${e.response}");
+      log("Failed to add device: ${e.response}");
+      return e.response!.statusCode!;
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
@@ -125,8 +126,6 @@ class DeviceProvider with ChangeNotifier {
     required String engineRoomFeature,
     required int location,
     required int organization,
-    required bool deviceStatus,
-    required int createdBy,
     required String latLong,
   }) async {
     _addLoading = true;
@@ -135,7 +134,6 @@ class DeviceProvider with ChangeNotifier {
 
     try {
       int status = await api.addDevice(
-        createdBy: createdBy,
         engineRoomFeature: engineRoomFeature,
         installationAddress: installationAddress,
         latLong: latLong,
@@ -143,12 +141,12 @@ class DeviceProvider with ChangeNotifier {
         name: name,
         organization: organization,
         serialNumber: serialNumber,
-        status: deviceStatus,
+        status: true,
       );
       return status;
-    } catch (e) {
+    } on DioException catch (e) {
       print(e);
-      return -1;
+      return e.response!.statusCode!;
     } finally {
       loadDevices(all: true);
       _addLoading = false;

@@ -7,6 +7,7 @@ import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 
 class FilterDeviceModal extends StatefulWidget {
   const FilterDeviceModal({super.key});
@@ -45,10 +46,9 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         "label": "نصاب",
         "items": (generalProvider.filters?["installers"] ?? [])
             .map<DropdownMenuItem<String>>(
-              (installer) => DropdownMenuItem<String>(
+              (installer) => myDropDownItem(
                 value: installer["id"].toString(),
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(installer["installer"].toString()),
+                label: installer["installer"].toString(),
               ),
             )
             .toList(),
@@ -58,10 +58,9 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         "label": "سازمان",
         "items": (generalProvider.filters?["organizations"] ?? [])
             .map<DropdownMenuItem<String>>(
-              (organization) => DropdownMenuItem<String>(
+              (organization) => myDropDownItem(
                 value: organization["organization"].toString(),
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(organization["organization"].toString()),
+                label: organization["organization"].toString(),
               ),
             )
             .toList(),
@@ -71,10 +70,9 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         "label": "وزارت‌خانه",
         "items": (generalProvider.filters?["administration"] ?? [])
             .map<DropdownMenuItem<String>>(
-              (administration) => DropdownMenuItem<String>(
+              (administration) => myDropDownItem(
                 value: administration["administration"].toString(),
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(administration["administration"].toString()),
+                label: administration["administration"].toString(),
               ),
             )
             .toList(),
@@ -84,10 +82,9 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         "label": "استان",
         "items": (generalProvider.filters?["locations"] ?? [])
             .map<DropdownMenuItem<String>>(
-              (location) => DropdownMenuItem<String>(
+              (location) => myDropDownItem(
                 value: location["location"][0].toString(),
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(location["location"][0].toString()),
+                label: location["location"][0].toString(),
               ),
             )
             .toList(),
@@ -97,10 +94,9 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         "label": "شهر",
         "items": (generalProvider.filters?["locations"] ?? [])
             .map<DropdownMenuItem<String>>(
-              (location) => DropdownMenuItem<String>(
+              (location) => myDropDownItem(
                 value: location["location"][1].toString(),
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(location["location"][1].toString()),
+                label: location["location"][1].toString(),
               ),
             )
             .toList(),

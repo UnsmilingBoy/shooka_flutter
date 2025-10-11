@@ -8,6 +8,7 @@ import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 
 class FilterEventModal extends StatefulWidget {
   const FilterEventModal({super.key});
@@ -59,10 +60,9 @@ class _FilterEventModalState extends State<FilterEventModal> {
           }),
           items: (generalProvider.filters?["event_title"] ?? [])
               .map<DropdownMenuItem<String>>(
-                (title) => DropdownMenuItem<String>(
+                (title) => myDropDownItem(
                   value: title["title"].toString(),
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(title["title"].toString()),
+                  label: title["title"].toString(),
                 ),
               )
               .toList(),
@@ -78,10 +78,9 @@ class _FilterEventModalState extends State<FilterEventModal> {
           }),
           items: (generalProvider.filters?["installers"] ?? [])
               .map<DropdownMenuItem<String>>(
-                (creator) => DropdownMenuItem<String>(
+                (creator) => myDropDownItem(
                   value: creator["id"].toString(),
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(creator["installer"].toString()),
+                  label: creator["installer"].toString(),
                 ),
               )
               .toList(),
@@ -103,10 +102,9 @@ class _FilterEventModalState extends State<FilterEventModal> {
           }),
           items: (generalProvider.filters?["devices"] ?? [])
               .map<DropdownMenuItem<String>>(
-                (device) => DropdownMenuItem<String>(
+                (device) => myDropDownItem(
                   value: device["id"].toString(),
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(device["name"].toString()),
+                  label: device["name"].toString(),
                 ),
               )
               .toList(),

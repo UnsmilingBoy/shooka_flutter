@@ -100,7 +100,7 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
 
       try {
-        final nextPageUsers = await api.fetchLocationsList(
+        final nextPageUsers = await api.fetchUsersList(
           page: _usersPage,
           search: lastSearchedUser,
         );

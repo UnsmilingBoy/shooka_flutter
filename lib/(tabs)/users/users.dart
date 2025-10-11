@@ -26,6 +26,7 @@ class _UsersTabState extends State<UsersTab> {
     Future.microtask(() {
       context.read<UserProvider>().fetchUsers(page: 1);
     });
+
     _scrollController.addListener(_onScroll);
   }
 

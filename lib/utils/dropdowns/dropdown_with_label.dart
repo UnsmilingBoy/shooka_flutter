@@ -38,6 +38,7 @@ class _DropdownWithLabelState extends State<DropdownWithLabel> {
           children: [
             Expanded(
               child: DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: widget.initialValue,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
