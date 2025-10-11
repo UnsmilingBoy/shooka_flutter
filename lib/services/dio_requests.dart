@@ -116,6 +116,20 @@ class ApiService {
   }
 
   //
+  // Delete User
+  //
+  Future<int> deleteUser({required int id}) async {
+    try {
+      final response = await dio.delete('/api/users/$id/');
+
+      log(response.data.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to delete user: ${e.response?.statusCode}");
+    }
+  }
+
+  //
   // Update User
   //
   Future<int> updateUserProfile({

@@ -13,6 +13,7 @@ class UserProvider extends ChangeNotifier {
   bool _updateUserLoading = false;
   bool _changePasswordLoading = false;
   bool _addLoading = false;
+  bool _deleteUserLoading = false;
   List<User> _users = [];
   bool _fetchUsersLoading = false;
   final bool _editUserLoading = false;
@@ -34,6 +35,7 @@ class UserProvider extends ChangeNotifier {
   bool get fetchUsersLoading => _fetchUsersLoading;
   bool get editUserLoading => _editUserLoading;
   bool get usersNextPageLoading => _usersNextPageLoading;
+  bool get deleteUserLoading => _deleteUserLoading;
   int get usersTotalPages => _usersTotalPages;
   int get usersPage => _usersPage;
   bool get addLoading => _addLoading;
@@ -150,6 +152,26 @@ class UserProvider extends ChangeNotifier {
     } finally {
       fetchUsers(page: 1);
       _addLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Delete User
+  //
+  Future<int> deleteUser({required int id}) async {
+    _deleteUserLoading = true;
+    notifyListeners();
+
+    try {
+      int status = await api.deleteUser(id: id);
+      return status;
+    } catch (e) {
+      _error = e.toString();
+      return -1;
+    } finally {
+      fetchUsers(page: 1);
+      _deleteUserLoading = false;
       notifyListeners();
     }
   }
