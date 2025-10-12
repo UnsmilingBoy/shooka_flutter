@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/basic%20device%20info/complete_dp_basic_info.dart';
+import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/consts/views_list.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
 
-class DeviceInformation extends StatefulWidget {
-  const DeviceInformation({super.key});
+class BasicDeviceInformation extends StatefulWidget {
+  const BasicDeviceInformation({super.key});
 
   @override
-  State<DeviceInformation> createState() => _DeviceInformationState();
+  State<BasicDeviceInformation> createState() => _BasicDeviceInformationState();
 }
 
-class _DeviceInformationState extends State<DeviceInformation> {
+class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
   @override
   Widget build(BuildContext context) {
+    final deviceProvider = context.watch<DeviceProvider>();
     final basicData = context.watch<DeviceProvider>().device;
     final features = context.watch<GeneralProvider>().filters["features"];
 
@@ -30,6 +34,10 @@ class _DeviceInformationState extends State<DeviceInformation> {
     return MyExpansionTile(
       initiallyExpanded: true,
       title: "اطلاعات موتورخانه",
+      completeOnPressed: () => showMaterialModalBottomSheet(
+        context: context,
+        builder: (context) => CompleteDpBasicInfo(),
+      ),
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),

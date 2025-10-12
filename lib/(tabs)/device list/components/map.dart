@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MapPickerModal extends StatefulWidget {
   const MapPickerModal({super.key});
@@ -12,6 +13,58 @@ class MapPickerModal extends StatefulWidget {
 class _MapPickerModalState extends State<MapPickerModal> {
   LatLng? selectedLocation;
   final MapController _mapController = MapController();
+  bool _isLocating = false;
+
+  Future<void> _goToCurrentLocation() async {
+    setState(() => _isLocating = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          // Permissions are denied, next time you could try
+          // requesting permissions again (this is also where
+          // Android's shouldShowRequestPermissionRationale
+          // returned true.)
+          setState(() => _isLocating = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission denied')),
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => _isLocating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Location permissions are permanently denied, we cannot request permissions.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final Position pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      );
+      final LatLng point = LatLng(pos.latitude, pos.longitude);
+
+      setState(() {
+        selectedLocation = point;
+      });
+
+      // Animate map to location
+      _mapController.move(point, 15);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to get location: $e')));
+    } finally {
+      setState(() => _isLocating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +134,40 @@ class _MapPickerModalState extends State<MapPickerModal> {
                   color: Theme.of(context).colorScheme.error,
                   size: 20,
                 ),
+              ),
+            ),
+          ),
+
+          // Current location button (bottom-left)
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: GestureDetector(
+              onTap: _goToCurrentLocation,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: _isLocating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        Icons.my_location,
+                        color: Theme.of(context).primaryColor,
+                        size: 22,
+                      ),
               ),
             ),
           ),

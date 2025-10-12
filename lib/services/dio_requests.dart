@@ -379,13 +379,98 @@ class ApiService {
   }
 
   //
+  // Update Complete Device Info
+  //
+  Future<int> updateCompleteDeviceInfo({
+    // DEVICE ID
+    required int deviceId,
+    // Location Public Info
+    String? phoneNumber1,
+    String? phoneNumber2,
+    String? linkerPerson1,
+    String? linkerPerson2,
+    int? buildingMetrage,
+    int? meterSubscriptionNumber,
+    String? buildingImage, // base64
+    // Engineroom Public Info
+    String? usage, // both, heating, cooling
+    bool? hasExchanger,
+    int? numberOfPoolExchangers,
+    int? numberOfJaccuziExchangers,
+    int? numberOfFloorHeatingExchangers,
+    int? numberOfBoilers,
+    int? numberOfCirculatingPumps,
+    int? numberOfCoilSources,
+    int? numberOfCoilSourcesPumps,
+    int? numberOfHotWaterPumps,
+    // Installation Info
+    String? installedDeviceModel, // 4relays, 8relays, 16relays
+    String? connectionType, // internet, simcard
+    String? modemModel,
+    bool? hasSimcard,
+    String? modemSimcardNumber,
+    String? installationDate, // "1404-07-13 12:02:42"
+    String? deviceSerialNumberImage, // base64
+    String? modemSimcardSerialNumberImage, // base64
+    // Engineroom Images
+    List<String>? images, // base64
+  }) async {
+    dynamic body = {
+      // DEVICE ID
+      "device_id": 3,
+      // Location Public Info
+      "phone_number1": phoneNumber1,
+      "phone_number2": phoneNumber2,
+      "linker_person1": linkerPerson1,
+      "linker_person2": linkerPerson2,
+      "building_metrage": buildingMetrage,
+      "meter_subscription_number": meterSubscriptionNumber,
+      "building_image": "data:image/jpeg;base64,$buildingImage",
+      // Engineroom Public Info
+      "usage": usage,
+      "has_exchanger": hasExchanger,
+      "number_of_pool_exchangers": numberOfPoolExchangers,
+      "number_of_jaccuzi_exchangers": numberOfJaccuziExchangers,
+      "number_of_floor_heating_exchangers": numberOfFloorHeatingExchangers,
+      "number_of_boilers": numberOfBoilers,
+      "number_of_circulating_pumps": numberOfCirculatingPumps,
+      "number_of_coil_sources": numberOfCoilSources,
+      "number_of_coil_sources_pumps": numberOfCoilSourcesPumps,
+      "number_of_hot_water_pumps": numberOfHotWaterPumps,
+      // Installation Info
+      "installed_device_model": installedDeviceModel,
+      "connection_type": connectionType,
+      "modem_model": modemModel,
+      "has_simcard": hasSimcard,
+      "modem_simcard_number": modemSimcardNumber,
+      "installation_date": installationDate,
+      "device_serial_number_image":
+          "data:image/jpeg;base64,$deviceSerialNumberImage",
+      "modem_simcard_serial_number_image":
+          "data:image/png;base64,$modemSimcardSerialNumberImage",
+      // Engineroom Images
+      "images": images,
+    };
+
+    log(body.toString());
+    try {
+      final response = await dio.post('/apiv2/device/edit-info/', data: body);
+      log(response.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      log("Failed to update device: ${e.response}");
+      return e.response!.statusCode!;
+    }
+  }
+
+  //
   // Fetch Filter Options
   //
   Future<dynamic> fetchFilters() async {
     try {
       final response = await dio.get('/apiv2/get_option_for_insert/');
 
-      log("boooooooooooooooo${response.data}");
+      log("${response.data}");
       return response.data;
     } on DioException catch (e) {
       throw Exception(

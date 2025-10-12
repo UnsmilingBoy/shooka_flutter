@@ -75,139 +75,127 @@ class _AddEventModalState extends State<AddEventModal> {
       title: "رویداد جدید",
       isLongList: true,
       children: [
-        SingleChildScrollView(
-          child: Column(
-            children: [
-              //
-              // Select Device Dropdown
-              //
-              DropdownWithLabel(
-                initialValue: selectedDevice,
-                iconOnPressed: () => setState(() {
-                  selectedDevice = null;
-                }),
-                items: generalProvider.filters?["devices"]
-                    .map<DropdownMenuItem<String>>(
-                      (device) => myDropDownItem(
-                        value: device["name"]
-                            .toString(), // ensure it's a String
-                        label: device["name"].toString(),
-                      ),
-                    )
-                    .toList(),
-
-                onChanged: (value) {
-                  setState(() {
-                    selectedDevice = value;
-                  });
-                },
-                label: "موتورخانه",
-                placeholder: "انتخاب موتورخانه...",
-              ),
-
-              //
-              // Select Title Dropdown
-              //
-              DropdownWithLabel(
-                initialValue: selectedEventTitle,
-                iconOnPressed: () => setState(() {
-                  selectedEventTitle = null;
-                }),
-                onChanged: (value) {
-                  setState(() {
-                    selectedEventTitle = value;
-                  });
-                },
-                items: generalProvider.filters?["event_title"]
-                    .map<DropdownMenuItem<String>>(
-                      (eventTitle) => myDropDownItem(
-                        value: eventTitle["title"]
-                            .toString(), // ensure it's a String
-                        label: eventTitle["title"].toString(),
-                      ),
-                    )
-                    .toList(),
-                label: "عنوان",
-                placeholder: "انتخاب عنوان...",
-              ),
-
-              //
-              // List of Other prompts
-              //
-              ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.symmetric(vertical: 5),
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: addEventPrompts.length,
-                itemBuilder: (context, index) => AddEventPromptTiles(
-                  label: addEventPrompts[index]["label"] as String,
-                  controller:
-                      addEventPrompts[index]["controller"]
-                          as TextEditingController,
-                  switchValue: addEventPrompts[index]["switchValue"] as bool,
-                  onSwitchChanged: (value) {
-                    setState(() {
-                      addEventPrompts[index]["switchValue"] = value;
-                    });
-                  },
+        DropdownWithLabel(
+          initialValue: selectedDevice,
+          iconOnPressed: () => setState(() {
+            selectedDevice = null;
+          }),
+          items: generalProvider.filters?["devices"]
+              .map<DropdownMenuItem<String>>(
+                (device) => myDropDownItem(
+                  value: device["name"].toString(), // ensure it's a String
+                  label: device["name"].toString(),
                 ),
-              ),
+              )
+              .toList(),
 
-              //
-              // Buttons
-              //
-              ModalBottomButtons(
-                saveText: "افزودن گزارش",
-                loading: eventProvider.addLoading,
-                onSave: () async {
-                  // Checking if atleast one of the switches is selected.
-                  final allFalse = addEventPrompts.every(
-                    (item) => item["switchValue"] == false,
-                  );
+          onChanged: (value) {
+            setState(() {
+              selectedDevice = value;
+            });
+          },
+          label: "موتورخانه",
+          placeholder: "انتخاب موتورخانه...",
+        ),
 
-                  // Ensure every required parameter is selected and provided.
-                  if (selectedDevice == null) {
-                    flatErrorToast(title: "موتورخانه ای انتخاب نشده است.");
-                  } else if (selectedEventTitle == null) {
-                    flatErrorToast(title: "عنوانی انتخاب نشده است.");
-                  } else if (allFalse) {
-                    flatErrorToast(
-                      title: "حداقل یکی از گزینه های گزارش را انتخاب کنید.",
-                    );
-                  } else {
-                    //
-                    // Reading and adding events
-                    //
-                    List eventsList = [];
-                    for (var event in addEventPrompts) {
-                      if (event["switchValue"] == true) {
-                        eventsList.add({
-                          "category": event["label"],
-                          "is_checked": true,
-                          "text": event["controller"].text,
-                        });
-                      }
-                    }
+        //
+        // Select Title Dropdown
+        //
+        DropdownWithLabel(
+          initialValue: selectedEventTitle,
+          iconOnPressed: () => setState(() {
+            selectedEventTitle = null;
+          }),
+          onChanged: (value) {
+            setState(() {
+              selectedEventTitle = value;
+            });
+          },
+          items: generalProvider.filters?["event_title"]
+              .map<DropdownMenuItem<String>>(
+                (eventTitle) => myDropDownItem(
+                  value: eventTitle["title"].toString(), // ensure it's a String
+                  label: eventTitle["title"].toString(),
+                ),
+              )
+              .toList(),
+          label: "عنوان",
+          placeholder: "انتخاب عنوان...",
+        ),
 
-                    final status = await eventProvider.addEvent(
-                      device: selectedDevice ?? "",
-                      title: selectedEventTitle ?? "",
-                      events: eventsList,
-                    );
-
-                    if (status == 201) {
-                      filledSuccessToast(title: 'رویداد با موفقیت اضافه شد.');
-                    } else {
-                      filledErrorToast(
-                        title: 'خطایی در اضافه کردن رویداد رخ داده است.',
-                      );
-                    }
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-            ],
+        //
+        // List of Other prompts
+        //
+        ListView.builder(
+          shrinkWrap: true,
+          padding: EdgeInsets.symmetric(vertical: 5),
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: addEventPrompts.length,
+          itemBuilder: (context, index) => AddEventPromptTiles(
+            label: addEventPrompts[index]["label"] as String,
+            controller:
+                addEventPrompts[index]["controller"] as TextEditingController,
+            switchValue: addEventPrompts[index]["switchValue"] as bool,
+            onSwitchChanged: (value) {
+              setState(() {
+                addEventPrompts[index]["switchValue"] = value;
+              });
+            },
           ),
+        ),
+
+        //
+        // Buttons
+        //
+        ModalBottomButtons(
+          saveText: "افزودن گزارش",
+          loading: eventProvider.addLoading,
+          onSave: () async {
+            // Checking if atleast one of the switches is selected.
+            final allFalse = addEventPrompts.every(
+              (item) => item["switchValue"] == false,
+            );
+
+            // Ensure every required parameter is selected and provided.
+            if (selectedDevice == null) {
+              flatErrorToast(title: "موتورخانه ای انتخاب نشده است.");
+            } else if (selectedEventTitle == null) {
+              flatErrorToast(title: "عنوانی انتخاب نشده است.");
+            } else if (allFalse) {
+              flatErrorToast(
+                title: "حداقل یکی از گزینه های گزارش را انتخاب کنید.",
+              );
+            } else {
+              //
+              // Reading and adding events
+              //
+              List eventsList = [];
+              for (var event in addEventPrompts) {
+                if (event["switchValue"] == true) {
+                  eventsList.add({
+                    "category": event["label"],
+                    "is_checked": true,
+                    "text": event["controller"].text,
+                  });
+                }
+              }
+
+              final status = await eventProvider.addEvent(
+                device: selectedDevice ?? "",
+                title: selectedEventTitle ?? "",
+                events: eventsList,
+              );
+
+              if (status == 201) {
+                filledSuccessToast(title: 'رویداد با موفقیت اضافه شد.');
+              } else {
+                filledErrorToast(
+                  title: 'خطایی در اضافه کردن رویداد رخ داده است.',
+                );
+              }
+              Navigator.pop(context);
+            }
+          },
         ),
       ],
     );

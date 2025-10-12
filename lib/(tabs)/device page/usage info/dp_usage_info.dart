@@ -3,14 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 
-class MoreDeviceInfo extends StatefulWidget {
-  const MoreDeviceInfo({super.key});
+class UsageInfo extends StatefulWidget {
+  const UsageInfo({super.key});
 
   @override
-  State<MoreDeviceInfo> createState() => _MoreDeviceInfoState();
+  State<UsageInfo> createState() => _UsageInfoState();
 }
 
-class _MoreDeviceInfoState extends State<MoreDeviceInfo> {
+class _UsageInfoState extends State<UsageInfo> {
   @override
   Widget build(BuildContext context) {
     final completeData = context.watch<DeviceProvider>().completeDeviceInfo;

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shooka_flutter/(tabs)/device%20page/components/device_image_slider.dart';
-import 'package:shooka_flutter/(tabs)/device%20page/components/dp_device_information.dart';
-import 'package:shooka_flutter/(tabs)/device%20page/components/dp_installation_location_info.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/device%20images/components/device_image_slider.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/basic%20device%20info/dp_basic_info.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/location%20info/dp_installation_location_info.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/components/dp_events.dart';
-import 'package:shooka_flutter/(tabs)/device%20page/components/dp_installation_info.dart';
-import 'package:shooka_flutter/(tabs)/device%20page/components/dp_more_device_info.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/installation%20info/dp_installation_info.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/usage%20info/dp_usage_info.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
@@ -63,7 +63,7 @@ class _DevicePageState extends State<DevicePage> {
                   //
                   // Device Information Tile
                   //
-                  DeviceInformation(),
+                  BasicDeviceInformation(),
 
                   //
                   //  Install Location Info
@@ -73,7 +73,7 @@ class _DevicePageState extends State<DevicePage> {
                   //
                   //  More Device Info
                   //
-                  MoreDeviceInfo(),
+                  UsageInfo(),
 
                   //
                   // Installation Info

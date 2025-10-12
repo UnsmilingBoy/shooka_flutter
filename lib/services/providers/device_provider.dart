@@ -8,6 +8,7 @@ class DeviceProvider with ChangeNotifier {
   final ApiService api;
   DeviceProvider({required this.api});
 
+  // State
   List<Device> _devices = [];
   CompleteDeviceInfo? _completeDeviceInfo;
   Device? _device;
@@ -15,6 +16,7 @@ class DeviceProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _addLoading = false;
   bool _completeInfoLoading = false;
+  bool _updateCompleteInfoLoading = false;
   int? lastSelectedInstaller;
   String? lastSearchedText;
   String? lastSelectedOrg;
@@ -23,11 +25,13 @@ class DeviceProvider with ChangeNotifier {
   String? lastSelectedCity;
   int filterCount = 0;
 
+  // Getters
   List<Device> get devices => _devices;
   bool get isLoading => _isLoading;
   bool get addLoading => _addLoading;
   bool get completeInfoLoading => _completeInfoLoading;
   CompleteDeviceInfo? get completeDeviceInfo => _completeDeviceInfo;
+  bool get updateCompleteInfoLoading => _updateCompleteInfoLoading;
   Device? get device => _device;
 
   Future<void> loadDevices({
@@ -185,6 +189,87 @@ class DeviceProvider with ChangeNotifier {
       _device = null;
     } finally {
       _completeInfoLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  //  Update Complete Device Info
+  //
+  Future<int> updateCompleteDeviceInfo({
+    // DEVICE ID
+    required int deviceId,
+    // Location Public Info
+    String? phoneNumber1,
+    String? phoneNumber2,
+    String? linkerPerson1,
+    String? linkerPerson2,
+    int? buildingMetrage,
+    int? meterSubscriptionNumber,
+    String? buildingImage, // base64
+    // Engineroom Public Info
+    String? usage, // both, heating, cooling
+    bool? hasExchanger,
+    int? numberOfPoolExchangers,
+    int? numberOfJaccuziExchangers,
+    int? numberOfFloorHeatingExchangers,
+    int? numberOfBoilers,
+    int? numberOfCirculatingPumps,
+    int? numberOfCoilSources,
+    int? numberOfCoilSourcesPumps,
+    int? numberOfHotWaterPumps,
+    // Installation Info
+    String? installedDeviceModel, // 4relays, 8relays, 16relays
+    String? connectionType, // internet, simcard
+    String? modemModel,
+    bool? hasSimcard,
+    String? modemSimcardNumber,
+    String? installationDate, // "1404-07-13 12:02:42"
+    String? deviceSerialNumberImage, // base64
+    String? modemSimcardSerialNumberImage, // base64
+    // Engineroom Images
+    List<String>? images, // base64
+  }) async {
+    _updateCompleteInfoLoading = true;
+    notifyListeners();
+
+    try {
+      int status = await api.updateCompleteDeviceInfo(
+        deviceId: deviceId,
+        phoneNumber1: phoneNumber1,
+        phoneNumber2: phoneNumber2,
+        linkerPerson1: linkerPerson1,
+        linkerPerson2: linkerPerson2,
+        buildingMetrage: buildingMetrage,
+        meterSubscriptionNumber: meterSubscriptionNumber,
+        buildingImage: buildingImage,
+        usage: usage,
+        hasExchanger: hasExchanger,
+        numberOfPoolExchangers: numberOfPoolExchangers,
+        numberOfCoilSources: numberOfCoilSources,
+        numberOfCoilSourcesPumps: numberOfCoilSourcesPumps,
+        numberOfHotWaterPumps: numberOfHotWaterPumps,
+        installedDeviceModel: installedDeviceModel,
+        connectionType: connectionType,
+        modemModel: modemModel,
+        modemSimcardNumber: modemSimcardNumber,
+        hasSimcard: hasSimcard,
+        installationDate: installationDate,
+        numberOfBoilers: numberOfBoilers,
+        numberOfCirculatingPumps: numberOfCirculatingPumps,
+        numberOfFloorHeatingExchangers: numberOfFloorHeatingExchangers,
+        numberOfJaccuziExchangers: numberOfJaccuziExchangers,
+        deviceSerialNumberImage: deviceSerialNumberImage,
+        modemSimcardSerialNumberImage: modemSimcardSerialNumberImage,
+        images: images,
+      );
+      return status;
+    } on DioException catch (e) {
+      print(e);
+      return e.response!.statusCode!;
+    } finally {
+      loadCompleteDeviceInfo(id: deviceId);
+      _updateCompleteInfoLoading = false;
       notifyListeners();
     }
   }
