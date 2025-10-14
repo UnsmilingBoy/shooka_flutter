@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
-import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 
 class LocationTile extends StatelessWidget {
   final double? borderRadius;
@@ -42,14 +41,14 @@ class LocationTile extends StatelessWidget {
             ),
           ],
         ),
-        trailing: MyIconButton(
-          onPressed: iconOnPressed,
-          padding: EdgeInsets.all(3),
-          child: Icon(
-            Icons.delete_forever_rounded,
-            color: Theme.of(context).colorScheme.error,
-          ),
-        ),
+        // trailing: MyIconButton(
+        //   onPressed: iconOnPressed,
+        //   padding: EdgeInsets.all(3),
+        //   child: Icon(
+        //     Icons.delete_forever_rounded,
+        //     color: Theme.of(context).colorScheme.error,
+        //   ),
+        // ),
         subtitle: Text("استان: $province"),
         subtitleTextStyle: Theme.of(
           context,

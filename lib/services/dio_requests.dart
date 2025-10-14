@@ -422,8 +422,9 @@ class ApiService {
   // Update Complete Device Info
   //
   Future<int> updateCompleteDeviceInfo({
-    // DEVICE ID
+    // DEVICE ID and Object Type
     required int deviceId,
+    required String objectType,
     // Location Public Info
     String? phoneNumber1,
     String? phoneNumber2,
@@ -455,46 +456,64 @@ class ApiService {
     // Engineroom Images
     List<String>? images, // base64
   }) async {
-    dynamic body = {
+    late dynamic body;
+    if (objectType == "locationpublicinfo") {
+      body = {
+        // Location Public Info
+        "phone_number1": phoneNumber1,
+        "phone_number2": phoneNumber2,
+        "linker_person1": linkerPerson1,
+        "linker_person2": linkerPerson2,
+        "building_metrage": buildingMetrage,
+        "meter_subscription_number": meterSubscriptionNumber,
+        "building_image": "data:image/jpeg;base64,$buildingImage",
+      };
+    } else if (objectType == "engineroompublicinfo") {
+      body = {
+        // Engineroom Public Info
+        "usage": usage,
+        "has_exchanger": hasExchanger,
+        "number_of_pool_exchangers": numberOfPoolExchangers,
+        "number_of_jaccuzi_exchangers": numberOfJaccuziExchangers,
+        "number_of_floor_heating_exchangers": numberOfFloorHeatingExchangers,
+        "number_of_boilers": numberOfBoilers,
+        "number_of_circulating_pumps": numberOfCirculatingPumps,
+        "number_of_coil_sources": numberOfCoilSources,
+        "number_of_coil_sources_pumps": numberOfCoilSourcesPumps,
+        "number_of_hot_water_pumps": numberOfHotWaterPumps,
+      };
+    } else if (objectType == "installationinfo") {
+      body = {
+        // Installation Info
+        "installed_device_model": installedDeviceModel,
+        "connection_type": connectionType,
+        "modem_model": modemModel,
+        "has_simcard": hasSimcard,
+        "modem_simcard_number": modemSimcardNumber,
+        "installation_date": installationDate,
+        "device_serial_number_image":
+            "data:image/jpeg;base64,$deviceSerialNumberImage",
+        "modem_simcard_serial_number_image":
+            "data:image/png;base64,$modemSimcardSerialNumberImage",
+      };
+    }
+
+    dynamic sendBody = {
       // DEVICE ID
       "device_id": 3,
-      // Location Public Info
-      "phone_number1": phoneNumber1,
-      "phone_number2": phoneNumber2,
-      "linker_person1": linkerPerson1,
-      "linker_person2": linkerPerson2,
-      "building_metrage": buildingMetrage,
-      "meter_subscription_number": meterSubscriptionNumber,
-      "building_image": "data:image/jpeg;base64,$buildingImage",
-      // Engineroom Public Info
-      "usage": usage,
-      "has_exchanger": hasExchanger,
-      "number_of_pool_exchangers": numberOfPoolExchangers,
-      "number_of_jaccuzi_exchangers": numberOfJaccuziExchangers,
-      "number_of_floor_heating_exchangers": numberOfFloorHeatingExchangers,
-      "number_of_boilers": numberOfBoilers,
-      "number_of_circulating_pumps": numberOfCirculatingPumps,
-      "number_of_coil_sources": numberOfCoilSources,
-      "number_of_coil_sources_pumps": numberOfCoilSourcesPumps,
-      "number_of_hot_water_pumps": numberOfHotWaterPumps,
-      // Installation Info
-      "installed_device_model": installedDeviceModel,
-      "connection_type": connectionType,
-      "modem_model": modemModel,
-      "has_simcard": hasSimcard,
-      "modem_simcard_number": modemSimcardNumber,
-      "installation_date": installationDate,
-      "device_serial_number_image":
-          "data:image/jpeg;base64,$deviceSerialNumberImage",
-      "modem_simcard_serial_number_image":
-          "data:image/png;base64,$modemSimcardSerialNumberImage",
+
+      ...body,
+
       // Engineroom Images
       "images": images,
     };
 
-    log(body.toString());
+    log(sendBody.toString());
     try {
-      final response = await dio.post('/apiv2/device/edit-info/', data: body);
+      final response = await dio.post(
+        '/apiv2/device/edit-info/',
+        data: sendBody,
+      );
       log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {

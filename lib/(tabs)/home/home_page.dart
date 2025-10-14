@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: Column(
                           spacing: 10,
                           children: [
-                            Text("موتورخانه های فعال"),
+                            Text("موتورخانه های متصل"),
                             CircularPercentIndicator(
                               lineWidth: 7,
                               animation: true,

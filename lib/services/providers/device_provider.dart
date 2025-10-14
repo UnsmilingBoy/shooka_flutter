@@ -245,8 +245,10 @@ class DeviceProvider with ChangeNotifier {
   //  Update Complete Device Info
   //
   Future<int> updateCompleteDeviceInfo({
+    // TODO: SPLIT THIS FUNCTION FOR EVERY OBJECT TYPE
     // DEVICE ID
     required int deviceId,
+    required String objectType,
     // Location Public Info
     String? phoneNumber1,
     String? phoneNumber2,
@@ -284,6 +286,7 @@ class DeviceProvider with ChangeNotifier {
     try {
       int status = await api.updateCompleteDeviceInfo(
         deviceId: deviceId,
+        objectType: objectType,
         phoneNumber1: phoneNumber1,
         phoneNumber2: phoneNumber2,
         linkerPerson1: linkerPerson1,

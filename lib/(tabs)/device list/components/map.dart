@@ -78,7 +78,7 @@ class _MapPickerModalState extends State<MapPickerModal> {
               mapController: _mapController,
               options: MapOptions(
                 initialCenter: LatLng(35.6892, 51.3890), // Tehran default
-                initialZoom: 13,
+                initialZoom: 16,
                 onTap: (tapPosition, point) {
                   setState(() => selectedLocation = point);
                 },

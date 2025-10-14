@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
-import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 
 class OrgTile extends StatelessWidget {
   final double? borderRadius;
@@ -40,13 +39,13 @@ class OrgTile extends StatelessWidget {
             ),
           ],
         ),
-        trailing: MyIconButton(
-          padding: EdgeInsets.all(3),
-          child: Icon(
-            Icons.delete_forever_rounded,
-            color: Theme.of(context).colorScheme.error,
-          ),
-        ),
+        // trailing: MyIconButton(
+        //   padding: EdgeInsets.all(3),
+        //   child: Icon(
+        //     Icons.delete_forever_rounded,
+        //     color: Theme.of(context).colorScheme.error,
+        //   ),
+        // ),
         subtitle: Text("نهاد: $orgParent"),
         subtitleTextStyle: Theme.of(
           context,
