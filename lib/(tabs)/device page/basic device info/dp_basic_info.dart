@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/basic%20device%20info/complete_dp_basic_info.dart';
-import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/consts/views_list.dart';
@@ -19,7 +18,7 @@ class BasicDeviceInformation extends StatefulWidget {
 class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
   @override
   Widget build(BuildContext context) {
-    final deviceProvider = context.watch<DeviceProvider>();
+    // final deviceProvider = context.watch<DeviceProvider>();
     final basicData = context.watch<DeviceProvider>().device;
     final features = context.watch<GeneralProvider>().filters["features"];
 

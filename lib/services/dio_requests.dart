@@ -233,7 +233,7 @@ class ApiService {
         '/api/event-history/',
         queryParameters: queryParams,
       );
-      log("BOOOOOOOOOOOOOOOOOOOOOOOOO${response.data}");
+      log("${response.data}");
 
       final List<dynamic> data = all ? response.data : response.data["results"];
       return data.map((json) => Event.fromJson(json)).toList();
@@ -319,6 +319,7 @@ class ApiService {
     required int organization,
     required bool status,
     required String latLong,
+    required List<String> images,
   }) async {
     var body = {
       "name": name,
@@ -330,6 +331,7 @@ class ApiService {
       "status": status,
       "lat_long": latLong,
       "details": {"name": name, "serial_number": serialNumber},
+      "images": images,
     };
 
     log(body.toString());
@@ -339,6 +341,44 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       log("Failed to add device: ${e.response}");
+      return e.response!.statusCode!;
+    }
+  }
+
+  //
+  // Edit Device
+  //
+  Future<int> editDevice({
+    required int id,
+    String? name,
+    String? serialNumber,
+    String? installationAddress,
+    String? engineRoomFeature,
+    int? location,
+    int? organization,
+    bool? status,
+    String? latLong,
+  }) async {
+    var body = {
+      "id": id,
+      if (name != null) "name": name,
+      if (serialNumber != null) "serial_number": serialNumber,
+      if (installationAddress != null)
+        "installation_address": installationAddress,
+      if (engineRoomFeature != null) "engine_room_feature": engineRoomFeature,
+      if (location != null) "location": location,
+      if (organization != null) "organization": organization,
+      if (status != null) "status": status,
+      if (latLong != null) "lat_long": latLong,
+    };
+
+    log(body.toString());
+    try {
+      final response = await dio.post('/apiv2/device/edit/', data: body);
+      log(response.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      log("Failed to edit device: ${e.response}");
       return e.response!.statusCode!;
     }
   }

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class InstallationLocationInfo extends StatefulWidget {
   const InstallationLocationInfo({super.key});
@@ -17,6 +19,18 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
   Widget build(BuildContext context) {
     final completeData = context.watch<DeviceProvider>().completeDeviceInfo;
     final basicData = context.watch<DeviceProvider>().device;
+    LatLng? deviceLatLng;
+    final latLongStr = basicData?.latLong;
+    if (latLongStr != null && latLongStr.isNotEmpty) {
+      final latLongParts = latLongStr.split(',');
+      if (latLongParts.length == 2) {
+        final lat = double.tryParse(latLongParts[0].trim());
+        final lng = double.tryParse(latLongParts[1].trim());
+        if (lat != null && lng != null) {
+          deviceLatLng = LatLng(lat, lng);
+        }
+      }
+    }
 
     final installLocationInfoList = [
       {"title": 'رابط اول', "value": completeData?.linkerPerson1},
@@ -55,6 +69,46 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
             ),
           ),
         ),
+
+        if (deviceLatLng != null)
+          Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
+            height: 180,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: deviceLatLng,
+                  initialZoom: 14,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=o0BuBFntqzU1CidazAOK',
+                    userAgentPackageName: 'com.example.app',
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: deviceLatLng,
+                        width: 40,
+                        height: 40,
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                          size: 32,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           height: 200,

@@ -131,13 +131,60 @@ class DeviceProvider with ChangeNotifier {
     required int location,
     required int organization,
     required String latLong,
+    required List<String> images,
+  }) async {
+    _addLoading = true;
+
+    notifyListeners();
+
+    // Prepend the base64 prefix to each image
+    final List<String> formattedImages = images
+        .map((img) => "data:image/png;base64,$img")
+        .toList();
+
+    try {
+      int status = await api.addDevice(
+        engineRoomFeature: engineRoomFeature,
+        installationAddress: installationAddress,
+        latLong: latLong,
+        location: location,
+        name: name,
+        organization: organization,
+        serialNumber: serialNumber,
+        status: true,
+        images: formattedImages, // Use the new list here
+      );
+      return status;
+    } on DioException catch (e) {
+      print(e);
+      return e.response!.statusCode!;
+    } finally {
+      loadDevices(all: true);
+      _addLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Edit Device
+  //
+  Future<int> editDevice({
+    required int id,
+    String? name,
+    String? serialNumber,
+    String? installationAddress,
+    String? engineRoomFeature,
+    int? location,
+    int? organization,
+    String? latLong,
   }) async {
     _addLoading = true;
 
     notifyListeners();
 
     try {
-      int status = await api.addDevice(
+      int status = await api.editDevice(
+        id: id,
         engineRoomFeature: engineRoomFeature,
         installationAddress: installationAddress,
         latLong: latLong,
@@ -153,6 +200,7 @@ class DeviceProvider with ChangeNotifier {
       return e.response!.statusCode!;
     } finally {
       loadDevices(all: true);
+      loadCompleteDeviceInfo(id: id);
       _addLoading = false;
       notifyListeners();
     }

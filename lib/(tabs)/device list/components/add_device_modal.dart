@@ -34,7 +34,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
 
   // Dropdown Initial values
   String? orgInitialValue;
-  String? installerInitialValue;
+  // String? installerInitialValue;
   String? featureInitialValue;
   String? provinceInitialValue;
 
@@ -86,18 +86,18 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             )
             .toList(),
       },
-      {
-        "label": "نصاب",
-        "initialValue": installerInitialValue,
-        "items": (generalProvider.filters?["installers"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (installer) => myDropDownItem(
-                value: installer["id"].toString(),
-                label: installer["installer"],
-              ),
-            )
-            .toList(),
-      },
+      // {
+      //   "label": "نصاب",
+      //   "initialValue": installerInitialValue,
+      //   "items": (generalProvider.filters?["installers"] ?? [])
+      //       .map<DropdownMenuItem<String>>(
+      //         (installer) => myDropDownItem(
+      //           value: installer["id"].toString(),
+      //           label: installer["installer"],
+      //         ),
+      //       )
+      //       .toList(),
+      // },
     ];
 
     return BottomModalTemplate(
@@ -133,7 +133,6 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             child: DropdownWithLabel(
               iconOnPressed: () => setState(() {
                 final label = dropdownList[index]["label"] as String;
-                if (label == "نصاب") installerInitialValue = null;
                 if (label == "سازمان") orgInitialValue = null;
                 if (label == "ویژگی موتورخانه") {
                   featureInitialValue = null;
@@ -142,9 +141,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
               }),
               onChanged: (value) => setState(() {
                 final label = dropdownList[index]["label"] as String;
-                if (label == "نصاب") {
-                  installerInitialValue = value;
-                } else if (label == "نام سازمان") {
+                if (label == "نام سازمان") {
                   orgInitialValue = value;
                 } else if (label == "ویژگی موتورخانه") {
                   featureInitialValue = value;
@@ -301,7 +298,6 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 orgInitialValue == null ||
                 featureInitialValue == null ||
                 provinceInitialValue == null ||
-                installerInitialValue == null ||
                 latLong == null) {
               flatErrorToast(title: "لطفا همه ی اطلاعات را وارد کنید.");
             } else if (!RegExp(
@@ -320,6 +316,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 location: int.tryParse(provinceInitialValue!)!,
                 organization: int.tryParse(orgInitialValue!)!,
                 latLong: latLong!,
+                images: base64Images,
               );
 
               if (status >= 200 && status < 300) {
