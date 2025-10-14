@@ -114,8 +114,8 @@ class _AddEventModalState extends State<AddEventModal> {
           items: generalProvider.filters?["event_title"]
               .map<DropdownMenuItem<String>>(
                 (eventTitle) => myDropDownItem(
-                  value: eventTitle["title"].toString(), // ensure it's a String
-                  label: eventTitle["title"].toString(),
+                  value: eventTitle, // ensure it's a String
+                  label: eventTitle,
                 ),
               )
               .toList(),

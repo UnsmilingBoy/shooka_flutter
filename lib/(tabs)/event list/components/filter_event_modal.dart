@@ -60,10 +60,7 @@ class _FilterEventModalState extends State<FilterEventModal> {
           }),
           items: (generalProvider.filters?["event_title"] ?? [])
               .map<DropdownMenuItem<String>>(
-                (title) => myDropDownItem(
-                  value: title["title"].toString(),
-                  label: title["title"].toString(),
-                ),
+                (title) => myDropDownItem(value: title, label: title),
               )
               .toList(),
           label: "عناوین:",
