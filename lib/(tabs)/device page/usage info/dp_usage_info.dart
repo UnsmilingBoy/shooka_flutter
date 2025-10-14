@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/usage%20info/complete_dp_usage_info.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 
@@ -41,6 +43,10 @@ class _UsageInfoState extends State<UsageInfo> {
     ];
 
     return MyExpansionTile(
+      completeOnPressed: () => showMaterialModalBottomSheet(
+        context: context,
+        builder: (context) => const CompleteDpUsageInfo(),
+      ),
       title: "اطلاعات کاربری موتورخانه",
       children: [
         ListView.builder(

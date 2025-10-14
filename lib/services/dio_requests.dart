@@ -459,6 +459,7 @@ class ApiService {
     late dynamic body;
     if (objectType == "locationpublicinfo") {
       body = {
+        "object_type": "locationpublicinfo",
         // Location Public Info
         "phone_number1": phoneNumber1,
         "phone_number2": phoneNumber2,
@@ -466,10 +467,12 @@ class ApiService {
         "linker_person2": linkerPerson2,
         "building_metrage": buildingMetrage,
         "meter_subscription_number": meterSubscriptionNumber,
-        "building_image": "data:image/jpeg;base64,$buildingImage",
+        if (buildingImage != null)
+          "building_image": "data:image/jpeg;base64,$buildingImage",
       };
     } else if (objectType == "engineroompublicinfo") {
       body = {
+        "object_type": "engineroompublicinfo",
         // Engineroom Public Info
         "usage": usage,
         "has_exchanger": hasExchanger,
@@ -484,6 +487,7 @@ class ApiService {
       };
     } else if (objectType == "installationinfo") {
       body = {
+        "object_type": "installationinfo",
         // Installation Info
         "installed_device_model": installedDeviceModel,
         "connection_type": connectionType,
@@ -491,16 +495,18 @@ class ApiService {
         "has_simcard": hasSimcard,
         "modem_simcard_number": modemSimcardNumber,
         "installation_date": installationDate,
-        "device_serial_number_image":
-            "data:image/jpeg;base64,$deviceSerialNumberImage",
-        "modem_simcard_serial_number_image":
-            "data:image/png;base64,$modemSimcardSerialNumberImage",
+        if (deviceSerialNumberImage != null)
+          "device_serial_number_image":
+              "data:image/jpeg;base64,$deviceSerialNumberImage",
+        if (modemSimcardSerialNumberImage != null)
+          "modem_simcard_serial_number_image":
+              "data:image/png;base64,$modemSimcardSerialNumberImage",
       };
     }
 
     dynamic sendBody = {
       // DEVICE ID
-      "device_id": 3,
+      "device_id": deviceId,
 
       ...body,
 

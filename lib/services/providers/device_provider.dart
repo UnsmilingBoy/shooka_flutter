@@ -242,13 +242,11 @@ class DeviceProvider with ChangeNotifier {
   }
 
   //
-  //  Update Complete Device Info
+  //  Update Complete Device Info (Location Public Info)
   //
-  Future<int> updateCompleteDeviceInfo({
-    // TODO: SPLIT THIS FUNCTION FOR EVERY OBJECT TYPE
+  Future<int> updateLocationPublicInfo({
     // DEVICE ID
     required int deviceId,
-    required String objectType,
     // Location Public Info
     String? phoneNumber1,
     String? phoneNumber2,
@@ -257,7 +255,40 @@ class DeviceProvider with ChangeNotifier {
     int? buildingMetrage,
     int? meterSubscriptionNumber,
     String? buildingImage, // base64
-    // Engineroom Public Info
+  }) async {
+    _updateCompleteInfoLoading = true;
+    notifyListeners();
+
+    try {
+      int status = await api.updateCompleteDeviceInfo(
+        deviceId: deviceId,
+        objectType: "locationpublicinfo",
+        phoneNumber1: phoneNumber1,
+        phoneNumber2: phoneNumber2,
+        linkerPerson1: linkerPerson1,
+        linkerPerson2: linkerPerson2,
+        buildingMetrage: buildingMetrage,
+        meterSubscriptionNumber: meterSubscriptionNumber,
+        buildingImage: buildingImage,
+      );
+      return status;
+    } on DioException catch (e) {
+      print(e);
+      return e.response!.statusCode!;
+    } finally {
+      loadCompleteDeviceInfo(id: deviceId);
+      _updateCompleteInfoLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  //  Update Complete Device Info (Location Public Info)
+  //
+  Future<int> updateEngineRoomPublicInfo({
+    // DEVICE ID
+    required int deviceId,
+    // Location Public Info
     String? usage, // both, heating, cooling
     bool? hasExchanger,
     int? numberOfPoolExchangers,
@@ -268,6 +299,43 @@ class DeviceProvider with ChangeNotifier {
     int? numberOfCoilSources,
     int? numberOfCoilSourcesPumps,
     int? numberOfHotWaterPumps,
+  }) async {
+    _updateCompleteInfoLoading = true;
+    notifyListeners();
+
+    try {
+      int status = await api.updateCompleteDeviceInfo(
+        deviceId: deviceId,
+        objectType: "engineroompublicinfo",
+        // Engineroom Public Info
+        usage: usage,
+        hasExchanger: hasExchanger,
+        numberOfPoolExchangers: numberOfPoolExchangers,
+        numberOfJaccuziExchangers: numberOfJaccuziExchangers,
+        numberOfFloorHeatingExchangers: numberOfFloorHeatingExchangers,
+        numberOfBoilers: numberOfBoilers,
+        numberOfCirculatingPumps: numberOfCirculatingPumps,
+        numberOfCoilSources: numberOfCoilSources,
+        numberOfCoilSourcesPumps: numberOfCoilSourcesPumps,
+        numberOfHotWaterPumps: numberOfHotWaterPumps,
+      );
+      return status;
+    } on DioException catch (e) {
+      print(e);
+      return e.response!.statusCode!;
+    } finally {
+      loadCompleteDeviceInfo(id: deviceId);
+      _updateCompleteInfoLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  //  Update Complete Device Info (Location Public Info)
+  //
+  Future<int> updateInstallationInfo({
+    // DEVICE ID
+    required int deviceId,
     // Installation Info
     String? installedDeviceModel, // 4relays, 8relays, 16relays
     String? connectionType, // internet, simcard
@@ -277,8 +345,6 @@ class DeviceProvider with ChangeNotifier {
     String? installationDate, // "1404-07-13 12:02:42"
     String? deviceSerialNumberImage, // base64
     String? modemSimcardSerialNumberImage, // base64
-    // Engineroom Images
-    List<String>? images, // base64
   }) async {
     _updateCompleteInfoLoading = true;
     notifyListeners();
@@ -286,33 +352,16 @@ class DeviceProvider with ChangeNotifier {
     try {
       int status = await api.updateCompleteDeviceInfo(
         deviceId: deviceId,
-        objectType: objectType,
-        phoneNumber1: phoneNumber1,
-        phoneNumber2: phoneNumber2,
-        linkerPerson1: linkerPerson1,
-        linkerPerson2: linkerPerson2,
-        buildingMetrage: buildingMetrage,
-        meterSubscriptionNumber: meterSubscriptionNumber,
-        buildingImage: buildingImage,
-        usage: usage,
-        hasExchanger: hasExchanger,
-        numberOfPoolExchangers: numberOfPoolExchangers,
-        numberOfCoilSources: numberOfCoilSources,
-        numberOfCoilSourcesPumps: numberOfCoilSourcesPumps,
-        numberOfHotWaterPumps: numberOfHotWaterPumps,
+        objectType: "installationinfo",
+        // Engineroom Public Info
         installedDeviceModel: installedDeviceModel,
         connectionType: connectionType,
         modemModel: modemModel,
-        modemSimcardNumber: modemSimcardNumber,
         hasSimcard: hasSimcard,
+        modemSimcardNumber: modemSimcardNumber,
         installationDate: installationDate,
-        numberOfBoilers: numberOfBoilers,
-        numberOfCirculatingPumps: numberOfCirculatingPumps,
-        numberOfFloorHeatingExchangers: numberOfFloorHeatingExchangers,
-        numberOfJaccuziExchangers: numberOfJaccuziExchangers,
         deviceSerialNumberImage: deviceSerialNumberImage,
         modemSimcardSerialNumberImage: modemSimcardSerialNumberImage,
-        images: images,
       );
       return status;
     } on DioException catch (e) {
