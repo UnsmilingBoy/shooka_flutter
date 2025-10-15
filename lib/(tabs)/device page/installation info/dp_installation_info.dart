@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/installation%20info/complete_dp_installation_info.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
@@ -19,15 +21,38 @@ class _InstallationInfoState extends State<InstallationInfo> {
     var installLocationInfoList = [
       {
         "title": 'مدل دستگاه نصب شده',
-        "value": completeData?.installedDeviceModel,
+        "value": completeData?.installedDeviceModel == "12relays"
+            ? "12 ‌رله‌ای"
+            : completeData?.installedDeviceModel == "8relays"
+            ? "8 رله‌ای"
+            : "16 رله‌ای",
       },
       {"title": 'مدل مودم', "value": completeData?.modemModel},
-      {"title": 'نوع ارتباط', "value": completeData?.connectionType},
-      {"title": 'آیا مودم سیم‌کارت دارد؟', "value": completeData?.hasSimcard},
+      {
+        "title": 'نوع ارتباط',
+        "value": completeData?.connectionType == "internet"
+            ? "اینترنت"
+            : completeData?.connectionType == "interanet"
+            ? "اینترانت"
+            : "اترنت",
+      },
       {"title": 'تاریخ نصب', "value": completeData?.installationDate},
+      {
+        "title": 'آیا مودم سیم‌کارت دارد؟',
+        "value": completeData?.hasSimcard == true ? "بله" : "خیر",
+      },
+      if (completeData?.hasSimcard == true)
+        {
+          "title": 'شماره سیم‌کارت مودم',
+          "value": completeData?.modemSimcardNumber,
+        },
     ];
 
     return MyExpansionTile(
+      completeOnPressed: () => showMaterialModalBottomSheet(
+        context: context,
+        builder: (context) => const CompleteDpInstallationInfo(),
+      ),
       title: "اطلاعات نصب",
       children: [
         ListView.builder(
@@ -62,6 +87,18 @@ class _InstallationInfoState extends State<InstallationInfo> {
             caption: "عکس شماره سریال دستگاه",
           ),
         ),
+
+        SizedBox(height: 15),
+
+        if (completeData?.hasSimcard == true)
+          SizedBox(
+            width: double.infinity,
+            height: 200,
+            child: ImageWithCaption(
+              networkImagePath: completeData?.modemSimcardSerialNumberImage,
+              caption: "عکس شماره سریال سیم‌کارت مودم",
+            ),
+          ),
       ],
     );
   }

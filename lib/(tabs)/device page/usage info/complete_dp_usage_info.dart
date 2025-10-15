@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/switches/my_switch.dart';
 // import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
@@ -32,7 +35,7 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
   final TextEditingController _numberOfPoolExchangersController =
       TextEditingController();
 
-  bool? _hasExchanger;
+  bool _hasExchanger = false;
   String? _usage;
 
   setInitialValues() {
@@ -41,8 +44,9 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
     // final basicData = deviceProvider.device;
     final completeData = deviceProvider.completeDeviceInfo;
 
-    _usage = completeData?.usage;
-    _hasExchanger = completeData?.hasExchanger;
+    _usage = completeData?.usage; //TODO: FIX THIS TOO
+
+    _hasExchanger = completeData?.hasExchanger ?? false;
     _numberOfBoilersController.text =
         completeData?.numberOfBoilers.toString() ?? "";
     _numberOfCirculatingPumpsController.text =
@@ -86,27 +90,64 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
         "label": "تعداد پمپ های منابع کوئلی",
         "controller": _numberOfCoilSourcesPumpsController,
       },
-      {
-        "label": "تعداد مبدل های گرمایش از کف",
-        "controller": _numberOfFloorHeatingExchangersController,
-      },
+
       {
         "label": "تعداد پمپ های آبگرم مصرفی",
         "controller": _numberOfHotWaterPumpsController,
       },
-      {
-        "label": "تعداد مبدل های جکوزی",
-        "controller": _numberOfJaccuziExchangersController,
-      },
-      {
-        "label": "تعداد مبدل های استخر",
-        "controller": _numberOfPoolExchangersController,
-      },
+      if (_hasExchanger)
+        {
+          "label": "تعداد مبدل های گرمایش از کف",
+          "controller": _numberOfFloorHeatingExchangersController,
+        },
+      if (_hasExchanger)
+        {
+          "label": "تعداد مبدل های جکوزی",
+          "controller": _numberOfJaccuziExchangersController,
+        },
+      if (_hasExchanger)
+        {
+          "label": "تعداد مبدل آب استخر",
+          "controller": _numberOfPoolExchangersController,
+        },
     ];
 
     return BottomModalTemplate(
       title: "ویرایش اطلاعات موتورخانه",
       children: [
+        DropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            _usage = null;
+          }),
+          onChanged: (value) => setState(() => _usage = value),
+          initialValue: _usage,
+          items: [
+            myDropDownItem(value: "heating", label: "گرمایشی"),
+            myDropDownItem(
+              value: "heatingx",
+              label: "آب گرم بهداشتی",
+            ), //TODO: VALUE????
+            myDropDownItem(value: "both", label: "هر دو"),
+          ],
+          label: "کاربری موتورخانه",
+          placeholder: "کاربری موتورخانه",
+        ),
+
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text("آیا مبدل استخر / جکوزی / گرمایش از کف دارد؟"),
+              ),
+              MySwitch(
+                switchValue: _hasExchanger,
+                onChanged: (value) => setState(() => _hasExchanger = value),
+              ),
+            ],
+          ),
+        ),
+
         ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
@@ -125,7 +166,7 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
 
         ModalBottomButtons(
           saveText: "ثبت اطلاعات",
-          loading: deviceProvider.completeInfoLoading,
+          loading: deviceProvider.updateCompleteInfoLoading,
           onSave: () async {
             final status = await deviceProvider.updateEngineRoomPublicInfo(
               deviceId: deviceProvider.device?.id ?? -1,

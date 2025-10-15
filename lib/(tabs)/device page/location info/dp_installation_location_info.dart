@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
-import 'package:shooka_flutter/(tabs)/device%20page/installation%20info/complete_dp_installation_info.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/location%20info/complete_dp_location_info.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
@@ -48,7 +48,7 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
       title: "اطلاعات محل نصب",
       completeOnPressed: () async => showMaterialModalBottomSheet(
         context: context,
-        builder: (context) => const CompleteDpInstallationInfo(),
+        builder: (context) => const CompleteDpInstallationLocationInfo(),
       ),
       children: [
         ListView.builder(

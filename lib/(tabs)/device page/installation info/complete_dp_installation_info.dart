@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
+import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/switches/my_switch.dart';
 // import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
@@ -17,16 +24,31 @@ class CompleteDpInstallationInfo extends StatefulWidget {
 
 class _CompleteDpInstallationInfoState
     extends State<CompleteDpInstallationInfo> {
-  final TextEditingController _linkPerson1Controller = TextEditingController();
-  final TextEditingController _linkPerson2Controller = TextEditingController();
-  final TextEditingController _buildingMetrageController =
-      TextEditingController();
-  final TextEditingController _meterSubscriptionNumberController =
-      TextEditingController();
-  final TextEditingController phoneNumber1Controller = TextEditingController();
-  final TextEditingController phoneNumber2Controller = TextEditingController();
+  final TextEditingController _modemModel = TextEditingController();
+  final TextEditingController _modemSimcardNumber = TextEditingController();
 
-  String? _buildingImage;
+  String? _deviceModel;
+  String? _connectionType;
+  bool hasSimcard = false;
+  String? installationDate;
+  String? deviceSerialNumberImage;
+  String? modemSimcardSerialNumberImage;
+
+  final _imageService = ImageService();
+
+  Future<void> _pickSerialNumberImage() async {
+    final base64 = await _imageService.pickAndConvertToBase64();
+    if (base64 != null) {
+      setState(() => deviceSerialNumberImage = base64);
+    }
+  }
+
+  Future<void> _pickModemSimcardSerialNumberImage() async {
+    final base64 = await _imageService.pickAndConvertToBase64();
+    if (base64 != null) {
+      setState(() => modemSimcardSerialNumberImage = base64);
+    }
+  }
 
   setInitialValues() {
     final deviceProvider = context.read<DeviceProvider>();
@@ -34,14 +56,12 @@ class _CompleteDpInstallationInfoState
     // final basicData = deviceProvider.device;
     final completeData = deviceProvider.completeDeviceInfo;
 
-    _linkPerson1Controller.text = completeData!.linkerPerson1;
-    _linkPerson2Controller.text = completeData.linkerPerson2;
-    _buildingMetrageController.text = completeData.buildingMetrage.toString();
-    _meterSubscriptionNumberController.text = completeData
-        .meterSubscriptionNumber
-        .toString();
-    phoneNumber1Controller.text = completeData.phoneNumber1;
-    phoneNumber2Controller.text = completeData.phoneNumber2;
+    _deviceModel = completeData?.installedDeviceModel;
+    _connectionType = completeData?.connectionType;
+    _modemModel.text = completeData?.modemModel ?? "";
+    hasSimcard = completeData?.hasSimcard ?? false;
+    installationDate = completeData?.installationDate;
+    _modemSimcardNumber.text = completeData?.modemSimcardNumber ?? "";
   }
 
   @override
@@ -56,20 +76,42 @@ class _CompleteDpInstallationInfoState
     final deviceProvider = context.watch<DeviceProvider>();
 
     final textfieldList = [
-      {"label": "رابط اول", "controller": _linkPerson1Controller},
-      {"label": "رابط دوم", "controller": _linkPerson2Controller},
-      {"label": "متراژ ساختمان", "controller": _buildingMetrageController},
-      // {
-      //   "label": "شماره اشتراک کنتور",
-      //   "controller": _meterSubscriptionNumberController
-      // },
-      {"label": "تلفن رابط اول", "controller": phoneNumber1Controller},
-      {"label": "تلفن رابط دوم", "controller": phoneNumber2Controller},
+      {"label": "مدل مودم", "controller": _modemModel},
     ];
 
     return BottomModalTemplate(
       title: "ویرایش اطلاعات موتورخانه",
       children: [
+        DropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            _deviceModel = null;
+          }),
+          onChanged: (value) => setState(() => _deviceModel = value),
+          initialValue: _deviceModel,
+          items: [
+            myDropDownItem(value: "8relays", label: "8 رله‌ای"),
+            myDropDownItem(value: "12relays", label: "12 رله‌ای"),
+            myDropDownItem(value: "16relays", label: "16 رله‌ای"),
+          ],
+          label: "مدل دستگاه نصب شده",
+          placeholder: "انتخاب مدل دستگاه نصب شده",
+        ),
+
+        DropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            _connectionType = null;
+          }),
+          onChanged: (value) => setState(() => _connectionType = value),
+          initialValue: _connectionType,
+          items: [
+            myDropDownItem(value: "internet", label: "اینترنت"),
+            myDropDownItem(value: "interanet", label: "اینترانت"),
+            myDropDownItem(value: "ethernet", label: "اترنت"),
+          ],
+          label: "نوع ارتباط",
+          placeholder: "انتخاب نوع ارتباط",
+        ),
+
         ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
@@ -86,22 +128,239 @@ class _CompleteDpInstallationInfoState
           ),
         ),
 
+        //
+        // Installation Date Picker
+        //
+        Padding(
+          padding: const EdgeInsets.only(top: 5.0, bottom: 10),
+          child: Row(
+            spacing: 10,
+            children: [
+              Text("بازه زمانی:"),
+              if (installationDate != null)
+                Expanded(
+                  child: Text(
+                    installationDate.toString(),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: Colors.white),
+                  ),
+                ),
+              MyIconButton(
+                //
+                // Date Range Picker
+                //
+                onPressed: () async {
+                  var picked = await myRangePicker(context);
+
+                  if (picked != null) {
+                    setState(() {
+                      installationDate =
+                          "${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}";
+                    });
+                  }
+                },
+                border: Border.all(color: Colors.grey.shade700),
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                child: Row(
+                  spacing: 5,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.date_range_rounded,
+                      size: 15,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    if (installationDate == null)
+                      Text(
+                        "انتخاب بازه",
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        //
+        // Device Serial Number Image Upload
+        //
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Row(
+            spacing: 10,
+            children: [
+              Text("عکس شماره سریال دستگاه: "),
+              if (deviceSerialNumberImage != null)
+                Expanded(
+                  child: Text(
+                    "تصویر انتخاب شد.",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: Colors.white),
+                  ),
+                ),
+              Row(
+                spacing: 5,
+                children: [
+                  if (deviceSerialNumberImage != null)
+                    MyIconButton(
+                      onPressed: () async {
+                        setState(() {
+                          deviceSerialNumberImage = null;
+                        });
+                      },
+                      border: Border.all(color: Colors.grey.shade700),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      child: Icon(
+                        Icons.clear,
+                        size: 15,
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
+                  MyIconButton(
+                    onPressed: () => _pickSerialNumberImage(),
+                    border: Border.all(color: Colors.grey.shade700),
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                    child: Row(
+                      spacing: 5,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo_camera_back_outlined,
+                          size: 15,
+                          color: Theme.of(context).hintColor,
+                        ),
+                        if (deviceSerialNumberImage == null)
+                          Text(
+                            "انتخاب عکس",
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        //
+        // Simcard Switch
+        //
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Row(
+            children: [
+              Expanded(child: Text("آیا سیم کارت دارد؟")),
+              MySwitch(
+                switchValue: hasSimcard,
+                onChanged: (value) => setState(() => hasSimcard = value),
+              ),
+            ],
+          ),
+        ),
+
+        if (hasSimcard)
+          Outlinetextfieldwithlabel(
+            label: "شماره سیم کارت مودم",
+            controller: _modemSimcardNumber,
+            placeHolder: "شماره سیم کارت مودم",
+          ),
+
+        SizedBox(height: 15),
+
+        //
+        // Modem Simcard Serial Number Image Upload
+        //
+        if (hasSimcard)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10.0),
+            child: Row(
+              spacing: 10,
+              children: [
+                Text("عکس شماره سریال سیم‌کارت: "),
+                if (modemSimcardSerialNumberImage != null)
+                  Expanded(
+                    child: Text(
+                      "تصویر انتخاب شد.",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.apply(color: Colors.white),
+                    ),
+                  ),
+                Row(
+                  spacing: 5,
+                  children: [
+                    if (modemSimcardSerialNumberImage != null)
+                      MyIconButton(
+                        onPressed: () async {
+                          setState(() {
+                            modemSimcardSerialNumberImage = null;
+                          });
+                        },
+                        border: Border.all(color: Colors.grey.shade700),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
+                        child: Icon(
+                          Icons.clear,
+                          size: 15,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                    MyIconButton(
+                      onPressed: () => _pickModemSimcardSerialNumberImage(),
+                      border: Border.all(color: Colors.grey.shade700),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        spacing: 5,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.photo_camera_back_outlined,
+                            size: 15,
+                            color: Theme.of(context).hintColor,
+                          ),
+                          if (modemSimcardSerialNumberImage == null)
+                            Text(
+                              "انتخاب عکس",
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+        //
+        // Submit Buttons
+        //
         ModalBottomButtons(
           saveText: "ثبت اطلاعات",
-          loading: deviceProvider.completeInfoLoading,
+          loading: deviceProvider.updateCompleteInfoLoading,
           onSave: () async {
-            final status = await deviceProvider.updateLocationPublicInfo(
+            final status = await deviceProvider.updateInstallationInfo(
               deviceId: deviceProvider.device?.id ?? -1,
-
-              linkerPerson1: _linkPerson1Controller.text,
-              linkerPerson2: _linkPerson2Controller.text,
-              buildingMetrage: int.tryParse(_buildingMetrageController.text),
-              meterSubscriptionNumber: int.tryParse(
-                _meterSubscriptionNumberController.text,
-              ),
-              buildingImage: _buildingImage,
-              phoneNumber1: phoneNumber1Controller.text,
-              phoneNumber2: phoneNumber2Controller.text,
+              installedDeviceModel: _deviceModel,
+              connectionType: _connectionType,
+              modemModel: _modemModel.text,
+              hasSimcard: hasSimcard,
+              installationDate: installationDate,
+              modemSimcardNumber: _modemSimcardNumber.text,
+              deviceSerialNumberImage: deviceSerialNumberImage,
+              modemSimcardSerialNumberImage: modemSimcardSerialNumberImage,
             );
 
             if (status >= 200 && status < 300) {

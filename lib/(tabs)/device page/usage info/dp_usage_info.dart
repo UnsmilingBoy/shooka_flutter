@@ -18,10 +18,17 @@ class _UsageInfoState extends State<UsageInfo> {
     final completeData = context.watch<DeviceProvider>().completeDeviceInfo;
 
     var installLocationInfoList = [
-      {"title": 'کاربری موتورخانه', "value": completeData?.usage},
+      {
+        "title": 'کاربری موتورخانه',
+        "value": completeData?.usage == "heating"
+            ? "گرمایشی"
+            : completeData?.usage == "both"
+            ? "گرمایشی و آب گرم بهداشتی"
+            : "آب گرم بهداشتی",
+      },
       {
         "title": 'آیا مبدل استخر / جکوزی / گرمایش از کف دارد؟',
-        "value": completeData?.hasExchanger,
+        "value": completeData?.hasExchanger == true ? 'بله' : 'خیر',
       },
       {"title": 'تعداد دیگ ها', "value": completeData?.numberOfBoilers},
       {
@@ -40,6 +47,22 @@ class _UsageInfoState extends State<UsageInfo> {
         "title": 'تعداد پمپ های آبگرم مصرفی',
         "value": completeData?.numberOfHotWaterPumps,
       },
+      if (completeData?.hasExchanger == true)
+        {
+          "title": 'تعداد مبدل های گرمایش از کف',
+          "value": completeData?.numberOfFloorHeatingExchangers,
+        },
+
+      if (completeData?.hasExchanger == true)
+        {
+          "title": 'تعداد مبدل های جکوزی',
+          "value": completeData?.numberOfJaccuziExchangers,
+        },
+      if (completeData?.hasExchanger == true)
+        {
+          "title": 'تعداد مبدل آب استخر',
+          "value": completeData?.numberOfPoolExchangers,
+        },
     ];
 
     return MyExpansionTile(
