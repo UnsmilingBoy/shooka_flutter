@@ -6,6 +6,7 @@ import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:shooka_flutter/utils/datepickers/my_date_picker.dart';
 import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
@@ -30,6 +31,7 @@ class _CompleteDpInstallationInfoState
   String? _deviceModel;
   String? _connectionType;
   bool hasSimcard = false;
+  String? installationDateLabel;
   String? installationDate;
   String? deviceSerialNumberImage;
   String? modemSimcardSerialNumberImage;
@@ -60,7 +62,7 @@ class _CompleteDpInstallationInfoState
     _connectionType = completeData?.connectionType;
     _modemModel.text = completeData?.modemModel ?? "";
     hasSimcard = completeData?.hasSimcard ?? false;
-    installationDate = completeData?.installationDate;
+    installationDateLabel = completeData?.installationDate;
     _modemSimcardNumber.text = completeData?.modemSimcardNumber ?? "";
   }
 
@@ -136,11 +138,11 @@ class _CompleteDpInstallationInfoState
           child: Row(
             spacing: 10,
             children: [
-              Text("بازه زمانی:"),
-              if (installationDate != null)
+              Text("تاریخ نصب:"),
+              if (installationDateLabel != null)
                 Expanded(
                   child: Text(
-                    installationDate.toString(),
+                    installationDateLabel.toString(),
                     style: Theme.of(
                       context,
                     ).textTheme.labelSmall?.apply(color: Colors.white),
@@ -151,12 +153,13 @@ class _CompleteDpInstallationInfoState
                 // Date Range Picker
                 //
                 onPressed: () async {
-                  var picked = await myRangePicker(context);
+                  var pickedDate = await myDatePicker(context);
 
-                  if (picked != null) {
+                  if (pickedDate != null) {
                     setState(() {
-                      installationDate =
-                          "${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}";
+                      installationDateLabel = pickedDate.formatFullDate();
+                      installationDate = pickedDate.formatCompactDate();
+                      print(installationDate);
                     });
                   }
                 },
@@ -171,9 +174,9 @@ class _CompleteDpInstallationInfoState
                       size: 15,
                       color: Theme.of(context).hintColor,
                     ),
-                    if (installationDate == null)
+                    if (installationDateLabel == null)
                       Text(
-                        "انتخاب بازه",
+                        "انتخاب تاریخ نصب",
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
                   ],

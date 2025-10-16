@@ -34,6 +34,16 @@ class _AddEventModalState extends State<AddEventModal> {
         "switchValue": false,
       },
       {
+        "label": "تعویض مودم",
+        "controller": TextEditingController(),
+        "switchValue": false,
+      },
+      {
+        "label": "تعویض دستگاه",
+        "controller": TextEditingController(),
+        "switchValue": false,
+      },
+      {
         "label": "تعمیر دستگاه",
         "controller": TextEditingController(),
         "switchValue": false,
@@ -58,6 +68,7 @@ class _AddEventModalState extends State<AddEventModal> {
         "controller": TextEditingController(),
         "switchValue": false,
       },
+
       {
         "label": "بازدید کلی",
         "controller": TextEditingController(),

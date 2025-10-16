@@ -44,14 +44,17 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
     final deviceProvider = context.watch<DeviceProvider>();
 
     final textfieldList = [
-      {"label": "نام موتورخانه", "controller": _nameController},
-      {"label": "شماره سریال موتورخانه", "controller": _serialNumberController},
-      {"label": "آدرس", "controller": locationController},
+      {"label": "نام موتورخانه*", "controller": _nameController},
+      {
+        "label": "شماره سریال موتورخانه*",
+        "controller": _serialNumberController,
+      },
+      {"label": "آدرس*", "controller": locationController},
     ];
 
     final dropdownList = [
       {
-        "label": "نام سازمان",
+        "label": "نام سازمان*",
         "initialValue": orgInitialValue,
         "items": (generalProvider.filters?["organizations"] ?? [])
             .map<DropdownMenuItem<String>>(
@@ -63,7 +66,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             .toList(),
       },
       {
-        "label": "ویژگی موتورخانه",
+        "label": "ویژگی موتورخانه*",
         "initialValue": featureInitialValue,
         "items": (generalProvider.filters?["features"] ?? [])
             .map<DropdownMenuItem<String>>(
@@ -75,7 +78,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             .toList(),
       },
       {
-        "label": "شهر و استان",
+        "label": "شهر و استان*",
         "initialValue": provinceInitialValue,
         "items": (generalProvider.filters?["locations"] ?? [])
             .map<DropdownMenuItem<String>>(
@@ -297,8 +300,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 locationController.text == "" ||
                 orgInitialValue == null ||
                 featureInitialValue == null ||
-                provinceInitialValue == null ||
-                latLong == null) {
+                provinceInitialValue == null) {
               flatErrorToast(title: "لطفا همه ی اطلاعات را وارد کنید.");
             } else if (!RegExp(
               r'^[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}$',

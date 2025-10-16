@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 
-Future<JalaliRange?> myRangePicker(BuildContext context) async {
-  return await showPersianDateRangePicker(
+Future<Jalali?> myDatePicker(BuildContext context) async {
+  return await showPersianDatePicker(
     context: context,
     builder: (context, child) {
       return Theme(
@@ -15,13 +15,11 @@ Future<JalaliRange?> myRangePicker(BuildContext context) async {
         child: child!,
       );
     },
-    initialEntryMode: PersianDatePickerEntryMode.calendarOnly,
-    initialDateRange: JalaliRange(
-      start: Jalali.now(),
-      end: Jalali.now().addDays(7),
-    ),
-    firstDate: Jalali(1400, 1),
-    lastDate: Jalali(1450, 9),
     initialDate: Jalali.now(),
+    firstDate: Jalali(1385, 8),
+    lastDate: Jalali(1450, 9),
+    holidayConfig: PersianHolidayConfig(weekendDays: {7}),
+    initialEntryMode: PersianDatePickerEntryMode.calendarOnly,
+    initialDatePickerMode: PersianDatePickerMode.year,
   );
 }

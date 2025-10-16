@@ -256,13 +256,14 @@ class DeviceProvider with ChangeNotifier {
     int? meterSubscriptionNumber,
     String? buildingImage, // base64
     int? location,
+    String? latLong,
   }) async {
     _updateCompleteInfoLoading = true;
     notifyListeners();
 
     try {
-      if (location != null) {
-        await editDevice(id: deviceId, location: location);
+      if (location != null || latLong != null) {
+        await editDevice(id: deviceId, location: location, latLong: latLong);
       }
 
       int status = await api.updateCompleteDeviceInfo(

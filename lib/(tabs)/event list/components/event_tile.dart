@@ -3,7 +3,7 @@ import 'package:shooka_flutter/(tabs)/event%20page/event_page.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 
-class EventTile extends StatelessWidget {
+class EventTile extends StatefulWidget {
   final String title;
   final String author;
   final String device;
@@ -23,10 +23,15 @@ class EventTile extends StatelessWidget {
   });
 
   @override
+  State<EventTile> createState() => _EventTileState();
+}
+
+class _EventTileState extends State<EventTile> {
+  @override
   Widget build(BuildContext context) {
     return ContainerButton(
-      borderRadius: borderRadius,
-      color: color,
+      borderRadius: widget.borderRadius,
+      color: widget.color,
 
       // Navigates to the event page and passes the event id.
       onPressed: () => Navigator.push(
@@ -34,11 +39,11 @@ class EventTile extends StatelessWidget {
         MaterialPageRoute(
           settings: RouteSettings(name: "/event_page"),
           builder: (_) => EventPage(
-            creator: author,
-            device: device,
-            title: title,
-            timeCreated: timeCreated,
-            message: message,
+            creator: widget.author,
+            device: widget.device,
+            title: widget.title,
+            timeCreated: widget.timeCreated,
+            message: widget.message,
           ),
         ),
       ),
@@ -55,7 +60,7 @@ class EventTile extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Text(
-                title,
+                widget.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleSmall,
@@ -69,7 +74,7 @@ class EventTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       textAlign: TextAlign.left,
-                      author,
+                      widget.author,
                       style: Theme.of(context).textTheme.labelSmall,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -84,7 +89,7 @@ class EventTile extends StatelessWidget {
             ),
           ],
         ),
-        subtitle: Text("دستگاه: $device"),
+        subtitle: Text("دستگاه: ${widget.device}"),
         subtitleTextStyle: Theme.of(
           context,
         ).textTheme.labelSmall?.apply(overflow: TextOverflow.ellipsis),

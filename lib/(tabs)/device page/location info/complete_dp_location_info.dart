@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/components/map.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/image_service.dart';
@@ -33,6 +36,7 @@ class _CompleteDpInstallationLocationInfoState
   String? _buildingImage;
 
   String? location;
+  String? latLong;
 
   final _imageService = ImageService();
 
@@ -186,6 +190,59 @@ class _CompleteDpInstallationLocationInfoState
                     ),
                   ),
                 ],
+              ),
+            ],
+          ),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Row(
+            spacing: 10,
+            children: [
+              Text("مختصات: "),
+              if (latLong != null)
+                Expanded(
+                  child: Text(
+                    latLong!,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: Colors.white),
+                  ),
+                ),
+              MyIconButton(
+                onPressed: () async {
+                  final result = await showMaterialModalBottomSheet<LatLng>(
+                    context: context,
+                    enableDrag: false,
+                    builder: (context) => const MapPickerModal(),
+                  );
+
+                  if (result != null) {
+                    print('Selected: ${result.latitude}, ${result.longitude}');
+                    setState(() {
+                      latLong = "${result.latitude}, ${result.longitude}";
+                    });
+                  }
+                },
+                border: Border.all(color: Colors.grey.shade700),
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                child: Row(
+                  spacing: 5,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.map,
+                      size: 15,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    if (latLong == null)
+                      Text(
+                        "انتخاب مختصات",
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
