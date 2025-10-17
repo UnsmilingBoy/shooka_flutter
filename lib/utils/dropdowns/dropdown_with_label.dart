@@ -39,6 +39,7 @@ class _DropdownWithLabelState extends State<DropdownWithLabel> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 isExpanded: true,
+                menuMaxHeight: 300,
                 initialValue: widget.initialValue,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),

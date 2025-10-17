@@ -136,19 +136,19 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             child: DropdownWithLabel(
               iconOnPressed: () => setState(() {
                 final label = dropdownList[index]["label"] as String;
-                if (label == "سازمان") orgInitialValue = null;
-                if (label == "ویژگی موتورخانه") {
+                if (label == "نام سازمان*") orgInitialValue = null;
+                if (label == "ویژگی موتورخانه*") {
                   featureInitialValue = null;
                 }
-                if (label == "شهر و استان") provinceInitialValue = null;
+                if (label == "شهر و استان*") provinceInitialValue = null;
               }),
               onChanged: (value) => setState(() {
                 final label = dropdownList[index]["label"] as String;
-                if (label == "نام سازمان") {
+                if (label == "نام سازمان*") {
                   orgInitialValue = value;
-                } else if (label == "ویژگی موتورخانه") {
+                } else if (label == "ویژگی موتورخانه*") {
                   featureInitialValue = value;
-                } else if (label == "شهر و استان") {
+                } else if (label == "شهر و استان*") {
                   provinceInitialValue = value;
                 }
               }),
