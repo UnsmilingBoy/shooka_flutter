@@ -44,7 +44,7 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
     // final basicData = deviceProvider.device;
     final completeData = deviceProvider.completeDeviceInfo;
 
-    _usage = completeData?.usage; //TODO: FIX THIS TOO
+    _usage = completeData?.usage;
 
     _hasExchanger = completeData?.hasExchanger ?? false;
     _numberOfBoilersController.text =
@@ -123,10 +123,7 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
           initialValue: _usage,
           items: [
             myDropDownItem(value: "heating", label: "گرمایشی"),
-            myDropDownItem(
-              value: "heatingx",
-              label: "آب گرم بهداشتی",
-            ), //TODO: VALUE????
+            myDropDownItem(value: "sanitary", label: "آب گرم بهداشتی"),
             myDropDownItem(value: "both", label: "هر دو"),
           ],
           label: "کاربری موتورخانه",

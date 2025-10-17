@@ -502,6 +502,8 @@ class ApiService {
           "modem_simcard_serial_number_image":
               "data:image/png;base64,$modemSimcardSerialNumberImage",
       };
+    } else if (objectType == "engineroomimages") {
+      body = {"object_type": "engineroomimages", "images": images};
     }
 
     dynamic sendBody = {
@@ -509,9 +511,6 @@ class ApiService {
       "device_id": deviceId,
 
       ...body,
-
-      // Engineroom Images
-      "images": images,
     };
 
     log(sendBody.toString());
@@ -525,6 +524,28 @@ class ApiService {
     } on DioException catch (e) {
       log("Failed to update device: ${e.response}");
       return e.response!.statusCode!;
+    }
+  }
+
+  //
+  // Delete engineroom Image
+  //
+  Future<int> deleteEngineroomImages({
+    required int deviceId,
+    required List<int> idList,
+  }) async {
+    var body = {"device_id": deviceId, "images_id": idList};
+    print(body);
+
+    try {
+      final response = await dio.post(
+        '/apiv2/device/delete-images/',
+        data: body,
+      );
+      log(response.data.toString());
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to remove images: ${e.response?.statusCode}");
     }
   }
 

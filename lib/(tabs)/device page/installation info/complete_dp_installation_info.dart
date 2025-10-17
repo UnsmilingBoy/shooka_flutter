@@ -7,11 +7,9 @@ import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_date_picker.dart';
-import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 import 'package:shooka_flutter/utils/switches/my_switch.dart';
-// import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 

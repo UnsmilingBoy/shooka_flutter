@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/device%20images/components/device_image_slider.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/basic%20device%20info/dp_basic_info.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/device%20images/dp_device_images.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/location%20info/dp_installation_location_info.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/components/dp_events.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/installation%20info/dp_installation_info.dart';
@@ -79,6 +80,11 @@ class _DevicePageState extends State<DevicePage> {
                   // Installation Info
                   //
                   InstallationInfo(),
+
+                  //
+                  // Add Pictures
+                  //
+                  DeviceImages(),
 
                   //
                   // Events

@@ -17,6 +17,7 @@ class DeviceProvider with ChangeNotifier {
   bool _addLoading = false;
   bool _completeInfoLoading = false;
   bool _updateCompleteInfoLoading = false;
+  bool removeImageLoading = false;
   int? lastSelectedInstaller;
   String? lastSearchedText;
   String? lastSelectedOrg;
@@ -376,6 +377,68 @@ class DeviceProvider with ChangeNotifier {
     } finally {
       loadCompleteDeviceInfo(id: deviceId);
       _updateCompleteInfoLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  //  Add Engineroom Picture
+  //
+  Future<int> addEngineroomPicture({
+    // DEVICE ID
+    required int deviceId,
+    // Installation Info
+    required List<String> images, // base64
+  }) async {
+    _updateCompleteInfoLoading = true;
+    notifyListeners();
+
+    // Prepend the base64 prefix to each image
+    final List<String> formattedImages = images
+        .map((img) => "data:image/png;base64,$img")
+        .toList();
+
+    try {
+      int status = await api.updateCompleteDeviceInfo(
+        deviceId: deviceId,
+        objectType: "engineroomimages",
+        images: formattedImages,
+      );
+      return status;
+    } on DioException catch (e) {
+      print(e);
+      return e.response!.statusCode!;
+    } finally {
+      loadCompleteDeviceInfo(id: deviceId);
+      _updateCompleteInfoLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  //  Remove Engineroom Pictures
+  //
+  Future<int> removeEngineroomPictures({
+    // DEVICE ID
+    required int deviceId,
+    // Installation Info
+    required List<int> imageId, // base64
+  }) async {
+    removeImageLoading = true;
+    notifyListeners();
+
+    try {
+      int status = await api.deleteEngineroomImages(
+        deviceId: deviceId,
+        idList: imageId,
+      );
+      return status;
+    } on DioException catch (e) {
+      print(e);
+      return e.response!.statusCode!;
+    } finally {
+      loadCompleteDeviceInfo(id: deviceId);
+      removeImageLoading = false;
       notifyListeners();
     }
   }
