@@ -24,7 +24,9 @@ class _UsageInfoState extends State<UsageInfo> {
             ? "گرمایشی"
             : completeData?.usage == "both"
             ? "گرمایشی و آب گرم بهداشتی"
-            : "آب گرم بهداشتی",
+            : completeData?.usage == "sanitary"
+            ? "آب گرم بهداشتی"
+            : "-",
       },
       {
         "title": 'آیا مبدل استخر / جکوزی / گرمایش از کف دارد؟',

@@ -44,7 +44,7 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
     // final basicData = deviceProvider.device;
     final completeData = deviceProvider.completeDeviceInfo;
 
-    _usage = completeData?.usage;
+    _usage = completeData?.usage == "" ? null : completeData?.usage;
 
     _hasExchanger = completeData?.hasExchanger ?? false;
     _numberOfBoilersController.text =

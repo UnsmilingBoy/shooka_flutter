@@ -56,8 +56,12 @@ class _CompleteDpInstallationInfoState
     // final basicData = deviceProvider.device;
     final completeData = deviceProvider.completeDeviceInfo;
 
-    _deviceModel = completeData?.installedDeviceModel;
-    _connectionType = completeData?.connectionType;
+    _deviceModel = completeData?.installedDeviceModel == ""
+        ? null
+        : completeData?.installedDeviceModel;
+    _connectionType = completeData?.connectionType == ""
+        ? null
+        : completeData?.connectionType;
     _modemModel.text = completeData?.modemModel ?? "";
     hasSimcard = completeData?.hasSimcard ?? false;
     installationDateLabel = completeData?.installationDate;

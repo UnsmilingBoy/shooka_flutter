@@ -25,7 +25,9 @@ class _InstallationInfoState extends State<InstallationInfo> {
             ? "12 ‌رله‌ای"
             : completeData?.installedDeviceModel == "8relays"
             ? "8 رله‌ای"
-            : "16 رله‌ای",
+            : completeData?.installedDeviceModel == "16relays"
+            ? "16 رله‌ای"
+            : "-",
       },
       {"title": 'مدل مودم', "value": completeData?.modemModel},
       {
@@ -34,7 +36,9 @@ class _InstallationInfoState extends State<InstallationInfo> {
             ? "اینترنت"
             : completeData?.connectionType == "interanet"
             ? "اینترانت"
-            : "اترنت",
+            : completeData?.connectionType == "ethernet"
+            ? "اترنت"
+            : "-",
       },
       {"title": 'تاریخ نصب', "value": completeData?.installationDate},
       {
