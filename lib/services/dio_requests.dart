@@ -318,7 +318,7 @@ class ApiService {
     required int location,
     required int organization,
     required bool status,
-    required String latLong,
+    String? latLong,
     required List<String> images,
   }) async {
     var body = {

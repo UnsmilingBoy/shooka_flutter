@@ -42,10 +42,30 @@ void main() {
         Provider<AuthService>.value(value: authService),
         Provider<Dio>.value(value: dio),
         Provider<ApiService>.value(value: apiService),
-        ChangeNotifierProvider(create: (_) => UserProvider(api: apiService)),
-        ChangeNotifierProvider(create: (_) => EventProvider(api: apiService)),
-        ChangeNotifierProvider(create: (_) => DeviceProvider(api: apiService)),
+        // Provide GeneralProvider first so it can be injected into other providers
         ChangeNotifierProvider(create: (_) => GeneralProvider(api: apiService)),
+
+        // Inject GeneralProvider into UserProvider via Proxy so UserProvider can call fetchFilters()
+        ChangeNotifierProxyProvider<GeneralProvider, UserProvider>(
+          create: (_) => UserProvider(api: apiService),
+          update: (context, general, userProvider) {
+            userProvider ??= UserProvider(api: apiService);
+            userProvider.setGeneralProvider(general);
+            return userProvider;
+          },
+        ),
+
+        ChangeNotifierProvider(create: (_) => EventProvider(api: apiService)),
+
+        // Inject GeneralProvider into DeviceProvider via Proxy
+        ChangeNotifierProxyProvider<GeneralProvider, DeviceProvider>(
+          create: (_) => DeviceProvider(api: apiService),
+          update: (context, general, deviceProvider) {
+            deviceProvider ??= DeviceProvider(api: apiService);
+            deviceProvider.setGeneralProvider(general);
+            return deviceProvider;
+          },
+        ),
       ],
       child: const MyApp(),
     ),

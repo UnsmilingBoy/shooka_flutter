@@ -3,10 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 
 class DeviceProvider with ChangeNotifier {
   final ApiService api;
-  DeviceProvider({required this.api});
+  GeneralProvider? _generalProvider;
+
+  DeviceProvider({required this.api, GeneralProvider? generalProvider})
+    : _generalProvider = generalProvider;
+
+  // Setter used by ProxyProvider or manual wiring to inject the GeneralProvider later
+  void setGeneralProvider(GeneralProvider general) =>
+      _generalProvider = general;
 
   // State
   List<Device> _devices = [];
@@ -131,7 +139,7 @@ class DeviceProvider with ChangeNotifier {
     required String engineRoomFeature,
     required int location,
     required int organization,
-    required String latLong,
+    String? latLong,
     required List<String> images,
   }) async {
     _addLoading = true;
@@ -161,6 +169,7 @@ class DeviceProvider with ChangeNotifier {
       return e.response!.statusCode!;
     } finally {
       loadDevices(all: true);
+      _generalProvider?.fetchFilters();
       _addLoading = false;
       notifyListeners();
     }

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/user_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 
 class UserProvider extends ChangeNotifier {
   final ApiService api;
+  GeneralProvider? _generalProvider;
 
-  UserProvider({required this.api});
+  UserProvider({required this.api, GeneralProvider? generalProvider})
+    : _generalProvider = generalProvider;
+
+  // Setter used by ProxyProvider or manual wiring to inject the GeneralProvider later
+  void setGeneralProvider(GeneralProvider general) =>
+      _generalProvider = general;
 
   // User / Users Variables
   User? _user;
@@ -151,6 +158,8 @@ class UserProvider extends ChangeNotifier {
       return -1;
     } finally {
       fetchUsers(page: 1);
+      // call fetchFilters on the injected GeneralProvider if available
+      _generalProvider?.fetchFilters();
       _addLoading = false;
       notifyListeners();
     }

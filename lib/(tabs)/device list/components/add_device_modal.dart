@@ -317,7 +317,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 engineRoomFeature: featureInitialValue!,
                 location: int.tryParse(provinceInitialValue!)!,
                 organization: int.tryParse(orgInitialValue!)!,
-                latLong: latLong!,
+                latLong: latLong,
                 images: base64Images,
               );
 

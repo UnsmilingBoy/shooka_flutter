@@ -157,6 +157,7 @@ class GeneralProvider with ChangeNotifier {
       return -1;
     } finally {
       fetchLocations(page: 1);
+      fetchFilters();
       _editLocationLoading = false;
       notifyListeners();
     }
@@ -253,6 +254,7 @@ class GeneralProvider with ChangeNotifier {
       return -1;
     } finally {
       fetchOrganizations(page: 1);
+      fetchFilters();
       _editOrganizationLoading = false;
       notifyListeners();
     }
