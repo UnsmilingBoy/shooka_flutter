@@ -80,24 +80,24 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
       },
       {
         "label": "استان",
+        // map to province strings, convert to Set to remove duplicates, then build items
         "items": (generalProvider.filters?["locations"] ?? [])
+            .map((location) => location["location"][0].toString())
+            .toSet()
             .map<DropdownMenuItem<String>>(
-              (location) => myDropDownItem(
-                value: location["location"][0].toString(),
-                label: location["location"][0].toString(),
-              ),
+              (province) => myDropDownItem(value: province, label: province),
             )
             .toList(),
         "initialValue": provinceInitialValue,
       },
       {
         "label": "شهر",
+        // map to city strings, convert to Set to remove duplicates, then build items
         "items": (generalProvider.filters?["locations"] ?? [])
+            .map((location) => location["location"][1].toString())
+            .toSet()
             .map<DropdownMenuItem<String>>(
-              (location) => myDropDownItem(
-                value: location["location"][1].toString(),
-                label: location["location"][1].toString(),
-              ),
+              (city) => myDropDownItem(value: city, label: city),
             )
             .toList(),
         "initialValue": cityInitialValue,

@@ -33,6 +33,9 @@ class DeviceProvider with ChangeNotifier {
   String? lastSelectedProvince;
   String? lastSelectedCity;
   int filterCount = 0;
+  int _devicesPage = 1;
+  int _devicesTotalPages = 1;
+  bool _devicesNextPageLoading = false;
 
   // Getters
   List<Device> get devices => _devices;
@@ -42,9 +45,13 @@ class DeviceProvider with ChangeNotifier {
   CompleteDeviceInfo? get completeDeviceInfo => _completeDeviceInfo;
   bool get updateCompleteInfoLoading => _updateCompleteInfoLoading;
   Device? get device => _device;
+  int get devicesPage => _devicesPage;
+  int get devicesTotalPages => _devicesTotalPages;
+  bool get devicesNextPageLoading => _devicesNextPageLoading;
 
   Future<void> loadDevices({
     required bool all,
+    int? page,
     int? installer,
     String? organization,
     String? administration,
@@ -104,6 +111,7 @@ class DeviceProvider with ChangeNotifier {
     try {
       final response = await api.fetchDevices(
         all: all,
+        page: page,
         administration: administration,
         city: city,
         installer: installer,
@@ -113,6 +121,7 @@ class DeviceProvider with ChangeNotifier {
       );
 
       _devices = response["data"];
+      _devicesTotalPages = response["pages"];
       final percentHeader = response["headers"]?["device-connectivity-percent"];
       if (percentHeader != null && percentHeader.isNotEmpty) {
         activeDevicesPercentage =
@@ -126,6 +135,34 @@ class DeviceProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  //
+  // Device Next Page
+  //
+  Future<void> devicesNextPage() async {
+    if (_devicesPage < _devicesTotalPages) {
+      _devicesPage++;
+      _devicesNextPageLoading = true;
+      notifyListeners();
+
+      try {
+        final nextPageDevices = await api.fetchDevices(
+          all: false,
+          page: _devicesPage,
+          search: lastSearchedText,
+        );
+        _devices.addAll(
+          nextPageDevices["data"],
+        ); // append results to existing list
+      } catch (e) {
+        _devices = [];
+        debugPrint("Error fetching devices: $e");
+      } finally {
+        _devicesNextPageLoading = false;
+        notifyListeners();
+      }
     }
   }
 

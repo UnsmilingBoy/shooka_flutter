@@ -16,6 +16,24 @@ class ImageWithCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget networkPreview(String url, {BoxFit? fit}) {
+      return Image.network(
+        url,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          if (localImagepath != null) {
+            return Image.asset(localImagepath!, fit: fit ?? BoxFit.contain);
+          }
+          return Container(
+            color: Colors.grey.shade200,
+            child: const Center(
+              child: Icon(Icons.broken_image, size: 32, color: Colors.grey),
+            ),
+          );
+        },
+      );
+    }
+
     return GestureDetector(
       onTap: () => showDialog(
         context: context,
@@ -29,8 +47,19 @@ class ImageWithCaption extends StatelessWidget {
               minScale: 0.5,
               maxScale: 4,
               child: networkImagePath != null
-                  ? Image.network(networkImagePath!)
-                  : Image.asset(localImagepath!),
+                  ? networkPreview(networkImagePath!)
+                  : (localImagepath != null
+                        ? Image.asset(localImagepath!)
+                        : Container(
+                            color: Colors.grey.shade200,
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 32,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )),
             ),
           ),
         ),
@@ -44,8 +73,19 @@ class ImageWithCaption extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: networkImagePath != null
-                  ? Image.network(networkImagePath!, fit: BoxFit.cover)
-                  : Image.asset(localImagepath!, fit: BoxFit.cover),
+                  ? networkPreview(networkImagePath!, fit: BoxFit.cover)
+                  : (localImagepath != null
+                        ? Image.asset(localImagepath!, fit: BoxFit.cover)
+                        : Container(
+                            color: Colors.grey.shade200,
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 32,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )),
             ),
           ),
 

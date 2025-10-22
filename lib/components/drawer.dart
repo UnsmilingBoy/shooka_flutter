@@ -1,12 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/tabs_list.dart';
 import 'package:shooka_flutter/core/theme/theme_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 
-class MyDrawer extends StatelessWidget {
+class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
+
+  @override
+  State<MyDrawer> createState() => _MyDrawerState();
+}
+
+class _MyDrawerState extends State<MyDrawer> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = info.version; // e.g. "1.2.3"
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +80,7 @@ class MyDrawer extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Text(
-                            'نسخه 1.0.0',
+                            'نسخه $_version',
                             style: Theme.of(context).textTheme.labelSmall,
                           ),
                         ],

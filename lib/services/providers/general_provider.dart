@@ -7,6 +7,10 @@ import 'package:shooka_flutter/services/dio_requests.dart';
 class GeneralProvider with ChangeNotifier {
   final ApiService api;
 
+  // App Version
+  String _apkVersion = '';
+  String _apkDownloadUrl = '';
+
   // Filters Variables
   dynamic _filters;
   bool _fetchFiltersIsLoading = false;
@@ -30,6 +34,10 @@ class GeneralProvider with ChangeNotifier {
   String? _lastSearchedOrg;
 
   GeneralProvider({required this.api});
+
+  // App Version Getters
+  String get apkVersion => _apkVersion;
+  String get apkDownloadUrl => _apkDownloadUrl;
 
   // Filters Getters
   dynamic get filters => _filters;
@@ -257,6 +265,19 @@ class GeneralProvider with ChangeNotifier {
       fetchFilters();
       _editOrganizationLoading = false;
       notifyListeners();
+    }
+  }
+
+  //
+  // Fetch APK Version
+  //
+  Future<void> fetchApkVersion() async {
+    try {
+      final response = await api.fetchApkVersion();
+      _apkVersion = response['version'];
+      _apkDownloadUrl = response['download_url'];
+    } catch (e) {
+      debugPrint("Error fetching APK version: $e");
     }
   }
 }

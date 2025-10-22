@@ -25,7 +25,7 @@ import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:toastification/toastification.dart';
 
 void main() {
-  final baseUrl = 'https://shouka-test.romaksystem.com';
+  final baseUrl = 'https://api-shouka.romaksystem.com';
   final storage = const FlutterSecureStorage();
   final dio = Dio(BaseOptions(baseUrl: baseUrl));
 

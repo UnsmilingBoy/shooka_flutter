@@ -48,10 +48,32 @@ class _DeviceImagesState extends State<DeviceImages> {
                   final isSelected = _selected.contains(index);
                   return ListTile(
                     contentPadding: EdgeInsets.all(0),
-                    leading: Image.network(
-                      imageItem.image,
+                    leading: SizedBox(
                       width: 60,
-                      fit: BoxFit.cover,
+                      height: 60,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(
+                          imageItem.image,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // if you have a local fallback asset, use it here, e.g. 'assets/images/fallback.png'
+                            // otherwise show a neutral placeholder
+                            return Container(
+                              color: Colors.grey.shade200,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 20,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
                     title: Text(
                       "تصویر شماره ${index + 1}",

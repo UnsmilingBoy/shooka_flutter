@@ -267,6 +267,7 @@ class ApiService {
   //
   Future<dynamic> fetchDevices({
     required bool all,
+    int? page,
     int? installer,
     String? organization,
     String? administration,
@@ -276,6 +277,7 @@ class ApiService {
   }) async {
     final queryParams = {
       "all": all == true ? "true" : "false",
+      if (page != null) "page": page,
       if (installer != null) "installer": installer,
       if (organization != null) "organization": organization,
       if (administration != null) "administration": administration,
@@ -294,8 +296,11 @@ class ApiService {
       log(response.data.toString());
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
+        final List<dynamic> data = page != null
+            ? response.data["results"]
+            : response.data;
         return {
+          "pages": response.data["total_pages"],
           "data": data.map((json) => Device.fromJson(json)).toList(),
           "headers": response.headers,
         };
@@ -710,6 +715,20 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add location: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Get APK Version
+  //
+  Future<dynamic> fetchApkVersion() async {
+    try {
+      final response = await dio.get('/apiv2/apk-version/');
+
+      log("${response.data}");
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception("Failed to get apk version: ${e.response}");
     }
   }
 }

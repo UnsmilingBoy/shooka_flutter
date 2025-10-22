@@ -20,13 +20,17 @@ class DeviceList extends StatefulWidget {
 }
 
 class _DeviceListState extends State<DeviceList> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
 
     Future.microtask(() {
-      context.read<DeviceProvider>().loadDevices(all: true);
+      context.read<DeviceProvider>().loadDevices(all: false, page: 1);
     });
+
+    _scrollController.addListener(_onScroll);
 
     // Opens the add device modal if the route was "/add_device"
     if (widget.openAddDevice) {
@@ -37,6 +41,23 @@ class _DeviceListState extends State<DeviceList> {
           builder: (context) => AddDeviceModal(),
         );
       });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      // Trigger next page when near the end
+      final provider = context.read<DeviceProvider>();
+      if (!provider.isLoading) {
+        provider.devicesNextPage();
+      }
     }
   }
 
@@ -75,7 +96,8 @@ class _DeviceListState extends State<DeviceList> {
                 searchValue = value;
               });
               await context.read<DeviceProvider>().loadDevices(
-                all: true,
+                all: false,
+                page: 1,
                 search: value,
               );
             },
@@ -108,17 +130,30 @@ class _DeviceListState extends State<DeviceList> {
                 : devices.isEmpty
                 ? Center(child: Text("موتورخانه ای یافت نشد."))
                 : ListView.builder(
-                    itemCount: devices.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: DeviceTile(
-                        deviceId: devices[index].id,
-                        name: devices[index].name,
-                        org: devices[index].organization,
-                        status: devices[index].status,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
+                    controller: _scrollController,
+                    itemCount: deviceProvider.devicesNextPageLoading
+                        ? devices.length + 1
+                        : devices.length,
+                    itemBuilder: (context, index) {
+                      if (index == devices.length &&
+                          deviceProvider.devicesNextPageLoading) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Center(child: Loading()),
+                        );
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: DeviceTile(
+                          deviceId: devices[index].id,
+                          name: devices[index].name,
+                          org: devices[index].organization,
+                          status: devices[index].status,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      );
+                    },
                   ),
           ),
         ],
