@@ -27,54 +27,22 @@ class _AddEventModalState extends State<AddEventModal> {
   @override
   void initState() {
     super.initState();
-    addEventPrompts.addAll([
-      {
-        "label": "تعویض سنسور",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-      {
-        "label": "تعویض مودم",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-      {
-        "label": "تعویض دستگاه",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-      {
-        "label": "تعمیر دستگاه",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-      {
-        "label": "برطرف کردن مشکل سیم‌کشی تابلو",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-      {
-        "label": "برطرف کردن مشکل ارتباطی",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-      {
-        "label": "چک کردن اتصال سنسور به لوله‌ها",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-      {
-        "label": "سیم‌کشی مجدد سنسور",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
+    // Load event categories from GeneralProvider in initState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final generalProvider = context.read<GeneralProvider>();
+      final eventCategories = generalProvider.filters?["event_category"] ?? [];
 
-      {
-        "label": "بازدید کلی",
-        "controller": TextEditingController(),
-        "switchValue": false,
-      },
-    ]);
+      setState(() {
+        addEventPrompts.clear();
+        for (var category in eventCategories) {
+          addEventPrompts.add({
+            "label": category["name"].toString(),
+            "controller": TextEditingController(),
+            "switchValue": false,
+          });
+        }
+      });
+    });
   }
 
   @override

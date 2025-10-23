@@ -7,7 +7,8 @@ import 'package:image/image.dart' as img_lib;
 
 // Resize / compress settings
 const int _maxWidth = 1280; // resize images wider than this
-const int _jpegQuality = 75; // output JPEG quality (0-100)
+const int _jpegQuality =
+    85; // output JPEG quality (0-100) - higher for mobile to avoid artifacts
 
 class ImageService {
   Future<List<String>> pickMultipleImages() async {
@@ -73,31 +74,18 @@ class ImageService {
           }
           return base64List;
         } else {
-          // Mobile: use image_picker
+          // Mobile: use image_picker - simpler processing to avoid crashes
           final picker = ImagePicker();
-          final pickedFiles = await picker.pickMultiImage();
+          final pickedFiles = await picker.pickMultiImage(
+            imageQuality: 85, // Let image_picker compress for us
+          );
           if (pickedFiles.isEmpty) return [];
           List<String> base64List = [];
           for (var file in pickedFiles) {
             final bytes = await File(file.path).readAsBytes();
-
-            try {
-              // decode image
-              final decoded = img_lib.decodeImage(bytes);
-              if (decoded != null) {
-                img_lib.Image resized = decoded;
-                if (decoded.width > _maxWidth) {
-                  resized = img_lib.copyResize(decoded, width: _maxWidth);
-                }
-                final jpg = img_lib.encodeJpg(resized, quality: _jpegQuality);
-                base64List.add(base64Encode(jpg));
-              } else {
-                base64List.add(base64Encode(bytes));
-              }
-            } catch (e) {
-              // on any error, fallback to original bytes
-              base64List.add(base64Encode(bytes));
-            }
+            // On mobile, skip heavy image processing - just encode the already-compressed bytes
+            // image_picker already applied imageQuality compression
+            base64List.add(base64Encode(bytes));
           }
           return base64List;
         }

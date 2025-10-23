@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/location%20info/complete_dp_location_info.dart';
@@ -7,6 +8,8 @@ import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io' show Platform;
 
 class InstallationLocationInfo extends StatefulWidget {
   const InstallationLocationInfo({super.key});
@@ -77,42 +80,106 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
         ),
 
         if (deviceLatLng != null)
-          Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
-            height: 180,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: FlutterMap(
-                options: MapOptions(
-                  initialCenter: deviceLatLng,
-                  initialZoom: 14,
-                  interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-                  ),
+          Builder(
+            builder: (context) {
+              final location = deviceLatLng!;
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=o0BuBFntqzU1CidazAOK',
-                    userAgentPackageName: 'com.example.app',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: deviceLatLng,
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.red,
-                          size: 32,
+                height: 200,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Stack(
+                    children: [
+                      FlutterMap(
+                        options: MapOptions(
+                          initialCenter: location,
+                          initialZoom: 16,
+                          interactionOptions: const InteractionOptions(
+                            flags:
+                                InteractiveFlag.pinchZoom |
+                                InteractiveFlag.drag,
+                          ),
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=o0BuBFntqzU1CidazAOK',
+                            userAgentPackageName: 'com.example.app',
+                          ),
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: location,
+                                width: 40,
+                                height: 40,
+                                child: const Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                  size: 32,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      // Navigation button positioned on top of the map
+                      Positioned(
+                        bottom: 10,
+                        right: 10,
+                        child: GestureDetector(
+                          onTap: () async {
+                            final lat = location.latitude;
+                            final lng = location.longitude;
+
+                            // For web and Windows, use Google Maps URL
+                            // For mobile (Android/iOS), use geo: URI for app chooser
+                            String url;
+                            if (kIsWeb || Platform.isWindows) {
+                              url =
+                                  'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+                            } else {
+                              url = 'geo:$lat,$lng?q=$lat,$lng';
+                            }
+
+                            try {
+                              await launchUrl(
+                                Uri.parse(url),
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('خطا: $e')),
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.directions,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         const SizedBox(height: 12),
         SizedBox(

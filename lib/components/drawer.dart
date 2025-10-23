@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/tabs_list.dart';
 import 'package:shooka_flutter/core/theme/theme_provider.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
@@ -150,6 +153,41 @@ class _MyDrawerState extends State<MyDrawer> {
                 }).toList(),
               ),
             ),
+
+            //
+            // Download Button
+            //
+            if (kIsWeb)
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: TextButton.icon(
+                  onPressed: () async {
+                    final general = context.read<GeneralProvider>();
+                    final url = general.apkDownloadUrl;
+                    if (url.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('لینک دانلود موجود نیست')),
+                      );
+                      return;
+                    }
+                    try {
+                      await launchUrl(
+                        Uri.parse(url),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('خطا: $e')));
+                    }
+                  },
+                  icon: const Icon(Icons.download, size: 18),
+                  label: const Text('دانلود آخرین نسخه'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
