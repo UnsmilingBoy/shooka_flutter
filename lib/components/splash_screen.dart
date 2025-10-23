@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
@@ -42,7 +45,6 @@ class _SplashPageState extends State<SplashPage> {
 
     // If remoteVersion is empty we don't show the dialog. Otherwise compare.
     if (remoteVersion.isNotEmpty && remoteVersion != _version) {
-      // if ("1.2" != _version) {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -61,9 +63,64 @@ class _SplashPageState extends State<SplashPage> {
                   color: Theme.of(context).primaryColor,
                   borderRadius: 10,
                   child: Text("بروزرسانی"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    // You can add logic here to redirect to app store or download link
+                  onPressed: () async {
+                    final url = general.apkDownloadUrl;
+                    if (url.isEmpty) {
+                      showDialog(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text('خطا'),
+                          content: const Text('لینک دانلود موجود نیست.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(c).pop(),
+                              child: const Text('باشه'),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      final uri = Uri.parse(url);
+                      // Skip canLaunchUrl - just try to launch directly
+                      final launched = await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+
+                      if (!launched) {
+                        showDialog(
+                          context: context,
+                          builder: (c) => AlertDialog(
+                            title: const Text('خطا'),
+                            content: const Text('باز کردن لینک انجام نشد.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(c).pop(),
+                                child: const Text('باشه'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      log('Error launching URL: $e');
+                      showDialog(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text('خطا'),
+                          content: Text('خطا هنگام باز کردن لینک: $e'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(c).pop(),
+                              child: const Text('باشه'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   },
                 ),
               ],

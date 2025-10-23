@@ -29,6 +29,7 @@ class AuthService {
       '/api/auth/login/',
       data: {'username': username, 'password': password},
     );
+    log("LOGIN RESPONSE: $resp");
 
     final data = resp.data;
     if (data == null || data['access'] == null) return false;
