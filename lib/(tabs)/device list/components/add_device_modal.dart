@@ -162,6 +162,51 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
           ),
         ),
 
+        //
+        // Preview of selected engine room feature
+        //
+        if (featureInitialValue != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10.0),
+            child: Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade700),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "پیش نمایش:",
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      "assets/images/views/$featureInitialValue.png",
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          padding: EdgeInsets.all(20),
+                          color: Colors.grey.shade800,
+                          child: Center(
+                            child: Text(
+                              "تصویر در دسترس نیست",
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
         Padding(
           padding: const EdgeInsets.only(bottom: 10.0),
           child: Row(

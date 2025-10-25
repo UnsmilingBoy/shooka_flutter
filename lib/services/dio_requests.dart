@@ -238,7 +238,7 @@ class ApiService {
       final List<dynamic> data = all ? response.data : response.data["results"];
       return data.map((json) => Event.fromJson(json)).toList();
     } on DioException catch (e) {
-      throw Exception("Failed to get user profile: ${e.response?.statusCode}");
+      throw Exception("Failed to get events: ${e.response?.statusCode}");
     }
   }
 
@@ -308,7 +308,7 @@ class ApiService {
         throw Exception('Failed to load devices');
       }
     } on DioException catch (e) {
-      throw Exception("Failed to get user profile: ${e.response?.statusCode}");
+      throw Exception("Failed to get device list: ${e.response?.statusCode}");
     }
   }
 
@@ -367,7 +367,8 @@ class ApiService {
     var body = {
       "id": id,
       if (name != null) "name": name,
-      if (serialNumber != null) "serial_number": serialNumber,
+      if (serialNumber != null && serialNumber != "")
+        "serial_number": serialNumber,
       if (installationAddress != null)
         "installation_address": installationAddress,
       if (engineRoomFeature != null) "engine_room_feature": engineRoomFeature,

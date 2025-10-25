@@ -19,6 +19,7 @@ class CompleteDpBasicInfo extends StatefulWidget {
 
 class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _serialNumberController = TextEditingController();
   String? orgInitialValue;
   String? installerInitialValue;
   String? featureInitialValue;
@@ -29,7 +30,6 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
     final basicData = deviceProvider.device;
 
     _nameController.text = basicData?.name ?? '';
-
     orgInitialValue = generalProvider.filters?["organizations"]
         .firstWhere(
           (f) => f['organization'] == basicData?.organization,
@@ -58,6 +58,10 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
 
     final textfieldList = [
       {"label": "نام موتورخانه", "controller": _nameController},
+      {
+        "label": "آپدیت شماره سریال دستگاه",
+        "controller": _serialNumberController,
+      },
     ];
 
     final dropdownList = [
@@ -146,19 +150,32 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
           saveText: "ثبت اطلاعات",
           loading: deviceProvider.addLoading,
           onSave: () async {
-            final status = await deviceProvider.editDevice(
-              id: deviceProvider.device?.id ?? -1,
-              name: _nameController.text,
-              organization: int.parse(orgInitialValue ?? '-1'),
-              engineRoomFeature: featureInitialValue ?? '',
-            );
-
-            if (status >= 200 && status < 300) {
-              filledSuccessToast(title: "اطلاعات با موفقیت ثبت شد.");
+            if (_serialNumberController.text != "" &&
+                !RegExp(
+                  r'^[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}$',
+                ).hasMatch(_serialNumberController.text)) {
+              flatErrorToast(
+                title: "فرمت شماره سریال اشتباه است.",
+                description: "مثال: 1111.2222.AAAA.FFFF",
+              );
             } else {
-              filledErrorToast(title: "خطایی در ثبت اطلاعات رخ داد.");
+              final status = await deviceProvider.editDevice(
+                id: deviceProvider.device?.id ?? -1,
+                name: _nameController.text,
+                serialNumber: _serialNumberController.text == ""
+                    ? null
+                    : _serialNumberController.text,
+                organization: int.parse(orgInitialValue ?? '-1'),
+                engineRoomFeature: featureInitialValue ?? '',
+              );
+
+              if (status >= 200 && status < 300) {
+                filledSuccessToast(title: "اطلاعات با موفقیت ثبت شد.");
+              } else {
+                filledErrorToast(title: "خطایی در ثبت اطلاعات رخ داد.");
+              }
+              Navigator.pop(context);
             }
-            Navigator.pop(context);
           },
         ),
       ],

@@ -158,7 +158,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
             log("installer is: $installerInitialValue");
 
             deviceProvider.loadDevices(
-              all: true,
+              all: false,
+              page: 1,
               search: deviceProvider.lastSearchedText,
               installer: installerInitialValue != null
                   ? int.tryParse(installerInitialValue ?? "-1")

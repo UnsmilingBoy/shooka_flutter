@@ -145,6 +145,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  dropdown_search:
+    dependency: "direct main"
+    description:
+      name: dropdown_search
+      sha256: "0e4c31b2c07d9fb994f3134a889d71ad67ca789da3d219077a14be375a50ed89"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.4-pre"
   equatable:
     dependency: transitive
     description:

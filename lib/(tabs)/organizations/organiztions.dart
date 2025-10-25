@@ -22,8 +22,12 @@ class _OrganiztionsTabState extends State<OrganiztionsTab> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      context.read<GeneralProvider>().fetchOrganizations(page: 1);
+    Future.microtask(() async {
+      await context.read<GeneralProvider>().fetchOrganizations(page: 1);
+      // Check after initial load completes
+      if (mounted) {
+        _checkAndLoadMoreIfNeeded();
+      }
     });
     _scrollController.addListener(_onScroll);
   }
@@ -42,6 +46,36 @@ class _OrganiztionsTabState extends State<OrganiztionsTab> {
       if (!provider.fetchOrganizationsLoading) {
         provider.orgNextPage();
       }
+    }
+  }
+
+  // Check if viewport has enough items to scroll, if not load more
+  void _checkAndLoadMoreIfNeeded() {
+    if (!mounted) return;
+
+    final provider = context.read<GeneralProvider>();
+
+    // If we have a scroll controller with a position
+    if (_scrollController.hasClients) {
+      final position = _scrollController.position;
+
+      // If list doesn't fill viewport (no scrolling possible)
+      if (position.maxScrollExtent <= 0 &&
+          provider.orgPage < provider.orgTotalPages &&
+          !provider.orgNextPageLoading) {
+        // Load next page and check again
+        provider.orgNextPage().then((_) {
+          if (mounted) {
+            Future.delayed(
+              Duration(milliseconds: 100),
+              _checkAndLoadMoreIfNeeded,
+            );
+          }
+        });
+      }
+    } else {
+      // If no clients yet, wait a bit and try again
+      Future.delayed(Duration(milliseconds: 100), _checkAndLoadMoreIfNeeded);
     }
   }
 

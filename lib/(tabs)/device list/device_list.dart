@@ -26,8 +26,12 @@ class _DeviceListState extends State<DeviceList> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
-      context.read<DeviceProvider>().loadDevices(all: false, page: 1);
+    Future.microtask(() async {
+      await context.read<DeviceProvider>().loadDevices(all: false, page: 1);
+      // Check after initial load completes
+      if (mounted) {
+        _checkAndLoadMoreIfNeeded();
+      }
     });
 
     _scrollController.addListener(_onScroll);
@@ -58,6 +62,36 @@ class _DeviceListState extends State<DeviceList> {
       if (!provider.isLoading) {
         provider.devicesNextPage();
       }
+    }
+  }
+
+  // Check if viewport has enough items to scroll, if not load more
+  void _checkAndLoadMoreIfNeeded() {
+    if (!mounted) return;
+
+    final provider = context.read<DeviceProvider>();
+
+    // If we have a scroll controller with a position
+    if (_scrollController.hasClients) {
+      final position = _scrollController.position;
+
+      // If list doesn't fill viewport (no scrolling possible)
+      if (position.maxScrollExtent <= 0 &&
+          provider.devicesPage < provider.devicesTotalPages &&
+          !provider.devicesNextPageLoading) {
+        // Load next page and check again
+        provider.devicesNextPage().then((_) {
+          if (mounted) {
+            Future.delayed(
+              Duration(milliseconds: 100),
+              _checkAndLoadMoreIfNeeded,
+            );
+          }
+        });
+      }
+    } else {
+      // If no clients yet, wait a bit and try again
+      Future.delayed(Duration(milliseconds: 100), _checkAndLoadMoreIfNeeded);
     }
   }
 

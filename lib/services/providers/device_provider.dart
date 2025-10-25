@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
@@ -122,12 +124,19 @@ class DeviceProvider with ChangeNotifier {
 
       _devices = response["data"];
       _devicesTotalPages = response["pages"];
+
+      // Try to read from headers (works on mobile/desktop if CORS allows it on web)
       final percentHeader = response["headers"]?["device-connectivity-percent"];
+      log("percent header: $percentHeader");
+
       if (percentHeader != null && percentHeader.isNotEmpty) {
         activeDevicesPercentage =
             double.tryParse(percentHeader[0])?.round() ?? 0;
       } else {
-        activeDevicesPercentage = 0;
+        // Fallback: check if the server includes it in response body
+        // If not available anywhere, default to 0
+        activeDevicesPercentage = response["percent"] ?? 0;
+        log("Using fallback for percent, got: $activeDevicesPercentage");
       }
     } catch (e) {
       _devices = [];
