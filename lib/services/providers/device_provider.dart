@@ -214,7 +214,7 @@ class DeviceProvider with ChangeNotifier {
       print(e);
       return e.response!.statusCode!;
     } finally {
-      loadDevices(all: true);
+      loadDevices(all: false, page: 1);
       _generalProvider?.fetchFilters();
       _addLoading = false;
       notifyListeners();
@@ -255,7 +255,7 @@ class DeviceProvider with ChangeNotifier {
       print(e);
       return e.response!.statusCode!;
     } finally {
-      loadDevices(all: true);
+      loadDevices(all: false, page: 1);
       loadCompleteDeviceInfo(id: id);
       _addLoading = false;
       notifyListeners();

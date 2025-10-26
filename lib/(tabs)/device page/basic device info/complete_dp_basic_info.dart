@@ -152,7 +152,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
           onSave: () async {
             if (_serialNumberController.text != "" &&
                 !RegExp(
-                  r'^[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}$',
+                  r'^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$',
                 ).hasMatch(_serialNumberController.text)) {
               flatErrorToast(
                 title: "فرمت شماره سریال اشتباه است.",
