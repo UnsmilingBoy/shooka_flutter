@@ -35,6 +35,20 @@ class _UsersTabState extends State<UsersTab> {
     });
 
     _scrollController.addListener(_onScroll);
+
+    // Listen to user provider changes and check if more items needed
+    context.read<UserProvider>().addListener(_onUserListChanged);
+  }
+
+  void _onUserListChanged() {
+    // Check after list updates (e.g., after add/edit/delete)
+    if (mounted && !context.read<UserProvider>().fetchUsersLoading) {
+      Future.delayed(Duration(milliseconds: 200), () {
+        if (mounted) {
+          _checkAndLoadMoreIfNeeded();
+        }
+      });
+    }
   }
 
   Future<void> _loadCurrentUserId() async {
@@ -48,6 +62,7 @@ class _UsersTabState extends State<UsersTab> {
   @override
   void dispose() {
     _scrollController.dispose();
+    context.read<UserProvider>().removeListener(_onUserListChanged);
     super.dispose();
   }
 

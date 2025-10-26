@@ -30,11 +30,26 @@ class _LocationsTabState extends State<LocationsTab> {
       }
     });
     _scrollController.addListener(_onScroll);
+
+    // Listen to general provider changes and check if more items needed
+    context.read<GeneralProvider>().addListener(_onLocationListChanged);
+  }
+
+  void _onLocationListChanged() {
+    // Check after list updates (e.g., after add/edit/delete)
+    if (mounted && !context.read<GeneralProvider>().fetchLocationsLoading) {
+      Future.delayed(Duration(milliseconds: 200), () {
+        if (mounted) {
+          _checkAndLoadMoreIfNeeded();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    context.read<GeneralProvider>().removeListener(_onLocationListChanged);
     super.dispose();
   }
 

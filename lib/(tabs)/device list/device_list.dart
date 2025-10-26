@@ -36,6 +36,9 @@ class _DeviceListState extends State<DeviceList> {
 
     _scrollController.addListener(_onScroll);
 
+    // Listen to device provider changes and check if more items needed
+    context.read<DeviceProvider>().addListener(_onDeviceListChanged);
+
     // Opens the add device modal if the route was "/add_device"
     if (widget.openAddDevice) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -48,9 +51,21 @@ class _DeviceListState extends State<DeviceList> {
     }
   }
 
+  void _onDeviceListChanged() {
+    // Check after list updates (e.g., after add/edit/delete)
+    if (mounted && !context.read<DeviceProvider>().isLoading) {
+      Future.delayed(Duration(milliseconds: 200), () {
+        if (mounted) {
+          _checkAndLoadMoreIfNeeded();
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
+    context.read<DeviceProvider>().removeListener(_onDeviceListChanged);
     super.dispose();
   }
 
