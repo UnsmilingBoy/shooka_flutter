@@ -6,6 +6,13 @@ plugins {
 }
 
 android {
+    val keystoreProperties = java.util.Properties()
+    val keystorePropertiesFile = rootProject.file("key.properties")
+    if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+    }
+
+
     namespace = "com.example.shooka_flutter"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -30,13 +37,25 @@ android {
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
-        }
+    signingConfigs {
+     create("release") {
+          keyAlias = keystoreProperties["keyAlias"] as String?
+          keyPassword = keystoreProperties["keyPassword"] as String?
+         storeFile = file(keystoreProperties["storeFile"] as String)
+         storePassword = keystoreProperties["storePassword"] as String?
+       }
     }
+
+    buildTypes {
+     getByName("release") {
+          signingConfig = signingConfigs.getByName("release")
+           // Optional but recommended:
+           isMinifyEnabled = false
+          isShrinkResources = false
+          // proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      }
+}
+
 }
 
 flutter {
