@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -6,10 +9,10 @@ plugins {
 }
 
 android {
-    val keystoreProperties = java.util.Properties()
+    val keystoreProperties = Properties()
     val keystorePropertiesFile = rootProject.file("key.properties")
     if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
     }
 
 
@@ -38,23 +41,23 @@ android {
     }
 
     signingConfigs {
-     create("release") {
-          keyAlias = keystoreProperties["keyAlias"] as String?
-          keyPassword = keystoreProperties["keyPassword"] as String?
-         storeFile = file(keystoreProperties["storeFile"] as String)
-         storePassword = keystoreProperties["storePassword"] as String?
-       }
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
     }
 
     buildTypes {
-     getByName("release") {
-          signingConfig = signingConfigs.getByName("release")
-           // Optional but recommended:
-           isMinifyEnabled = false
-          isShrinkResources = false
-          // proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      }
-}
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            // Optional but recommended:
+            isMinifyEnabled = false
+            isShrinkResources = false
+            // proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
 
 }
 
