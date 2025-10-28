@@ -23,17 +23,30 @@ class _ProfileScaffoldState extends State<ProfileScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: ProfileAppbar(
-        image: widget.image,
-        name: widget.name,
-        username: widget.username,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 1200),
+            child: ProfileAppbar(
+              image: widget.image,
+              name: widget.name,
+              username: widget.username,
+            ),
+          ),
+        ),
       ),
       endDrawer: MyDrawer(),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(15),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: widget.body,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 1200),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: widget.body,
+            ),
+          ),
         ),
       ),
     );

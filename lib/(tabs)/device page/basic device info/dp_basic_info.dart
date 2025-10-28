@@ -64,7 +64,7 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
         ),
         SizedBox(
           width: double.infinity,
-          height: 200,
+          height: MediaQuery.sizeOf(context).width > 600 ? 400 : 200,
           child: ImageWithCaption(
             localImagepath: getMain3DViewById(
               features: features,

@@ -69,7 +69,9 @@ class _DpEventsState extends State<DpEvents> {
           borderRadius: 10,
           child: Text(
             "مشاهده همه رویداد ها",
-            style: Theme.of(context).textTheme.labelMedium,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.apply(color: Colors.white),
           ),
         ),
       ],

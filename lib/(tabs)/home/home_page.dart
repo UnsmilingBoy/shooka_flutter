@@ -249,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             borderRadius: 0,
                             name: devices[index].name,
                             org: devices[index].organization,
-                            status: devices[index].status,
+                            status: devices[index].isConnected,
                           ),
                         ),
                 ],

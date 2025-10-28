@@ -37,120 +37,138 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(15.0),
           child: Center(
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                spacing: 45,
-                children: [
-                  //
-                  // Logo
-                  //
-                  Image.asset("assets/icons/romak-logo-blue.png", width: 150),
-
-                  //
-                  // Login TextFields And Button
-                  //
-                  Column(
-                    spacing: 10,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 450),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: 45,
                     children: [
-                      Row(
+                      //
+                      // Logo
+                      //
+                      Image.asset(
+                        "assets/icons/romak-logo-blue.png",
+                        width: 150,
+                      ),
+
+                      //
+                      // Login TextFields And Button
+                      //
+                      Column(
+                        spacing: 10,
                         children: [
-                          Text(
-                            "ورود به حساب کاربری",
-                            style: Theme.of(context).textTheme.titleMedium,
+                          Row(
+                            children: [
+                              Text(
+                                "ورود به حساب کاربری",
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ],
+                          ),
+
+                          // UserName
+                          Outlinetextfieldwithlabel(
+                            controller: usernameController,
+                            placeHolder: "نام کاربری",
+                            label: "نام کاربری:",
+                          ),
+
+                          //Password
+                          Outlinetextfieldwithlabel(
+                            isPassword: true,
+                            controller: passwordController,
+                            placeHolder: "رمزعبور",
+                            label: "رمزعبور:",
+                          ),
+
+                          // Error Message
+                          if (_error != "")
+                            Row(
+                              children: [
+                                Text(
+                                  _error.toString(),
+                                  style: Theme.of(context).textTheme.labelMedium
+                                      ?.apply(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                      ),
+                                ),
+                              ],
+                            ),
+
+                          SizedBox(height: 10),
+
+                          // Login Button
+                          ContainerButton(
+                            fillWidth: true,
+                            borderRadius: 10,
+                            padding: EdgeInsets.all(15),
+                            onPressed: _loading
+                                ? null
+                                : () async {
+                                    setState(() {
+                                      _loading = true;
+                                      _error = "";
+                                    });
+
+                                    try {
+                                      final ok = await auth.login(
+                                        usernameController.text.trim(),
+                                        passwordController.text,
+                                      );
+                                      if (ok) {
+                                        await getHomePageData(context);
+                                        Navigator.pushReplacementNamed(
+                                          context,
+                                          '/home',
+                                        );
+                                      } else {
+                                        if (kDebugMode) {
+                                          print(ok);
+                                        }
+                                        setState(() {
+                                          _error =
+                                              "نام کاربری یا رمز عبور اشتباه است.";
+                                        });
+                                      }
+                                    } on DioException catch (e) {
+                                      if (kDebugMode) print(e);
+
+                                      // Checks Status Code
+                                      setState(
+                                        () => _error = errorCodeMessage(
+                                          e.response?.statusCode,
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      if (kDebugMode) print(e);
+                                      setState(() {
+                                        _error = "مشکلی پیش آمده.";
+                                      });
+                                    } finally {
+                                      setState(() => _loading = false);
+                                    }
+                                  },
+
+                            color: Theme.of(context).primaryColor,
+                            child: _loading
+                                ? Loading()
+                                : Text(
+                                    "ورود",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.apply(color: Colors.white),
+                                  ),
                           ),
                         ],
                       ),
-
-                      // UserName
-                      Outlinetextfieldwithlabel(
-                        controller: usernameController,
-                        placeHolder: "نام کاربری",
-                        label: "نام کاربری:",
-                      ),
-
-                      //Password
-                      Outlinetextfieldwithlabel(
-                        isPassword: true,
-                        controller: passwordController,
-                        placeHolder: "رمزعبور",
-                        label: "رمزعبور:",
-                      ),
-
-                      // Error Message
-                      if (_error != "")
-                        Row(
-                          children: [
-                            Text(
-                              _error.toString(),
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.apply(
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                            ),
-                          ],
-                        ),
-
-                      SizedBox(height: 10),
-
-                      // Login Button
-                      ContainerButton(
-                        fillWidth: true,
-                        borderRadius: 10,
-                        padding: EdgeInsets.all(15),
-                        onPressed: _loading
-                            ? null
-                            : () async {
-                                setState(() {
-                                  _loading = true;
-                                  _error = "";
-                                });
-
-                                try {
-                                  final ok = await auth.login(
-                                    usernameController.text.trim(),
-                                    passwordController.text,
-                                  );
-                                  if (ok) {
-                                    await getHomePageData(context);
-                                    Navigator.pushReplacementNamed(
-                                      context,
-                                      '/home',
-                                    );
-                                  } else {
-                                    if (kDebugMode) {
-                                      print(ok);
-                                    }
-                                    setState(() {
-                                      _error =
-                                          "نام کاربری یا رمز عبور اشتباه است.";
-                                    });
-                                  }
-                                } on DioException catch (e) {
-                                  if (kDebugMode) print(e);
-
-                                  // Checks Status Code
-                                  setState(
-                                    () => _error = errorCodeMessage(
-                                      e.response?.statusCode,
-                                    ),
-                                  );
-                                } catch (e) {
-                                  if (kDebugMode) print(e);
-                                  setState(() {
-                                    _error = "مشکلی پیش آمده.";
-                                  });
-                                } finally {
-                                  setState(() => _loading = false);
-                                }
-                              },
-
-                        color: Theme.of(context).primaryColor,
-                        child: _loading ? Loading() : Text("ورود"),
-                      ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

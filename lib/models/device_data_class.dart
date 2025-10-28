@@ -9,7 +9,8 @@ class Device {
   final String status;
   final String administration;
   final String creator;
-  final bool isConnected;
+  final String isConnected;
+  final String serialNumber;
   final String? address;
   final String? city;
   final String? province;
@@ -19,6 +20,7 @@ class Device {
     required this.address,
     required this.city,
     required this.province,
+    required this.serialNumber,
     required this.id,
     required this.name,
     required this.organization,
@@ -47,11 +49,12 @@ class Device {
           : "غیرفعال", // can be true / false / null
       administration: json['administration'] ?? '',
       creator: json['creator'] ?? '',
-      isConnected: json['is_connected'] ?? false,
+      isConnected: json['is_connected'] == true ? "متصل" : "قطع",
       createdAt: json['created_at'] ?? '',
       address: json["installation_address"] ?? "",
       city: json["city"] ?? "",
       province: json["province"] ?? "",
+      serialNumber: json["serial_number"] ?? "",
     );
   }
 }

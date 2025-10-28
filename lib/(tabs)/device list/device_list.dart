@@ -198,8 +198,10 @@ class _DeviceListState extends State<DeviceList> {
                           deviceId: devices[index].id,
                           name: devices[index].name,
                           org: devices[index].organization,
-                          status: devices[index].status,
+                          status: devices[index].isConnected,
                           color: Theme.of(context).colorScheme.surface,
+                          isFirst:
+                              index == 0, // Show tooltip only for first item
                         ),
                       );
                     },

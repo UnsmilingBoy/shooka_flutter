@@ -87,7 +87,7 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                height: 200,
+                height: MediaQuery.sizeOf(context).width > 600 ? 350 : 200,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Stack(

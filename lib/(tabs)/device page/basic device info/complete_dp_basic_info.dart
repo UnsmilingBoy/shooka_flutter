@@ -30,6 +30,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
     final basicData = deviceProvider.device;
 
     _nameController.text = basicData?.name ?? '';
+    _serialNumberController.text = basicData?.serialNumber ?? '';
     orgInitialValue = generalProvider.filters?["organizations"]
         .firstWhere(
           (f) => f['organization'] == basicData?.organization,

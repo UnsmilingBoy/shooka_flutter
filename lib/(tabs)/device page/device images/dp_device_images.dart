@@ -6,6 +6,7 @@ import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
+import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 
 class DeviceImages extends StatefulWidget {
@@ -53,25 +54,9 @@ class _DeviceImagesState extends State<DeviceImages> {
                       height: 60,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: Image.network(
-                          imageItem.image,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            // if you have a local fallback asset, use it here, e.g. 'assets/images/fallback.png'
-                            // otherwise show a neutral placeholder
-                            return Container(
-                              color: Colors.grey.shade200,
-                              child: const Center(
-                                child: Icon(
-                                  Icons.broken_image,
-                                  size: 20,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            );
-                          },
+                        child: ImageWithCaption(
+                          networkImagePath: imageItem.image,
+                          disableCaption: true,
                         ),
                       ),
                     ),
@@ -172,7 +157,9 @@ class _DeviceImagesState extends State<DeviceImages> {
               fillWidth: true,
               child: Text(
                 "اضافه کردن تصویر جدید",
-                style: Theme.of(context).textTheme.labelMedium,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.apply(color: Colors.white),
               ),
             ),
             if (selectedForRemove.isNotEmpty)

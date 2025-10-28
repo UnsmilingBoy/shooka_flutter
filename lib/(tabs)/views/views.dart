@@ -20,7 +20,7 @@ class ViewsTab extends StatelessWidget {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
-          crossAxisCount: 2,
+          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
         ),
         itemCount: views.length,
         itemBuilder: (context, index) =>

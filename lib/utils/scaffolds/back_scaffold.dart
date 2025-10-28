@@ -31,31 +31,43 @@ class _BackScaffoldState extends State<BackScaffold> {
         //
         // Appbar
         //
-        appBar: AppBar(
-          title: Text(widget.label),
-          centerTitle: true,
-          actions: [
-            InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () =>
-                  Navigator.of(context).pushReplacementNamed(widget.backRoute),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 5,
-                  children: [
-                    Text(
-                      widget.backLabel,
-                      style: Theme.of(context).textTheme.labelLarge,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(kToolbarHeight),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 1200),
+              child: AppBar(
+                title: Text(widget.label),
+                centerTitle: true,
+                actions: [
+                  InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pushReplacementNamed(widget.backRoute),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 5,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 5,
+                        children: [
+                          Text(
+                            widget.backLabel,
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          Icon(Icons.chevron_right_rounded),
+                        ],
+                      ),
                     ),
-                    Icon(Icons.chevron_right_rounded),
-                  ],
-                ),
+                  ),
+                  SizedBox(width: 5),
+                ],
               ),
             ),
-            SizedBox(width: 5),
-          ],
+          ),
         ),
 
         //
@@ -66,11 +78,16 @@ class _BackScaffoldState extends State<BackScaffold> {
         //
         // Body
         //
-        body: Padding(
-          padding: EdgeInsets.all(15),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: widget.body,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 1200),
+            child: Padding(
+              padding: EdgeInsets.all(15),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: widget.body,
+              ),
+            ),
           ),
         ),
       ),
