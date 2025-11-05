@@ -24,17 +24,29 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Load package info (version)
-      await _loadPackageInfo();
+      try {
+        // Load package info (version)
+        await _loadPackageInfo();
 
-      // Fetch remote apk/version info
-      await context.read<GeneralProvider>().fetchApkVersion();
+        // Fetch remote apk/version info with timeout
+        await context.read<GeneralProvider>().fetchApkVersion().timeout(
+          Duration(seconds: 10),
+          onTimeout: () {
+            // Continue even if version check fails
+            log('Version check timed out');
+          },
+        );
 
-      // Now it's safe to compare versions and show dialogs
-      bool result = _maybeShowUpdateDialog();
+        // Now it's safe to compare versions and show dialogs
+        _maybeShowUpdateDialog();
 
-      // Finally check auth (navigates away depending on token)
-      if (result) await _checkAuth();
+        // Always check auth (even if update dialog is shown, user might dismiss or already be updated)
+        await _checkAuth();
+      } catch (e) {
+        log('Error in splash init: $e');
+        // On any error, try to proceed to auth check
+        await _checkAuth();
+      }
     });
   }
 
@@ -145,29 +157,52 @@ class _SplashPageState extends State<SplashPage> {
   // Check auth function (checks if the token is valid and refreshes if not)
   //
   Future<void> _checkAuth() async {
-    final auth = Provider.of<AuthService>(context, listen: false);
-    final token = await auth.getAccessToken();
-    print(token);
+    try {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      final token = await auth.getAccessToken();
+      print(token);
 
-    if (token != null) {
-      if (!JwtDecoder.isExpired(token)) {
-        // Token still valid → go to home
-        await getHomePageData(context);
-        Navigator.pushReplacementNamed(context, "/home");
-        return;
-      } else {
-        // Token expired → try to refresh
-        final ok = await auth.tryRefreshToken();
-        if (ok) {
-          await getHomePageData(context);
+      if (token != null) {
+        if (!JwtDecoder.isExpired(token)) {
+          // Token still valid → go to home
+          await getHomePageData(context).timeout(
+            Duration(seconds: 15),
+            onTimeout: () {
+              log('Home page data fetch timed out, proceeding anyway');
+            },
+          );
           Navigator.pushReplacementNamed(context, "/home");
           return;
+        } else {
+          // Token expired → try to refresh with timeout
+          final ok = await auth.tryRefreshToken().timeout(
+            Duration(seconds: 10),
+            onTimeout: () {
+              log('Token refresh timed out');
+              return false;
+            },
+          );
+
+          if (ok) {
+            await getHomePageData(context).timeout(
+              Duration(seconds: 15),
+              onTimeout: () {
+                log('Home page data fetch timed out, proceeding anyway');
+              },
+            );
+            Navigator.pushReplacementNamed(context, "/home");
+            return;
+          }
         }
       }
-    }
 
-    // No token OR refresh failed → go to login
-    Navigator.pushReplacementNamed(context, "/login");
+      // No token OR refresh failed → go to login
+      Navigator.pushReplacementNamed(context, "/login");
+    } catch (e) {
+      log('Error in _checkAuth: $e');
+      // On any error, go to login to let user sign in fresh
+      Navigator.pushReplacementNamed(context, "/login");
+    }
   }
 
   //

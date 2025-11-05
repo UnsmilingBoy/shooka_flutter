@@ -43,15 +43,20 @@ class _BottomModalTemplateState extends State<BottomModalTemplate> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
-                Column(
-                  children: generalProvider.isLoading
-                      ? [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 30.0),
-                            child: Loading(),
-                          ),
-                        ]
-                      : widget.children,
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 800),
+                  child: Column(
+                    children: generalProvider.isLoading
+                        ? [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 30.0,
+                              ),
+                              child: Loading(),
+                            ),
+                          ]
+                        : widget.children,
+                  ),
                 ),
               ],
             ),

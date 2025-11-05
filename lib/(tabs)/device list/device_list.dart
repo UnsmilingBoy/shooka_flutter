@@ -6,6 +6,7 @@ import 'package:shooka_flutter/(tabs)/device%20list/components/filter_device_mod
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
@@ -117,6 +118,7 @@ class _DeviceListState extends State<DeviceList> {
     TextEditingController searchController = TextEditingController();
 
     final deviceProvider = context.watch<DeviceProvider>();
+    final generalProvider = context.watch<GeneralProvider>();
 
     final devices = deviceProvider.devices;
 
@@ -202,6 +204,12 @@ class _DeviceListState extends State<DeviceList> {
                           color: Theme.of(context).colorScheme.surface,
                           isFirst:
                               index == 0, // Show tooltip only for first item
+                          installationDate: devices[index].createdAt,
+                          address:
+                              generalProvider
+                                  .filters["locations"][devices[index]
+                                  .location]["location"][1],
+                          serialNumber: devices[index].serialNumber,
                         ),
                       );
                     },

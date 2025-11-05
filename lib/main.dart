@@ -27,7 +27,14 @@ import 'package:toastification/toastification.dart';
 void main() {
   final baseUrl = 'https://api-shouka.romaksystem.com';
   final storage = const FlutterSecureStorage();
-  final dio = Dio(BaseOptions(baseUrl: baseUrl));
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: Duration(seconds: 15),
+      receiveTimeout: Duration(seconds: 15),
+      sendTimeout: Duration(seconds: 15),
+    ),
+  );
 
   final authService = AuthService(dio: dio, storage: storage, baseUrl: baseUrl);
   dio.interceptors.add(AuthInterceptor(authService));
@@ -77,39 +84,55 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: ToastificationWrapper(
-        child: MaterialApp(
-          home: SplashPage(),
-          routes: {
-            '/login': (context) => const LoginPage(),
-            '/home': (context) => const MyHomePage(),
-            '/profile': (context) => const ProfilePage(),
-            '/device_list': (context) => const DeviceList(openAddDevice: false),
-            // I handle '/device_page' in DeviceTile with MaterialPageRoute and set its RouteSetting name to '/device_page' for passing device id.
-            '/add_device': (context) => const DeviceList(openAddDevice: true),
-            '/events': (context) => const EventsTab(openAddEvent: false),
-            // I handle '/event_page' in EventTile Just like /device_page.
-            '/add_event': (context) => const EventsTab(openAddEvent: true),
-            '/organizations': (context) => const OrganiztionsTab(),
-            '/views': (context) => const ViewsTab(),
-            '/locations': (context) => const LocationsTab(),
-            '/users': (context) => const UsersTab(),
+        child: Builder(
+          builder: (context) {
+            final themeProvider = Provider.of<ThemeProvider>(context);
+
+            return MaterialApp(
+              home: SplashPage(),
+              routes: {
+                '/login': (context) => const LoginPage(),
+                '/home': (context) => const MyHomePage(),
+                '/profile': (context) => const ProfilePage(),
+                '/device_list': (context) =>
+                    const DeviceList(openAddDevice: false),
+                // I handle '/device_page' in DeviceTile with MaterialPageRoute and set its RouteSetting name to '/device_page' for passing device id.
+                '/add_device': (context) =>
+                    const DeviceList(openAddDevice: true),
+                '/events': (context) => const EventsTab(openAddEvent: false),
+                // I handle '/event_page' in EventTile Just like /device_page.
+                '/add_event': (context) => const EventsTab(openAddEvent: true),
+                '/organizations': (context) => const OrganiztionsTab(),
+                '/views': (context) => const ViewsTab(),
+                '/locations': (context) => const LocationsTab(),
+                '/users': (context) => const UsersTab(),
+              },
+              locale: const Locale("fa", "IR"),
+              supportedLocales: const [Locale("fa", "IR"), Locale("en", "US")],
+              localizationsDelegates: const [
+                PersianMaterialLocalizations.delegate,
+                PersianCupertinoLocalizations.delegate,
+              ],
+              debugShowCheckedModeBanner: false,
+              title: 'Shooka',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.themeMode,
+              builder: (context, child) {
+                // Apply responsive font scaling
+                final scale = AppTheme.getFontScale(context);
+                return MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: TextScaler.linear(scale)),
+                  child: child!,
+                );
+              },
+            );
           },
-          locale: const Locale("fa", "IR"),
-          supportedLocales: const [Locale("fa", "IR"), Locale("en", "US")],
-          localizationsDelegates: const [
-            PersianMaterialLocalizations.delegate,
-            PersianCupertinoLocalizations.delegate,
-          ],
-          debugShowCheckedModeBanner: false,
-          title: 'Shooka',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: themeProvider.themeMode,
         ),
       ),
     );

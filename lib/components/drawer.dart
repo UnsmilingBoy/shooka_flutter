@@ -121,7 +121,9 @@ class _MyDrawerState extends State<MyDrawer> {
                           ? Theme.of(context).primaryColor
                           : null,
                       borderRadius: 10,
-                      padding: EdgeInsets.all(15),
+                      padding: MediaQuery.of(context).size.width < 600
+                          ? EdgeInsets.all(15)
+                          : EdgeInsets.all(20),
                       onPressed: () {
                         Navigator.pop(context);
                         Navigator.of(context).pushNamed(hrefs!.first);

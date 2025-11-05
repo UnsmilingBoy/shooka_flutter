@@ -102,7 +102,14 @@ class AuthService {
     if (refresh == null) return false;
 
     try {
-      final plain = Dio(BaseOptions(baseUrl: baseUrl));
+      final plain = Dio(
+        BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: Duration(seconds: 10),
+          receiveTimeout: Duration(seconds: 10),
+        ),
+      );
+
       final resp = await plain.post(
         '/api/auth/token/refresh/',
         data: {'refresh': refresh},
@@ -117,6 +124,7 @@ class AuthService {
       }
       return true;
     } catch (e) {
+      log('Token refresh failed: $e');
       // refresh failed (refresh token expired or invalid)
       await logout();
       return false;

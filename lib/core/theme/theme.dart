@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
+  // Helper method to get font scale based on screen width
+  static double getFontScale(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width > 1200) {
+      return 1.15; // Desktop: 30% larger
+    } else if (width > 800) {
+      return 1.15; // Tablet: 15% larger
+    } else {
+      return 1.0; // Mobile: base size
+    }
+  }
+
   // Light Theme
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
