@@ -218,6 +218,7 @@ class _DeviceListState extends State<DeviceList> {
                                   )?["location"]?[1] ??
                               "",
                           status: devices[index].status,
+                          creator: devices[index].creator,
                         ),
                       );
                     },

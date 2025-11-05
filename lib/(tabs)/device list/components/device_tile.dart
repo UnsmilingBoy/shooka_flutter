@@ -13,6 +13,7 @@ class DeviceTile extends StatefulWidget {
   final String? installationDate;
   final String? address;
   final String? status;
+  final String? creator;
 
   const DeviceTile({
     super.key,
@@ -26,6 +27,7 @@ class DeviceTile extends StatefulWidget {
     this.installationDate,
     this.address,
     this.status,
+    this.creator,
   });
 
   @override
@@ -95,67 +97,92 @@ class _DeviceTileState extends State<DeviceTile> {
             if (showDetailsInRow &&
                 (widget.installationDate != null ||
                     widget.address != null ||
-                    widget.status != null))
-              Row(
-                children: [
-                  // Installation Date
-                  if (widget.installationDate != null) ...[
-                    Icon(Icons.calendar_today, size: 12, color: Colors.grey),
-                    SizedBox(width: 4),
-                    Text(
-                      widget.installationDate!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).hintColor,
+                    widget.status != null ||
+                    widget.creator != null))
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    // Installation Date
+                    if (widget.installationDate != null) ...[
+                      Icon(Icons.calendar_today, size: 12, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Text(
+                        widget.installationDate!,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
                       ),
-                    ),
-                  ],
-                  // Divider
-                  if (widget.installationDate != null &&
-                      (widget.address != null || widget.status != null))
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Container(
-                        height: 12,
-                        width: 1,
-                        color: Colors.grey[400],
+                    ],
+                    // Divider
+                    if (widget.installationDate != null &&
+                        (widget.address != null ||
+                            widget.status != null ||
+                            widget.creator != null))
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Container(
+                          height: 12,
+                          width: 1,
+                          color: Colors.grey[400],
+                        ),
                       ),
-                    ),
-                  // Address
-                  if (widget.address != null) ...[
-                    Icon(Icons.location_on, size: 12, color: Colors.grey),
-                    SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        overflow: TextOverflow.ellipsis,
+                    // Address
+                    if (widget.address != null) ...[
+                      Icon(Icons.location_on, size: 12, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Text(
                         widget.address!,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Theme.of(context).hintColor,
                         ),
                       ),
-                    ),
-                  ],
-                  // Divider
-                  if (widget.address != null)
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Container(
-                        height: 12,
-                        width: 1,
-                        color: Colors.grey[400],
+                    ],
+                    // Divider
+                    if (widget.address != null &&
+                        (widget.creator != null || widget.status != null))
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Container(
+                          height: 12,
+                          width: 1,
+                          color: Colors.grey[400],
+                        ),
                       ),
-                    ),
-                  // Serial Number
-                  if (widget.status != null) ...[
-                    Icon(Icons.check, size: 12, color: Colors.grey),
-                    SizedBox(width: 4),
-                    Text(
-                      widget.status!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).hintColor,
+                    // Creator
+                    if (widget.creator != null) ...[
+                      Icon(Icons.person, size: 12, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Text(
+                        widget.creator!,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
                       ),
-                    ),
+                    ],
+                    // Divider
+                    if (widget.creator != null && widget.status != null)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Container(
+                          height: 12,
+                          width: 1,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                    // Status
+                    if (widget.status != null) ...[
+                      Icon(Icons.check, size: 12, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Text(
+                        widget.status!,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
           ],
         ),
