@@ -263,6 +263,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     )?["location"]?[1] ??
                                 "",
                             status: devices[index].status,
+                            creator: devices[index].creator,
                           ),
                         ),
                 ],
