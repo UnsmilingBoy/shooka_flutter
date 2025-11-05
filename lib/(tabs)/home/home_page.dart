@@ -6,6 +6,7 @@ import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
 import 'package:shooka_flutter/components/shimmer_list.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
+import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/containers/mainmenu_container.dart';
@@ -37,6 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
     bool eventLoading = context.watch<EventProvider>().fetchLoading;
 
     final devices = context.watch<DeviceProvider>().devices;
+    final generalProvider = context.watch<GeneralProvider>();
     final activeDevicesPercentage = context
         .watch<DeviceProvider>()
         .activeDevicesPercentage;
@@ -249,10 +251,18 @@ class _MyHomePageState extends State<MyHomePage> {
                             borderRadius: 0,
                             name: devices[index].name,
                             org: devices[index].organization,
-                            status: devices[index].isConnected,
+                            isConnected: devices[index].isConnected,
                             installationDate: devices[index].createdAt,
-                            address: "devices[index].city",
-                            serialNumber: "devices[index].serialNumber",
+                            address:
+                                (generalProvider.filters?["locations"] as List?)
+                                    ?.firstWhere(
+                                      (location) =>
+                                          location["id"] ==
+                                          devices[index].location,
+                                      orElse: () => null,
+                                    )?["location"]?[1] ??
+                                "",
+                            status: devices[index].status,
                           ),
                         ),
                 ],

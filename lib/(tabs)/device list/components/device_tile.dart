@@ -5,27 +5,27 @@ import 'package:shooka_flutter/utils/buttons/container_button.dart';
 class DeviceTile extends StatefulWidget {
   final String name;
   final String org;
-  final String? status;
+  final String? isConnected;
   final Color? color;
   final double? borderRadius;
   final int deviceId;
   final bool isFirst;
   final String? installationDate;
   final String? address;
-  final String? serialNumber;
+  final String? status;
 
   const DeviceTile({
     super.key,
     required this.name,
     required this.org,
-    required this.status,
+    required this.isConnected,
     this.color,
     this.borderRadius,
     required this.deviceId,
     this.isFirst = false,
     this.installationDate,
     this.address,
-    this.serialNumber,
+    this.status,
   });
 
   @override
@@ -38,6 +38,7 @@ class _DeviceTileState extends State<DeviceTile> {
   @override
   void initState() {
     super.initState();
+
     // Only show tooltip for the first item
     if (widget.isFirst) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -94,7 +95,7 @@ class _DeviceTileState extends State<DeviceTile> {
             if (showDetailsInRow &&
                 (widget.installationDate != null ||
                     widget.address != null ||
-                    widget.serialNumber != null))
+                    widget.status != null))
               Row(
                 children: [
                   // Installation Date
@@ -110,7 +111,7 @@ class _DeviceTileState extends State<DeviceTile> {
                   ],
                   // Divider
                   if (widget.installationDate != null &&
-                      (widget.address != null || widget.serialNumber != null))
+                      (widget.address != null || widget.status != null))
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Container(
@@ -144,11 +145,15 @@ class _DeviceTileState extends State<DeviceTile> {
                       ),
                     ),
                   // Serial Number
-                  if (widget.serialNumber != null) ...[
-                    Icon(Icons.numbers, size: 12, color: Colors.grey),
+                  if (widget.status != null) ...[
+                    Icon(
+                      Icons.check_box_outlined,
+                      size: 12,
+                      color: Colors.grey,
+                    ),
                     SizedBox(width: 4),
                     Text(
-                      widget.serialNumber!,
+                      widget.status!,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: Theme.of(context).hintColor,
                       ),
@@ -160,11 +165,11 @@ class _DeviceTileState extends State<DeviceTile> {
         ),
         trailing: Tooltip(
           key: _tooltipKey,
-          message: "موتورخانه ${widget.status} است.",
+          message: "موتورخانه ${widget.isConnected} است.",
           child: Icon(
             size: 15,
             Icons.circle,
-            color: widget.status == "متصل" ? Colors.green : Colors.red,
+            color: widget.isConnected == "متصل" ? Colors.green : Colors.red,
           ),
         ),
       ),

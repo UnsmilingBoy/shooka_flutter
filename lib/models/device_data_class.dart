@@ -45,8 +45,8 @@ class Device {
       location: json['location'] ?? 0,
       details: DeviceDetails.fromJson(json['details'] ?? {}),
       status: json['status'] == true
-          ? "فعال"
-          : "غیرفعال", // can be true / false / null
+          ? "تایید شده"
+          : "رد شده", // can be true / false / null
       administration: json['administration'] ?? '',
       creator: json['creator'] ?? '',
       isConnected: json['is_connected'] == true ? "متصل" : "قطع",

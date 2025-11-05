@@ -22,13 +22,16 @@ class DeviceList extends StatefulWidget {
 
 class _DeviceListState extends State<DeviceList> {
   final ScrollController _scrollController = ScrollController();
+  late final DeviceProvider _deviceProvider;
 
   @override
   void initState() {
     super.initState();
 
+    _deviceProvider = context.read<DeviceProvider>();
+
     Future.microtask(() async {
-      await context.read<DeviceProvider>().loadDevices(all: false, page: 1);
+      await _deviceProvider.loadDevices(all: false, page: 1);
       // Check after initial load completes
       if (mounted) {
         _checkAndLoadMoreIfNeeded();
@@ -38,7 +41,7 @@ class _DeviceListState extends State<DeviceList> {
     _scrollController.addListener(_onScroll);
 
     // Listen to device provider changes and check if more items needed
-    context.read<DeviceProvider>().addListener(_onDeviceListChanged);
+    _deviceProvider.addListener(_onDeviceListChanged);
 
     // Opens the add device modal if the route was "/add_device"
     if (widget.openAddDevice) {
@@ -54,7 +57,7 @@ class _DeviceListState extends State<DeviceList> {
 
   void _onDeviceListChanged() {
     // Check after list updates (e.g., after add/edit/delete)
-    if (mounted && !context.read<DeviceProvider>().isLoading) {
+    if (mounted && !_deviceProvider.isLoading) {
       Future.delayed(Duration(milliseconds: 200), () {
         if (mounted) {
           _checkAndLoadMoreIfNeeded();
@@ -66,7 +69,7 @@ class _DeviceListState extends State<DeviceList> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<DeviceProvider>().removeListener(_onDeviceListChanged);
+    _deviceProvider.removeListener(_onDeviceListChanged);
     super.dispose();
   }
 
@@ -74,9 +77,8 @@ class _DeviceListState extends State<DeviceList> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 100) {
       // Trigger next page when near the end
-      final provider = context.read<DeviceProvider>();
-      if (!provider.isLoading) {
-        provider.devicesNextPage();
+      if (!_deviceProvider.isLoading) {
+        _deviceProvider.devicesNextPage();
       }
     }
   }
@@ -85,18 +87,16 @@ class _DeviceListState extends State<DeviceList> {
   void _checkAndLoadMoreIfNeeded() {
     if (!mounted) return;
 
-    final provider = context.read<DeviceProvider>();
-
     // If we have a scroll controller with a position
     if (_scrollController.hasClients) {
       final position = _scrollController.position;
 
       // If list doesn't fill viewport (no scrolling possible)
       if (position.maxScrollExtent <= 0 &&
-          provider.devicesPage < provider.devicesTotalPages &&
-          !provider.devicesNextPageLoading) {
+          _deviceProvider.devicesPage < _deviceProvider.devicesTotalPages &&
+          !_deviceProvider.devicesNextPageLoading) {
         // Load next page and check again
-        provider.devicesNextPage().then((_) {
+        _deviceProvider.devicesNextPage().then((_) {
           if (mounted) {
             Future.delayed(
               Duration(milliseconds: 100),
@@ -200,16 +200,24 @@ class _DeviceListState extends State<DeviceList> {
                           deviceId: devices[index].id,
                           name: devices[index].name,
                           org: devices[index].organization,
-                          status: devices[index].isConnected,
+                          isConnected: devices[index].isConnected,
                           color: Theme.of(context).colorScheme.surface,
                           isFirst:
                               index == 0, // Show tooltip only for first item
-                          installationDate: devices[index].createdAt,
+                          installationDate: devices[index].createdAt.replaceAll(
+                            " ",
+                            " - ",
+                          ),
                           address:
-                              generalProvider
-                                  .filters["locations"][devices[index]
-                                  .location]["location"][1],
-                          serialNumber: devices[index].serialNumber,
+                              (generalProvider.filters?["locations"] as List?)
+                                  ?.firstWhere(
+                                    (location) =>
+                                        location["id"] ==
+                                        devices[index].location,
+                                    orElse: () => null,
+                                  )?["location"]?[1] ??
+                              "",
+                          status: devices[index].status,
                         ),
                       );
                     },
