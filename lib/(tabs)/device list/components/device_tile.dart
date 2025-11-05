@@ -146,11 +146,7 @@ class _DeviceTileState extends State<DeviceTile> {
                     ),
                   // Serial Number
                   if (widget.status != null) ...[
-                    Icon(
-                      Icons.check_box_outlined,
-                      size: 12,
-                      color: Colors.grey,
-                    ),
+                    Icon(Icons.check, size: 12, color: Colors.grey),
                     SizedBox(width: 4),
                     Text(
                       widget.status!,
