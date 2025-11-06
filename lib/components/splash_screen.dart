@@ -38,10 +38,12 @@ class _SplashPageState extends State<SplashPage> {
         );
 
         // Now it's safe to compare versions and show dialogs
-        _maybeShowUpdateDialog();
+        bool shouldProceed = await _maybeShowUpdateDialog();
 
-        // Always check auth (even if update dialog is shown, user might dismiss or already be updated)
-        await _checkAuth();
+        // Only check auth if we should proceed (no update required or update dialog dismissed)
+        if (shouldProceed) {
+          await _checkAuth();
+        }
       } catch (e) {
         log('Error in splash init: $e');
         // On any error, try to proceed to auth check
@@ -50,13 +52,14 @@ class _SplashPageState extends State<SplashPage> {
     });
   }
 
-  bool _maybeShowUpdateDialog() {
+  Future<bool> _maybeShowUpdateDialog() async {
     final general = context.read<GeneralProvider>();
     final remoteVersion = general.apkVersion;
 
     // If remoteVersion is empty we don't show the dialog. Otherwise compare.
     if (remoteVersion.isNotEmpty && remoteVersion != _version) {
-      showDialog(
+      // Show dialog and wait indefinitely - user must update or close the app
+      await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => WillPopScope(
