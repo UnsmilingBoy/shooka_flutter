@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:shooka_flutter/main.dart';
 import 'auth_service.dart';
 
 class AuthInterceptor extends Interceptor {
@@ -27,7 +28,11 @@ class AuthInterceptor extends Interceptor {
     if (status == 401 && reqOptions.extra['retried'] != true) {
       final ok = await auth.tryRefreshToken();
       if (!ok) {
-        // refresh failed -> let UI handle sign out
+        // refresh failed -> redirect to login immediately
+        navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
         return handler.next(err);
       }
 

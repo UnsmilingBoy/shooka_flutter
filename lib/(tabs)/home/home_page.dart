@@ -253,6 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             org: devices[index].organization,
                             isConnected: devices[index].isConnected,
                             installationDate: devices[index].createdAt,
+                            latLong: devices[index].latLong,
                             address:
                                 (generalProvider.filters?["locations"] as List?)
                                     ?.firstWhere(

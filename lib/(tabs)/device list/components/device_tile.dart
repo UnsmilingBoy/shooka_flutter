@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/device_page.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
+import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DeviceTile extends StatefulWidget {
   final String name;
@@ -14,6 +20,7 @@ class DeviceTile extends StatefulWidget {
   final String? address;
   final String? status;
   final String? creator;
+  final String? latLong;
 
   const DeviceTile({
     super.key,
@@ -24,10 +31,11 @@ class DeviceTile extends StatefulWidget {
     this.borderRadius,
     required this.deviceId,
     this.isFirst = false,
-    this.installationDate,
-    this.address,
-    this.status,
-    this.creator,
+    required this.installationDate,
+    required this.address,
+    required this.status,
+    required this.creator,
+    required this.latLong,
   });
 
   @override
@@ -61,6 +69,20 @@ class _DeviceTileState extends State<DeviceTile> {
     final screenWidth = MediaQuery.of(context).size.width;
     final showDetailsInRow = screenWidth > 600;
 
+    // Parse latLong into LatLng
+    LatLng? deviceLatLng;
+    final latLongStr = widget.latLong;
+    if (latLongStr != null && latLongStr.isNotEmpty) {
+      final latLongParts = latLongStr.split(',');
+      if (latLongParts.length == 2) {
+        final lat = double.tryParse(latLongParts[0].trim());
+        final lng = double.tryParse(latLongParts[1].trim());
+        if (lat != null && lng != null) {
+          deviceLatLng = LatLng(lat, lng);
+        }
+      }
+    }
+
     return ContainerButton(
       // Navigates to DevicePage and passes deviceId.
       onPressed: () => Navigator.push(
@@ -93,7 +115,10 @@ class _DeviceTileState extends State<DeviceTile> {
               "سازمان: ${widget.org}",
               style: Theme.of(context).textTheme.labelSmall,
             ),
+
+            //
             // Show details in a row on larger screens only
+            //
             if (showDetailsInRow &&
                 (widget.installationDate != null ||
                     widget.address != null ||
@@ -186,14 +211,54 @@ class _DeviceTileState extends State<DeviceTile> {
               ),
           ],
         ),
-        trailing: Tooltip(
-          key: _tooltipKey,
-          message: "موتورخانه ${widget.isConnected} است.",
-          child: Icon(
-            size: 15,
-            Icons.circle,
-            color: widget.isConnected == "متصل" ? Colors.green : Colors.red,
-          ),
+        trailing: Column(
+          spacing: 7,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Tooltip(
+              key: _tooltipKey,
+              message: "موتورخانه ${widget.isConnected} است.",
+              child: Icon(
+                size: 15,
+                Icons.circle,
+                color: widget.isConnected == "متصل" ? Colors.green : Colors.red,
+              ),
+            ),
+
+            //
+            // Navigation Button
+            //
+            if (widget.latLong != null)
+              MyIconButton(
+                padding: EdgeInsets.all(3),
+                child: Icon(Icons.navigation_rounded, size: 18),
+                onPressed: () async {
+                  final lat = deviceLatLng!.latitude;
+                  final lng = deviceLatLng.longitude;
+
+                  // For web and Windows, use Google Maps URL
+                  // For mobile (Android/iOS), use geo: URI for app chooser
+                  String url;
+                  if (kIsWeb || Platform.isWindows) {
+                    url =
+                        'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+                  } else {
+                    url = 'geo:$lat,$lng?q=$lat,$lng';
+                  }
+
+                  try {
+                    await launchUrl(
+                      Uri.parse(url),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('خطا: $e')));
+                  }
+                },
+              ),
+          ],
         ),
       ),
     );

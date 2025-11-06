@@ -208,6 +208,7 @@ class _DeviceListState extends State<DeviceList> {
                             " ",
                             " - ",
                           ),
+                          latLong: devices[index].latLong,
                           address:
                               (generalProvider.filters?["locations"] as List?)
                                   ?.firstWhere(

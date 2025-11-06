@@ -24,6 +24,9 @@ import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:toastification/toastification.dart';
 
+// Global navigator key for navigation from anywhere
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() {
   final baseUrl = 'https://api-shouka.romaksystem.com';
   final storage = const FlutterSecureStorage();
@@ -92,6 +95,7 @@ class MyApp extends StatelessWidget {
             final themeProvider = Provider.of<ThemeProvider>(context);
 
             return MaterialApp(
+              navigatorKey: navigatorKey,
               home: SplashPage(),
               routes: {
                 '/login': (context) => const LoginPage(),
