@@ -228,7 +228,7 @@ class _DeviceTileState extends State<DeviceTile> {
             //
             // Navigation Button
             //
-            if (widget.latLong != null)
+            if (widget.latLong != null && !kIsWeb)
               MyIconButton(
                 padding: EdgeInsets.all(3),
                 child: Icon(Icons.navigation_rounded, size: 18),
