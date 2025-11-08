@@ -62,6 +62,7 @@ class DeviceProvider with ChangeNotifier {
     String? search,
   }) async {
     _isLoading = true;
+    _devicesPage = 1; // Reset page counter when loading devices
 
     filterCount = 0;
 
@@ -161,6 +162,11 @@ class DeviceProvider with ChangeNotifier {
           all: false,
           page: _devicesPage,
           search: lastSearchedText,
+          administration: lastSelectedAdmin,
+          installer: lastSelectedInstaller,
+          organization: lastSelectedOrg,
+          province: lastSelectedProvince,
+          city: lastSelectedCity,
         );
         _devices.addAll(
           nextPageDevices["data"],
