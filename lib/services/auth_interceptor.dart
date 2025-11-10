@@ -12,9 +12,10 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await auth.getAccessToken();
+    final token = await auth.getToken();
     if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+      // Use Token authentication instead of Bearer
+      options.headers['Authorization'] = 'Token $token';
     }
     handler.next(options);
   }
@@ -22,38 +23,20 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final status = err.response?.statusCode;
-    final reqOptions = err.requestOptions;
 
-    // If 401 and we haven't retried yet, attempt refresh -> retry original
-    if (status == 401 && reqOptions.extra['retried'] != true) {
-      final ok = await auth.tryRefreshToken();
-      if (!ok) {
-        // refresh failed -> redirect to login immediately
-        navigatorKey.currentState?.pushNamedAndRemoveUntil(
-          '/login',
-          (route) => false,
-        );
-        return handler.next(err);
-      }
+    // If 401, redirect to login immediately (no refresh token in single token auth)
+    if (status == 401) {
+      // Clear stored token
+      await auth.logout();
 
-      // we have a new access token now
-      final newToken = await auth.getAccessToken();
-      if (newToken == null) return handler.next(err);
-
-      // mark request so we don't loop
-      reqOptions.extra['retried'] = true;
-      reqOptions.headers['Authorization'] = 'Bearer $newToken';
-
-      try {
-        // retry the original request
-        final response = await auth.dio.fetch(reqOptions);
-        return handler.resolve(response);
-      } catch (e) {
-        return handler.next(err);
-      }
+      // Redirect to login
+      navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        '/login',
+        (route) => false,
+      );
     }
 
-    // otherwise forward error
+    // Forward error
     handler.next(err);
   }
 }

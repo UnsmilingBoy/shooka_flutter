@@ -1,6 +1,5 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -157,49 +156,26 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   //
-  // Check auth function (checks if the token is valid and refreshes if not)
+  // Check auth function (checks if the user has a valid token)
   //
   Future<void> _checkAuth() async {
     try {
       final auth = Provider.of<AuthService>(context, listen: false);
-      final token = await auth.getAccessToken();
-      print(token);
 
-      if (token != null) {
-        if (!JwtDecoder.isExpired(token)) {
-          // Token still valid → go to home
-          await getHomePageData(context).timeout(
-            Duration(seconds: 15),
-            onTimeout: () {
-              log('Home page data fetch timed out, proceeding anyway');
-            },
-          );
-          Navigator.pushReplacementNamed(context, "/home");
-          return;
-        } else {
-          // Token expired → try to refresh with timeout
-          final ok = await auth.tryRefreshToken().timeout(
-            Duration(seconds: 10),
-            onTimeout: () {
-              log('Token refresh timed out');
-              return false;
-            },
-          );
-
-          if (ok) {
-            await getHomePageData(context).timeout(
-              Duration(seconds: 15),
-              onTimeout: () {
-                log('Home page data fetch timed out, proceeding anyway');
-              },
-            );
-            Navigator.pushReplacementNamed(context, "/home");
-            return;
-          }
-        }
+      // Check if user is authenticated (has a token)
+      if (await auth.isAuthenticated()) {
+        // Token exists → go to home
+        await getHomePageData(context).timeout(
+          Duration(seconds: 15),
+          onTimeout: () {
+            log('Home page data fetch timed out, proceeding anyway');
+          },
+        );
+        Navigator.pushReplacementNamed(context, "/home");
+        return;
       }
 
-      // No token OR refresh failed → go to login
+      // No token → go to login
       Navigator.pushReplacementNamed(context, "/login");
     } catch (e) {
       log('Error in _checkAuth: $e');

@@ -3,15 +3,11 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AuthService {
   final Dio dio;
   final FlutterSecureStorage storage;
   final String baseUrl;
-
-  // internal guard to avoid multiple simultaneous refresh calls
-  Future<bool>? _refreshFuture;
 
   AuthService({
     required this.dio,
@@ -19,117 +15,86 @@ class AuthService {
     required this.baseUrl,
   });
 
-  // Keys for secure storage
-  static const _kAccess = 'access';
-  static const _kRefresh = 'refresh';
+  // Keys for secure storage (single token now)
+  static const _kToken = 'token';
   static const _kUserId = 'userId';
 
   Future<bool> login(String username, String password) async {
-    final resp = await dio.post(
-      '/api/auth/login/',
-      data: {'username': username, 'password': password},
-    );
-    log("LOGIN RESPONSE: $resp");
+    try {
+      final resp = await dio.post(
+        '/api-token-auth/',
+        data: {'username': username, 'password': password},
+      );
+      log("LOGIN RESPONSE: $resp");
 
-    final data = resp.data;
-    if (data == null || data['access'] == null) return false;
+      final data = resp.data;
+      if (data == null || data['token'] == null) return false;
 
-    await storage.write(key: _kAccess, value: data['access']);
-    await storage.write(key: _kRefresh, value: data['refresh']);
-    log("User id is: ${data["user_id"]}");
-    await storage.write(key: _kUserId, value: data['user_id'].toString());
-    return true;
+      await storage.write(key: _kToken, value: data['token']);
+
+      // Store user_id if provided
+      if (data['user_id'] != null) {
+        log("User id is: ${data["user_id"]}");
+        await storage.write(key: _kUserId, value: data['user_id'].toString());
+      }
+
+      return true;
+    } on DioException catch (e) {
+      log('Login error: $e');
+      log('Response data: ${e.response?.data}');
+      log('Response status: ${e.response?.statusCode}');
+      log('Response headers: ${e.response?.headers}');
+      return false;
+    } catch (e) {
+      log('Login error: $e');
+      return false;
+    }
   }
-
-  //Testing new branch
 
   Future<void> logout() async {
     try {
-      // 1️⃣ Get tokens from storage
-      final accessToken = await storage.read(key: _kAccess);
-      final refreshToken = await storage.read(key: _kRefresh);
+      // Get token from storage
+      final token = await storage.read(key: _kToken);
 
-      if (accessToken != null && refreshToken != null) {
-        // 2️⃣ Call backend logout endpoint
-        final res = await dio.post(
-          "$baseUrl/api/auth/logout/",
-          data: {"refresh": refreshToken},
-          options: Options(
-            headers: {
-              "Authorization": "Bearer $accessToken",
-              "Content-Type": "application/json",
-            },
-          ),
-        );
+      if (token != null) {
+        // Call backend logout endpoint if available
+        try {
+          final res = await dio.post(
+            "$baseUrl/api/auth/logout/",
+            options: Options(
+              headers: {
+                "Authorization": "Token $token",
+                "Content-Type": "application/json",
+              },
+            ),
+          );
 
-        if (kDebugMode) {
-          print(res);
+          if (kDebugMode) {
+            print(res);
+          }
+        } catch (e) {
+          log("Backend logout failed: $e");
         }
       }
 
-      // 3️⃣ Delete tokens from storage
-      await storage.delete(key: _kAccess);
-      await storage.delete(key: _kRefresh);
+      // Delete token from storage
+      await storage.delete(key: _kToken);
+      await storage.delete(key: _kUserId);
 
-      // 4️⃣ Clear Dio Authorization header
+      // Clear Dio Authorization header
       dio.options.headers.remove('Authorization');
     } catch (e) {
-      // optional: print error but still remove local tokens
       print("Logout error: $e");
-      await storage.delete(key: _kAccess);
-      await storage.delete(key: _kRefresh);
+      await storage.delete(key: _kToken);
+      await storage.delete(key: _kUserId);
       dio.options.headers.remove('Authorization');
     }
   }
 
-  Future<String?> getAccessToken() => storage.read(key: _kAccess);
-  Future<String?> getRefreshToken() => storage.read(key: _kRefresh);
+  Future<String?> getToken() => storage.read(key: _kToken);
 
-  bool isAccessTokenExpired(String token) {
-    return JwtDecoder.isExpired(token);
-  }
-
-  // Public wrapper that prevents parallel refresh attempts
-  Future<bool> tryRefreshToken() async {
-    if (_refreshFuture != null) return _refreshFuture!;
-    _refreshFuture = _doRefresh();
-    final result = await _refreshFuture!;
-    _refreshFuture = null;
-    return result;
-  }
-
-  // Actual refresh implementation (uses a plain Dio instance without our interceptor)
-  Future<bool> _doRefresh() async {
-    final refresh = await getRefreshToken();
-    if (refresh == null) return false;
-
-    try {
-      final plain = Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: Duration(seconds: 10),
-          receiveTimeout: Duration(seconds: 10),
-        ),
-      );
-
-      final resp = await plain.post(
-        '/api/auth/token/refresh/',
-        data: {'refresh': refresh},
-      );
-      final data = resp.data;
-      if (data == null || data['access'] == null) return false;
-
-      await storage.write(key: _kAccess, value: data['access']);
-      // rotate refresh token if server gives a new one
-      if (data['refresh'] != null) {
-        await storage.write(key: _kRefresh, value: data['refresh']);
-      }
-      return true;
-    } catch (e) {
-      log('Token refresh failed: $e');
-      // refresh failed (refresh token expired or invalid)
-      await logout();
-      return false;
-    }
+  Future<bool> isAuthenticated() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
   }
 }

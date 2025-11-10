@@ -18,6 +18,8 @@ import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:shooka_flutter/services/auth_interceptor.dart';
 import 'package:shooka_flutter/services/auth_service.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/encryption_interceptor.dart';
+import 'package:shooka_flutter/services/encryption_service.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
@@ -27,9 +29,17 @@ import 'package:toastification/toastification.dart';
 // Global navigator key for navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
-  final baseUrl = 'https://api-shouka.romaksystem.com';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Updated base URL
+  final baseUrl = 'https://romaktech2.ir/apiv2/shouka';
   final storage = const FlutterSecureStorage();
+
+  // Initialize encryption service and keys
+  final encryptionService = EncryptionService(storage: storage);
+  await encryptionService.initializeKeys();
+
   final dio = Dio(
     BaseOptions(
       baseUrl: baseUrl,
@@ -40,11 +50,13 @@ void main() {
   );
 
   final authService = AuthService(dio: dio, storage: storage, baseUrl: baseUrl);
+
+  // Add interceptors in order: Auth first, then Encryption
   dio.interceptors.add(AuthInterceptor(authService));
+  dio.interceptors.add(EncryptionInterceptor(encryptionService));
 
   final apiService = ApiService(dio: dio, auth: authService, storage: storage);
 
-  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
       providers: [
@@ -52,6 +64,7 @@ void main() {
         Provider<AuthService>.value(value: authService),
         Provider<Dio>.value(value: dio),
         Provider<ApiService>.value(value: apiService),
+        Provider<EncryptionService>.value(value: encryptionService),
         // Provide GeneralProvider first so it can be injected into other providers
         ChangeNotifierProvider(create: (_) => GeneralProvider(api: apiService)),
 
