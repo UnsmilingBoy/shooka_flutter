@@ -578,12 +578,16 @@ class ApiService {
     required int page,
     String? search,
   }) async {
-    final queryParams = {"page": page, if (search != null) "search": search};
+    final queryParams = {
+      "page": page,
+      if (search != null) "search": search,
+      "data_per_page": 10,
+    };
 
     try {
-      final response = await dio.get(
-        '/apiv2/objects/organization/',
-        queryParameters: queryParams,
+      final response = await dio.post(
+        '/api/shouka/objects/organization/',
+        data: queryParams,
       );
 
       log("${response.data}");
@@ -656,12 +660,16 @@ class ApiService {
     required int page,
     String? search,
   }) async {
-    final queryParams = {"page": page, if (search != null) "search": search};
+    final queryParams = {
+      "page": page,
+      if (search != null) "search": search,
+      "data_per_page": 10,
+    };
 
     try {
-      final response = await dio.get(
-        '/apiv2/objects/location/',
-        queryParameters: queryParams,
+      final response = await dio.post(
+        '/api/shouka/objects/location/',
+        data: queryParams,
       );
 
       log("${response.data}");

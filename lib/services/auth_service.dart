@@ -22,7 +22,7 @@ class AuthService {
   Future<bool> login(String username, String password) async {
     try {
       final resp = await dio.post(
-        '/api-token-auth/',
+        '/apiv2/shouka/api-token-auth/',
         data: {'username': username, 'password': password},
       );
       log("LOGIN RESPONSE: $resp");
@@ -60,7 +60,7 @@ class AuthService {
         // Call backend logout endpoint if available
         try {
           final res = await dio.post(
-            "$baseUrl/api/auth/logout/",
+            "$baseUrl/apiv2/shouka/api/auth/logout/",
             options: Options(
               headers: {
                 "Authorization": "Token $token",

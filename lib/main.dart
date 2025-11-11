@@ -33,7 +33,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Updated base URL
-  final baseUrl = 'https://romaktech2.ir/apiv2/shouka';
+  final baseUrl = 'https://romaktech2.ir';
   final storage = const FlutterSecureStorage();
 
   // Initialize encryption service and keys

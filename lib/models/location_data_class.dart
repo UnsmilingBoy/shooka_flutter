@@ -1,9 +1,9 @@
 class Location {
-  final int id;
+  final int? id;
   final String city;
   final String province;
 
-  Location({required this.id, required this.city, required this.province});
+  Location({this.id, required this.city, required this.province});
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
