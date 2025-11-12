@@ -278,6 +278,7 @@ class ApiService {
     final queryParams = {
       "all": all == true ? "true" : "false",
       if (page != null) "page": page,
+      "data_per_page": 10,
       if (installer != null) "installer": installer,
       if (organization != null) "organization": organization,
       if (administration != null) "administration": administration,
@@ -289,9 +290,9 @@ class ApiService {
     log("query params for devices are: $queryParams");
 
     try {
-      final response = await dio.get(
-        '/apiv2/devices-list/',
-        queryParameters: queryParams,
+      final response = await dio.post(
+        '/api/shouka/devices-list/',
+        data: queryParams,
       );
       log(response.data.toString());
 
@@ -341,7 +342,7 @@ class ApiService {
 
     log(body.toString());
     try {
-      final response = await dio.post('/apiv2/device/add/', data: body);
+      final response = await dio.post('/api/shouka/devices/add', data: body);
       log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
@@ -380,7 +381,7 @@ class ApiService {
 
     log(body.toString());
     try {
-      final response = await dio.post('/apiv2/device/edit/', data: body);
+      final response = await dio.post('/api/shouka/devices/edit', data: body);
       log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
@@ -394,7 +395,10 @@ class ApiService {
   //
   Future<Device> fetchBasicDeviceInfo({required int id}) async {
     try {
-      final response = await dio.get('/apiv2/objects/device/$id/');
+      final response = await dio.post(
+        '/api/shouka/objects/device/retrieve/',
+        data: {"id": id},
+      );
 
       log(response.data.toString());
       return Device.fromJson(response.data);
@@ -411,7 +415,7 @@ class ApiService {
   Future<CompleteDeviceInfo> fetchDevicePageInfo({required int id}) async {
     try {
       final response = await dio.post(
-        '/apiv2/device/retrieve-info/',
+        '/api/shouka/device/retrieve-info/',
         data: {"device_id": id},
       );
 
@@ -522,7 +526,7 @@ class ApiService {
     log(sendBody.toString());
     try {
       final response = await dio.post(
-        '/apiv2/device/edit-info/',
+        '/api/shouka/device/edit-info/',
         data: sendBody,
       );
       log(response.toString());
