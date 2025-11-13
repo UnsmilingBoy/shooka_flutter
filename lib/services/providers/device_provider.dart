@@ -294,7 +294,7 @@ class DeviceProvider with ChangeNotifier {
       _completeDeviceInfo = await api.fetchDevicePageInfo(id: id);
       _device = await api.fetchBasicDeviceInfo(id: id);
     } catch (e) {
-      print(e.toString());
+      print("error loading complete device info: $e");
       _completeDeviceInfo = null;
       _device = null;
     } finally {

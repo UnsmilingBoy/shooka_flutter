@@ -3,10 +3,10 @@ class Device {
   final String name;
   final String organization;
   final String? latLong;
-  final int engineRoomFeature;
-  final int location;
+  final int? engineRoomFeature;
+  final int? location;
   final DeviceDetails details;
-  final String status;
+  final String? status;
   final String administration;
   final String creator;
   final String isConnected;
@@ -25,10 +25,10 @@ class Device {
     required this.name,
     required this.organization,
     this.latLong,
-    required this.engineRoomFeature,
-    required this.location,
+    this.engineRoomFeature,
+    this.location,
     required this.details,
-    required this.status,
+    this.status,
     required this.administration,
     required this.creator,
     required this.isConnected,
@@ -37,12 +37,12 @@ class Device {
 
   factory Device.fromJson(Map<String, dynamic> json) {
     return Device(
-      id: json['id'] as int,
+      id: json['id'] ?? 0,
       name: json['name'] ?? '',
       organization: json['organization'] ?? '',
       latLong: json['lat_long'],
-      engineRoomFeature: json['engine_room_feature'] ?? 0,
-      location: json['location'] ?? 0,
+      engineRoomFeature: json['engine_room_feature'],
+      location: json['location'],
       details: DeviceDetails.fromJson(json['details'] ?? {}),
       status: json['status'] == true
           ? "تایید شده"

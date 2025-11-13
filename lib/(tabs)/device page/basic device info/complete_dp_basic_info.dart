@@ -171,6 +171,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
               );
 
               if (status >= 200 && status < 300) {
+                print("status is$status");
                 filledSuccessToast(title: "اطلاعات با موفقیت ثبت شد.");
               } else {
                 filledErrorToast(title: "خطایی در ثبت اطلاعات رخ داد.");

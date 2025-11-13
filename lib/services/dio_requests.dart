@@ -401,7 +401,7 @@ class ApiService {
       );
 
       log(response.data.toString());
-      return Device.fromJson(response.data);
+      return Device.fromJson(response.data["data"]);
     } on DioException catch (e) {
       throw Exception(
         "Failed to get Basic Device Info: ${e.response?.statusCode}",
@@ -564,7 +564,7 @@ class ApiService {
   //
   Future<dynamic> fetchFilters() async {
     try {
-      final response = await dio.get('/apiv2/get_option_for_insert/');
+      final response = await dio.post('/api/shouka/get_option_for_insert/');
 
       log("${response.data}");
       return response.data;
@@ -603,9 +603,7 @@ class ApiService {
         "results": data.map((json) => Organization.fromJson(json)).toList(),
       };
     } on DioException catch (e) {
-      throw Exception(
-        "Failed to get filter options: ${e.response?.statusCode}",
-      );
+      throw Exception("Failed to get org: ${e.response?.statusCode}");
     }
   }
 

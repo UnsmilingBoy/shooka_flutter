@@ -49,12 +49,11 @@ class EncryptionService {
 
     var encrypter = Encrypter(AES(key, mode: AESMode.cbc, padding: null));
 
-    var encrypted = encrypter.encrypt(
-      String.fromCharCodes(
-        _pkcs7Pad(Uint8List.fromList(utf8.encode(plainText))),
-      ),
-      iv: iv,
-    );
+    // PKCS7-pad the plaintext bytes and encrypt the raw bytes directly.
+    final padded = _pkcs7Pad(Uint8List.fromList(utf8.encode(plainText)));
+
+    // Use encryptBytes to avoid trying to interpret padded bytes as UTF-8 string.
+    final encrypted = encrypter.encryptBytes(padded, iv: iv);
 
     return encrypted.base64;
   }
