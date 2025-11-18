@@ -5,7 +5,6 @@ class UserTile extends StatelessWidget {
   final double? borderRadius;
   final String name;
   final String role;
-  final String imagePath;
   final Color? color;
   final String status;
   final VoidCallback? onPressed;
@@ -17,7 +16,6 @@ class UserTile extends StatelessWidget {
     required this.name,
     required this.role,
     required this.status,
-    required this.imagePath,
   });
 
   @override
@@ -28,7 +26,13 @@ class UserTile extends StatelessWidget {
       color: color,
       child: ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(backgroundImage: NetworkImage(imagePath)),
+        leading: CircleAvatar(
+          backgroundColor: color,
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : "U",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
         title: Row(
           spacing: 10,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

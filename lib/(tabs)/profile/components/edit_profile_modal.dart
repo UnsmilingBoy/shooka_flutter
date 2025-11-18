@@ -1,25 +1,20 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
-import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 
 class EditProfileModal extends StatefulWidget {
   final String name;
   final String username;
-  final String email;
-  final String profileHref;
+  final String? email;
   final String phoneNumber;
   const EditProfileModal({
     super.key,
     required this.name,
     required this.username,
     required this.email,
-    required this.profileHref,
     required this.phoneNumber,
   });
 
@@ -37,26 +32,13 @@ class _EditProfileModalState extends State<EditProfileModal> {
   TextEditingController email = TextEditingController();
 
   //
-  // Get Image
-  //
-  String? _base64Image;
-  final _imageService = ImageService();
-
-  Future<void> _pickImage() async {
-    final base64 = await _imageService.pickAndConvertToBase64();
-    if (base64 != null) {
-      setState(() => _base64Image = base64);
-    }
-  }
-
-  //
   // InitState
   //
   @override
   void initState() {
     name.text = widget.name;
     phoneNumber.text = widget.phoneNumber;
-    email.text = widget.email;
+    email.text = widget.email ?? "";
     username.text = widget.username;
     super.initState();
   }
@@ -93,33 +75,14 @@ class _EditProfileModalState extends State<EditProfileModal> {
         //
         // Picture
         //
-        GestureDetector(
-          onTap: () => _pickImage(),
-          child: Stack(
-            children: [
-              CircleAvatar(
-                backgroundImage: _base64Image != null
-                    ? MemoryImage(base64Decode(_base64Image!))
-                    : NetworkImage(widget.profileHref),
-                radius: 50,
-              ),
-              Positioned(
-                bottom: 2,
-                left: 4,
-                child: Container(
-                  padding: EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    border: BoxBorder.all(
-                      color: Theme.of(context).colorScheme.surface,
-                      width: 2,
-                    ),
-                    shape: BoxShape.circle,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-                  child: Icon(Icons.edit, size: 15),
-                ),
-              ),
-            ],
+        CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          radius: 50,
+          child: Text(
+            widget.name.isNotEmpty ? widget.name[0].toUpperCase() : "U",
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.apply(color: Colors.white),
           ),
         ),
 
@@ -154,7 +117,6 @@ class _EditProfileModalState extends State<EditProfileModal> {
               username: username.text,
               email: email.text,
               phoneNumber: phoneNumber.text,
-              profilePic: _base64Image,
             );
             Navigator.pop(context);
           },

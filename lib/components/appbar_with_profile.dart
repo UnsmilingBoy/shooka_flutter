@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 class ProfileAppbar extends StatelessWidget implements PreferredSizeWidget {
   final String name;
   final String username;
-  final String image;
+  final String? image;
   const ProfileAppbar({
     super.key,
     required this.name,
     required this.username,
-    required this.image,
+    this.image,
   });
 
   @override
@@ -21,7 +21,13 @@ class ProfileAppbar extends StatelessWidget implements PreferredSizeWidget {
           spacing: 7,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(backgroundImage: NetworkImage(image)),
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : "U",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

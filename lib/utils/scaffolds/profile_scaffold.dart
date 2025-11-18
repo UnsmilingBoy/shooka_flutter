@@ -6,13 +6,13 @@ class ProfileScaffold extends StatefulWidget {
   final Widget body;
   final String username;
   final String name;
-  final String image;
+  final String? image;
   const ProfileScaffold({
     super.key,
     required this.body,
     required this.username,
     required this.name,
-    required this.image,
+    this.image,
   });
 
   @override

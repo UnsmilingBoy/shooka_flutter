@@ -117,7 +117,7 @@ class _UsersTabState extends State<UsersTab> {
     // Filter out the current user from the list
     final users = _currentUserId != null
         ? allUsers
-              .where((user) => user.id.toString() != _currentUserId)
+              .where((user) => user.userId.toString() != _currentUserId)
               .toList()
         : allUsers;
 
@@ -203,20 +203,18 @@ class _UsersTabState extends State<UsersTab> {
                             context: context,
                             builder: (context) => AddUserModal(
                               editMode: true,
-                              id: users[index].id,
+                              id: users[index].userId,
                               userName: users[index].username,
                               email: users[index].email,
                               phoneNumber: users[index].phoneNumber,
                               name: users[index].firstName,
-                              imageHref: users[index].profileHref,
-                              role: users[index].role,
+                              role: users[index].userRole.userRoleName,
                             ),
                           ),
                           color: Theme.of(context).colorScheme.surface,
                           name: users[index].firstName,
-                          imagePath: users[index].profileHref,
-                          role: users[index].role,
-                          status: users[index].isActive.toString(),
+                          role: users[index].userRole.userRoleLabel,
+                          status: users[index].isActive ? "فعال" : "غیرفعال",
                           borderRadius: 10,
                         ),
                       );

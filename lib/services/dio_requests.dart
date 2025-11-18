@@ -56,13 +56,11 @@ class ApiService {
   // Fetch User
   //
   Future<User> fetchUserProfile() async {
-    final userId = await storage.read(key: "userId");
-
     try {
-      final response = await dio.get('/api/users/$userId/');
+      final response = await dio.post('/api/shouka/users/profile');
 
-      log(response.data.toString());
-      return User.fromJson(response.data);
+      log(response.data["data"].toString());
+      return User.fromJson(response.data["data"]);
     } on DioException catch (e) {
       throw Exception("Failed to get user profile: ${e.response?.statusCode}");
     }

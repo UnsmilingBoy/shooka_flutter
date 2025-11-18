@@ -48,7 +48,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
     final tiles = [
       {"title": "نام", "icon": Icon(Icons.label), "value": name},
-      {"title": "نقش", "icon": Icon(Icons.badge), "value": user?.role},
+      {
+        "title": "نقش",
+        "icon": Icon(Icons.badge),
+        "value": user?.userRole.userRoleLabel,
+      },
       {
         "title": "نام کاربری",
         "icon": Icon(Icons.person_rounded),
@@ -59,7 +63,11 @@ class _ProfilePageState extends State<ProfilePage> {
         "icon": Icon(Icons.phone),
         "value": user?.phoneNumber,
       },
-      {"title": "ایمیل", "icon": Icon(Icons.email), "value": user?.email},
+      {
+        "title": "ایمیل",
+        "icon": Icon(Icons.email),
+        "value": user?.email ?? "بدون ایمیل",
+      },
     ];
 
     return Directionality(
@@ -95,13 +103,23 @@ class _ProfilePageState extends State<ProfilePage> {
                                 email: user.email,
                                 name: name,
                                 phoneNumber: user.phoneNumber,
-                                profileHref: user.profileHref,
                                 username: user.username,
                               ),
                             ),
                             child: CircleAvatar(
-                              backgroundImage: NetworkImage(user!.profileHref),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
                               radius: 60,
+                              child: Text(
+                                user!.firstName.isNotEmpty
+                                    ? user.firstName[0].toUpperCase()
+                                    : "U",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.apply(color: Colors.white),
+                              ),
                             ),
                           ),
                         ),
@@ -110,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         Text(
-                          user.role,
+                          user.userRole.userRoleLabel,
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ],
@@ -135,7 +153,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           email: user.email,
                           name: name,
                           phoneNumber: user.phoneNumber,
-                          profileHref: user.profileHref,
                           username: user.username,
                         ),
                       ),
@@ -202,7 +219,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           email: user.email,
                           name: name,
                           phoneNumber: user.phoneNumber,
-                          profileHref: user.profileHref,
                           username: user.username,
                         ),
                       ),

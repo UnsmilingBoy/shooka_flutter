@@ -46,7 +46,6 @@ class _MyHomePageState extends State<MyHomePage> {
     bool deviceLoading = context.watch<DeviceProvider>().isLoading;
 
     return ProfileScaffold(
-      image: user?.profileHref ?? "",
       name: name,
       username: user?.username ?? "",
       body: Directionality(
