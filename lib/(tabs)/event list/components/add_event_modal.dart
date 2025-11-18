@@ -165,7 +165,7 @@ class _AddEventModalState extends State<AddEventModal> {
                 events: eventsList,
               );
 
-              if (status == 201) {
+              if (status >= 200 && status < 300) {
                 filledSuccessToast(title: 'رویداد با موفقیت اضافه شد.');
               } else {
                 filledErrorToast(

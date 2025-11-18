@@ -41,7 +41,7 @@ class Device {
       name: json['name'] ?? '',
       organization: json['organization'] ?? '',
       latLong: json['lat_long'],
-      engineRoomFeature: json['engine_room_feature'],
+      engineRoomFeature: json['engineroomfeature_id'],
       location: json['location_id'],
       details: DeviceDetails.fromJson(json['details'] ?? {}),
       status: json['status'] == true

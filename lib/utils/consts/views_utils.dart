@@ -3,10 +3,22 @@ String? getMain3DViewById({
   required int id,
   bool? returnNameOnly,
 }) {
-  final feature = features.firstWhere((f) => f['id'] == id, orElse: () => {});
+  if (features == null || features is! List || features.isEmpty) {
+    return null;
+  }
+
+  final feature = features.firstWhere(
+    (f) => f != null && f['id'] == id,
+    orElse: () => null,
+  );
+
+  if (feature == null) {
+    return null;
+  }
+
   if (returnNameOnly == true) {
-    return feature.isNotEmpty ? feature['main_3d_view'] : null;
+    return feature['main_3d_view'];
   }
   // Return the full URL from the API response
-  return feature.isNotEmpty ? feature['main_3d_view_url'] : null;
+  return feature['main_3d_view_url'];
 }
