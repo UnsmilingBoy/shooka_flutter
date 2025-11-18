@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/basic%20device%20info/complete_dp_basic_info.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
-import 'package:shooka_flutter/utils/consts/views_list.dart';
+import 'package:shooka_flutter/utils/consts/views_utils.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/image%20views/image_with_caption.dart';
 
@@ -66,7 +66,7 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
           width: double.infinity,
           height: MediaQuery.sizeOf(context).width > 600 ? 400 : 200,
           child: ImageWithCaption(
-            localImagepath: getMain3DViewById(
+            networkImagePath: getMain3DViewById(
               features: features,
               id: basicData?.engineRoomFeature ?? 1,
             ),

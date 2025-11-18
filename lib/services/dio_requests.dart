@@ -210,7 +210,6 @@ class ApiService {
   // Fetch Event List
   //
   Future<List<Event>> fetchEventList({
-    required bool all,
     int? creator,
     int? device,
     String? start,
@@ -219,7 +218,7 @@ class ApiService {
     String? search,
   }) async {
     final queryParams = {
-      "all": all == true ? "true" : "false",
+      "data_per_page": 1000,
       if (creator != null) "creator": creator,
       if (device != null) "device": device,
       if (start != null) "start": start,
@@ -229,13 +228,13 @@ class ApiService {
     };
 
     try {
-      final response = await dio.get(
-        '/api/event-history/',
-        queryParameters: queryParams,
+      final response = await dio.post(
+        '/api/shouka/events/list/',
+        data: queryParams,
       );
       log("${response.data}");
 
-      final List<dynamic> data = all ? response.data : response.data["results"];
+      final List<dynamic> data = response.data["results"];
       return data.map((json) => Event.fromJson(json)).toList();
     } on DioException catch (e) {
       throw Exception("Failed to get events: ${e.response?.statusCode}");
@@ -254,7 +253,7 @@ class ApiService {
 
     log(body.toString());
     try {
-      final response = await dio.post('/api/event-history/', data: body);
+      final response = await dio.post('/api/shouka/events/add/', data: body);
       log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
@@ -335,6 +334,7 @@ class ApiService {
       "location": location,
       "organization": organization,
       "status": status,
+      "plan": "free", //TODO: Change This to selected plan
       "lat_long": latLong,
       "details": {"name": name, "serial_number": serialNumber},
       "images": images,
@@ -740,6 +740,38 @@ class ApiService {
       return response.data;
     } on DioException catch (e) {
       throw Exception("Failed to get apk version: ${e.response}");
+    }
+  }
+
+  //
+  // Fetch Engineroom Features (3D Views)
+  //
+  Future<dynamic> fetchEngineroomFeatures({
+    required int page,
+    String? search,
+  }) async {
+    final body = {
+      "page": page,
+      "data_per_page": 1000,
+      if (search != null) "search": search,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/objects/engineroomfeature/',
+        data: body,
+      );
+
+      log(response.data.toString());
+
+      final List<dynamic> data = response.data["results"];
+      final int totalPages = response.data["total_pages"];
+
+      return {"pages": totalPages, "results": data};
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get engineroom features: ${e.response?.statusCode}",
+      );
     }
   }
 }

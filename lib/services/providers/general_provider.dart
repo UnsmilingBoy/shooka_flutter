@@ -15,6 +15,12 @@ class GeneralProvider with ChangeNotifier {
   dynamic _filters;
   bool _fetchFiltersIsLoading = false;
 
+  // Engineroom Features Variables
+  List<dynamic> _engineroomFeatures = [];
+  bool _fetchEngineroomFeaturesLoading = false;
+  int _engineroomFeaturesTotalPages = 1;
+  int _engineroomFeaturesPage = 1;
+
   // Locations Variables
   List<Location> _locations = [];
   bool _fetchLocationsLoading = false;
@@ -42,6 +48,12 @@ class GeneralProvider with ChangeNotifier {
   // Filters Getters
   dynamic get filters => _filters;
   bool get isLoading => _fetchFiltersIsLoading;
+
+  // Engineroom Features Getters
+  bool get fetchEngineroomFeaturesLoading => _fetchEngineroomFeaturesLoading;
+  List<dynamic> get engineroomFeatures => _engineroomFeatures;
+  int get engineroomFeaturesTotalPages => _engineroomFeaturesTotalPages;
+  int get engineroomFeaturesPage => _engineroomFeaturesPage;
 
   // Locations Getters
   bool get fetchLocationsLoading => _fetchLocationsLoading;
@@ -278,6 +290,33 @@ class GeneralProvider with ChangeNotifier {
       _apkDownloadUrl = response['download_url'];
     } catch (e) {
       debugPrint("Error fetching APK version: $e");
+    }
+  }
+
+  //
+  // Fetch Engineroom Features (3D Views)
+  //
+  Future<void> fetchEngineroomFeatures({
+    required int page,
+    String? search,
+  }) async {
+    _fetchEngineroomFeaturesLoading = true;
+    _engineroomFeaturesPage = 1;
+    notifyListeners();
+
+    try {
+      final result = await api.fetchEngineroomFeatures(
+        page: page,
+        search: search,
+      );
+      _engineroomFeatures = result["results"];
+      _engineroomFeaturesTotalPages = result["pages"];
+    } catch (e) {
+      _engineroomFeatures = [];
+      debugPrint("Error fetching engineroom features: $e");
+    } finally {
+      _fetchEngineroomFeaturesLoading = false;
+      notifyListeners();
     }
   }
 }

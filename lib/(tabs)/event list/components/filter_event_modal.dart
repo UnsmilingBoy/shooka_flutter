@@ -174,7 +174,6 @@ class _FilterEventModalState extends State<FilterEventModal> {
           saveText: "فیلتر",
           onSave: () {
             eventProvider.loadEvents(
-              all: true,
               search: eventProvider.lastSearchedText,
               start: startDate,
               end: endDate,

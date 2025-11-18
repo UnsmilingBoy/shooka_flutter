@@ -22,6 +22,7 @@ class ImageWithCaption extends StatelessWidget {
         fit: fit,
         errorBuilder: (context, error, stackTrace) {
           if (localImagepath != null) {
+            print("Loading local image due to network error: $error");
             return Image.asset(localImagepath!, fit: fit ?? BoxFit.contain);
           }
           return Container(

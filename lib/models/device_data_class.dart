@@ -42,7 +42,7 @@ class Device {
       organization: json['organization'] ?? '',
       latLong: json['lat_long'],
       engineRoomFeature: json['engine_room_feature'],
-      location: json['location'],
+      location: json['location_id'],
       details: DeviceDetails.fromJson(json['details'] ?? {}),
       status: json['status'] == true
           ? "تایید شده"

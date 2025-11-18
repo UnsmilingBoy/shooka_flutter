@@ -24,7 +24,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      context.read<EventProvider>().loadEvents(all: true);
+      context.read<EventProvider>().loadEvents();
       context.read<DeviceProvider>().loadDevices(all: false, page: 1);
     });
   }

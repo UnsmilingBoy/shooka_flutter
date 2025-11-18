@@ -20,10 +20,7 @@ class _DpEventsState extends State<DpEvents> {
     super.initState();
 
     Future.microtask(() {
-      context.read<EventProvider>().loadEvents(
-        all: true,
-        device: widget.deviceId,
-      );
+      context.read<EventProvider>().loadEvents(device: widget.deviceId);
     });
   }
 

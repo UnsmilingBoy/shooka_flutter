@@ -166,30 +166,58 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
         // Preview of selected engine room feature
         //
         if (featureInitialValue != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade700),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "پیش نمایش:",
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                  SizedBox(height: 8),
-                  ClipRRect(
+          Builder(
+            builder: (context) {
+              // Find the selected feature to get the image URL
+              final selectedFeature =
+                  (generalProvider.filters?["features"] ?? []).firstWhere(
+                    (f) => f["main_3d_view"] == featureInitialValue,
+                    orElse: () => null,
+                  );
+
+              final imageUrl = selectedFeature?["main_3d_view_url"];
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade700),
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      "assets/images/views/$featureInitialValue.png",
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "پیش نمایش:",
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      SizedBox(height: 8),
+                      if (imageUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                padding: EdgeInsets.all(20),
+                                color: Colors.grey.shade800,
+                                child: Center(
+                                  child: Text(
+                                    "تصویر در دسترس نیست",
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      else
+                        Container(
                           padding: EdgeInsets.all(20),
                           color: Colors.grey.shade800,
                           child: Center(
@@ -198,13 +226,12 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                               style: Theme.of(context).textTheme.labelSmall,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
 
         Padding(

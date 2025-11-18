@@ -4,7 +4,7 @@ import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
-import 'package:shooka_flutter/utils/consts/views_list.dart';
+import 'package:shooka_flutter/utils/consts/views_utils.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';

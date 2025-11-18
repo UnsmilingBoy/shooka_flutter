@@ -24,7 +24,7 @@ class _EventsTabState extends State<EventsTab> {
     super.initState();
 
     Future.microtask(() {
-      context.read<EventProvider>().loadEvents(all: true);
+      context.read<EventProvider>().loadEvents();
     });
 
     // Opens the add event modal if the route was "/add_event"
@@ -73,10 +73,7 @@ class _EventsTabState extends State<EventsTab> {
               setState(() {
                 searchValue = value;
               }),
-              await context.read<EventProvider>().loadEvents(
-                all: true,
-                search: value,
-              ),
+              await context.read<EventProvider>().loadEvents(search: value),
             },
             searchController: searchController,
             filterModal: FilterEventModal(),

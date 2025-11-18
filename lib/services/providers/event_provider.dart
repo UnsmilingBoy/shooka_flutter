@@ -23,7 +23,6 @@ class EventProvider with ChangeNotifier {
   // Load Events
   //
   Future<void> loadEvents({
-    required bool all,
     int? creator,
     int? device,
     String? start,
@@ -66,7 +65,6 @@ class EventProvider with ChangeNotifier {
 
     try {
       _events = await api.fetchEventList(
-        all: all,
         search: search,
         creator: creator,
         device: device,
@@ -106,7 +104,7 @@ class EventProvider with ChangeNotifier {
       print(e);
       return -1;
     } finally {
-      loadEvents(all: true);
+      loadEvents();
       _addLoading = false;
       notifyListeners();
     }

@@ -60,13 +60,14 @@ class AuthService {
         // Call backend logout endpoint if available
         try {
           final res = await dio.post(
-            "$baseUrl/apiv2/shouka/api/auth/logout/",
+            "$baseUrl/api/shouka/logout/",
             options: Options(
               headers: {
                 "Authorization": "Token $token",
                 "Content-Type": "application/json",
               },
             ),
+            data: {"token": token},
           );
 
           if (kDebugMode) {
