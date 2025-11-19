@@ -14,11 +14,13 @@ class Device {
   final String? address;
   final String? city;
   final String? province;
+  final String? plan;
   final String createdAt; // Jalali date string
 
   Device({
     required this.address,
     required this.city,
+    required this.plan,
     required this.province,
     required this.serialNumber,
     required this.id,
@@ -55,6 +57,7 @@ class Device {
       city: json["city"] ?? "",
       province: json["province"] ?? "",
       serialNumber: json["serial_number"] ?? "",
+      plan: json["plan"] ?? "",
     );
   }
 }

@@ -90,7 +90,9 @@ class AuthService {
       // Clear Dio Authorization header
       dio.options.headers.remove('Authorization');
     } catch (e) {
-      print("Logout error: $e");
+      if (kDebugMode) {
+        print("Logout error: $e");
+      }
       await storage.delete(key: _kToken);
       await storage.delete(key: _kUserId);
       dio.options.headers.remove('Authorization');

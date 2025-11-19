@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:typed_data';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -83,7 +84,7 @@ class EncryptionService {
       final unpaddedData = _pkcs7Unpad(Uint8List.fromList(decrypted));
       return utf8.decode(unpaddedData);
     } catch (e) {
-      print('Decryption error: $e');
+      log('Decryption error: $e');
       return encryptedText; // Return original if decryption fails
     }
   }

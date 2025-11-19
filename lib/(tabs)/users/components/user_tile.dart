@@ -22,7 +22,7 @@ class UserTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ContainerButton(
       borderRadius: borderRadius,
-      onPressed: onPressed ?? () => print("cat"),
+      onPressed: onPressed,
       color: color,
       child: ListTile(
         contentPadding: EdgeInsets.zero,

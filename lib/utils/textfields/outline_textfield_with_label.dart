@@ -6,12 +6,14 @@ class Outlinetextfieldwithlabel extends StatelessWidget {
   final TextEditingController controller;
   final String placeHolder;
   final bool? isPassword;
+  final bool? isSerialNumber;
   const Outlinetextfieldwithlabel({
     super.key,
     required this.label,
     required this.controller,
     required this.placeHolder,
     this.isPassword,
+    this.isSerialNumber,
   });
 
   @override
@@ -22,6 +24,7 @@ class Outlinetextfieldwithlabel extends StatelessWidget {
       children: [
         Text(label),
         Outlinetextfield(
+          isSerialNumber: isSerialNumber,
           placeholder: placeHolder,
           controller: controller,
           isPassword: isPassword,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
@@ -23,6 +24,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
   String? orgInitialValue;
   String? installerInitialValue;
   String? featureInitialValue;
+  String? planInitialValue;
 
   setInitialValues() {
     final deviceProvider = context.read<DeviceProvider>();
@@ -43,6 +45,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
       id: basicData?.engineRoomFeature ?? -1,
       returnNameOnly: true,
     );
+    planInitialValue = basicData?.plan;
   }
 
   @override
@@ -89,6 +92,14 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
             )
             .toList(),
       },
+      {
+        "label": "پلن",
+        "initialValue": planInitialValue,
+        "items": [
+          myDropDownItem(value: "free", label: "رایگان"),
+          myDropDownItem(value: "optimized", label: "بهینه"),
+        ],
+      },
     ];
 
     return BottomModalTemplate(
@@ -127,6 +138,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
                 if (label == "ویژگی موتورخانه") {
                   featureInitialValue = null;
                 }
+                if (label == "پلن") planInitialValue = null;
               }),
               onChanged: (value) => setState(() {
                 final label = dropdownList[index]["label"] as String;
@@ -134,6 +146,8 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
                   orgInitialValue = value;
                 } else if (label == "ویژگی موتورخانه") {
                   featureInitialValue = value;
+                } else if (label == "پلن") {
+                  planInitialValue = value;
                 }
               }),
               initialValue: dropdownList[index]["initialValue"] as String?,
@@ -167,10 +181,13 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
                     : _serialNumberController.text,
                 organization: int.parse(orgInitialValue ?? '-1'),
                 engineRoomFeature: featureInitialValue ?? '',
+                plan: planInitialValue,
               );
 
               if (status >= 200 && status < 300) {
-                print("status is$status");
+                if (kDebugMode) {
+                  print("status is$status");
+                }
                 filledSuccessToast(title: "اطلاعات با موفقیت ثبت شد.");
               } else {
                 filledErrorToast(title: "خطایی در ثبت اطلاعات رخ داد.");

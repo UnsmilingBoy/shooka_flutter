@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/services/multiple_image_service.dart';
@@ -75,7 +76,9 @@ class _DeviceImagesState extends State<DeviceImages> {
                           if (value == true) {
                             _selected.add(index);
                             selectedForRemove.add(imageItem.imageId);
-                            print(selectedForRemove);
+                            if (kDebugMode) {
+                              print(selectedForRemove);
+                            }
                           } else {
                             _selected.remove(index);
                             selectedForRemove.remove(imageItem.imageId);

@@ -21,9 +21,11 @@ class EncryptionInterceptor extends Interceptor {
       if (options.data != null) {
         String plainData;
 
-        // Convert data to JSON string
+        // Convert data to JSON string with Unicode support
         if (options.data is Map || options.data is List) {
-          plainData = jsonEncode(options.data);
+          // Use JsonEncoder with indent for better readability and toEncodable for Unicode
+          const encoder = JsonEncoder.withIndent('  ');
+          plainData = encoder.convert(options.data);
         } else if (options.data is String) {
           plainData = options.data;
         } else {
@@ -56,9 +58,12 @@ class EncryptionInterceptor extends Interceptor {
         if (response.data is Map) {
           String? encryptedData;
 
-          if (response.data['data'] != null) {
+          // Check if data is a String (encrypted) or already a Map (not encrypted)
+          if (response.data['data'] != null &&
+              response.data['data'] is String) {
             encryptedData = response.data['data'] as String;
-          } else if (response.data['ciphertext'] != null) {
+          } else if (response.data['ciphertext'] != null &&
+              response.data['ciphertext'] is String) {
             encryptedData = response.data['ciphertext'] as String;
           }
 
@@ -70,14 +75,18 @@ class EncryptionInterceptor extends Interceptor {
               encryptedData,
             );
 
-            log('Decrypted response: $decryptedData');
-
-            // Parse the decrypted JSON string back to object
+            // Parse the decrypted JSON string back to object and log with proper Unicode
             try {
-              response.data = jsonDecode(decryptedData);
+              final decodedJson = jsonDecode(decryptedData);
+              response.data = decodedJson;
+
+              // Log with proper Unicode formatting
+              const encoder = JsonEncoder.withIndent('  ');
+              log('Decrypted response: ${encoder.convert(decodedJson)}');
             } catch (e) {
               // If not valid JSON, keep as string
               response.data = decryptedData;
+              log('Decrypted response: $decryptedData');
             }
           }
         } else if (response.data is String) {
@@ -111,6 +120,9 @@ class EncryptionInterceptor extends Interceptor {
     // Try to decrypt error response if it exists
     try {
       log(
+        'API Error: ${err.response?.statusCode} ${err.requestOptions.method} ${err.requestOptions.path}',
+      );
+      log(
         'Error interceptor - response data type: ${err.response?.data.runtimeType}',
       );
       log('Error interceptor - response data: ${err.response?.data}');
@@ -119,9 +131,12 @@ class EncryptionInterceptor extends Interceptor {
         if (err.response!.data is Map) {
           String? encryptedData;
 
-          if (err.response!.data['data'] != null) {
+          // Check if data is a String (encrypted) or already a Map (not encrypted)
+          if (err.response!.data['data'] != null &&
+              err.response!.data['data'] is String) {
             encryptedData = err.response!.data['data'] as String;
-          } else if (err.response!.data['ciphertext'] != null) {
+          } else if (err.response!.data['ciphertext'] != null &&
+              err.response!.data['ciphertext'] is String) {
             encryptedData = err.response!.data['ciphertext'] as String;
           }
 
@@ -130,12 +145,21 @@ class EncryptionInterceptor extends Interceptor {
             final decryptedData = await encryptionService.decryptData(
               encryptedData,
             );
-            log('Decrypted error response: $decryptedData');
 
             try {
-              err.response!.data = jsonDecode(decryptedData);
+              final decodedJson = jsonDecode(decryptedData);
+              err.response!.data = decodedJson;
+
+              // Log with proper Unicode formatting
+              const encoder = JsonEncoder.withIndent('  ');
+              log(
+                'Error Response [${err.response?.statusCode}]: ${encoder.convert(decodedJson)}',
+              );
             } catch (e) {
               err.response!.data = decryptedData;
+              log(
+                'Error Response [${err.response?.statusCode}]: $decryptedData',
+              );
             }
           }
         } else if (err.response!.data is String) {
@@ -145,12 +169,21 @@ class EncryptionInterceptor extends Interceptor {
             final decryptedData = await encryptionService.decryptData(
               err.response!.data,
             );
-            log('Decrypted error response: $decryptedData');
 
             try {
-              err.response!.data = jsonDecode(decryptedData);
+              final decodedJson = jsonDecode(decryptedData);
+              err.response!.data = decodedJson;
+
+              // Log with proper Unicode formatting
+              const encoder = JsonEncoder.withIndent('  ');
+              log(
+                'Error Response [${err.response?.statusCode}]: ${encoder.convert(decodedJson)}',
+              );
             } catch (e) {
               err.response!.data = decryptedData;
+              log(
+                'Error Response [${err.response?.statusCode}]: $decryptedData',
+              );
             }
           } catch (e) {
             log('Error response decryption failed: $e');

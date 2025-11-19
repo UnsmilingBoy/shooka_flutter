@@ -34,6 +34,9 @@ class DeviceProvider with ChangeNotifier {
   String? lastSelectedAdmin;
   String? lastSelectedProvince;
   String? lastSelectedCity;
+  String? lastSelectedPlan;
+  String? lastStartDate;
+  String? lastEndDate;
   int filterCount = 0;
   int _devicesPage = 1;
   int _devicesTotalPages = 1;
@@ -60,6 +63,9 @@ class DeviceProvider with ChangeNotifier {
     String? province,
     String? city,
     String? search,
+    String? plan,
+    String? start,
+    String? end,
   }) async {
     _isLoading = true;
     _devicesPage = 1; // Reset page counter when loading devices
@@ -102,6 +108,28 @@ class DeviceProvider with ChangeNotifier {
       lastSelectedCity = null;
     }
 
+    if (plan != null) {
+      lastSelectedPlan = plan;
+      filterCount++;
+    } else {
+      lastSelectedPlan = null;
+    }
+
+    if (start != null) {
+      lastStartDate = start;
+      filterCount++;
+    } else {
+      lastStartDate = null;
+    }
+
+    if (end != null) {
+      lastEndDate = end;
+      // Don't increment filterCount for end date if start is already counted
+      // as they represent a single date range filter
+    } else {
+      lastEndDate = null;
+    }
+
     if (search != null) {
       lastSearchedText = search;
     }
@@ -121,6 +149,9 @@ class DeviceProvider with ChangeNotifier {
         organization: organization,
         province: province,
         search: search,
+        plan: plan,
+        start: start,
+        end: end,
       );
 
       _devices = response["data"];
@@ -169,6 +200,9 @@ class DeviceProvider with ChangeNotifier {
           organization: lastSelectedOrg,
           province: lastSelectedProvince,
           city: lastSelectedCity,
+          plan: lastSelectedPlan,
+          start: lastStartDate,
+          end: lastEndDate,
         );
         _devices.addAll(
           nextPageDevices["data"],
@@ -184,6 +218,22 @@ class DeviceProvider with ChangeNotifier {
   }
 
   //
+  // Clear All Filters
+  //
+  void clearFilters() {
+    lastSelectedInstaller = null;
+    lastSelectedOrg = null;
+    lastSelectedAdmin = null;
+    lastSelectedProvince = null;
+    lastSelectedCity = null;
+    lastSelectedPlan = null;
+    lastStartDate = null;
+    lastEndDate = null;
+    filterCount = 0;
+    notifyListeners();
+  }
+
+  //
   // Add Device
   //
   Future<int> addDevice({
@@ -193,6 +243,7 @@ class DeviceProvider with ChangeNotifier {
     required String engineRoomFeature,
     required int location,
     required int organization,
+    String? plan,
     String? latLong,
     required List<String> images,
   }) async {
@@ -215,11 +266,12 @@ class DeviceProvider with ChangeNotifier {
         organization: organization,
         serialNumber: serialNumber,
         status: true,
+        plan: plan,
         images: formattedImages, // Use the new list here
       );
       return status;
     } on DioException catch (e) {
-      print(e);
+      log(e.toString());
       return e.response!.statusCode!;
     } finally {
       loadDevices(all: false, page: 1);
@@ -240,6 +292,7 @@ class DeviceProvider with ChangeNotifier {
     String? engineRoomFeature,
     int? location,
     int? organization,
+    String? plan,
     String? latLong,
   }) async {
     _addLoading = true;
@@ -257,30 +310,16 @@ class DeviceProvider with ChangeNotifier {
         organization: organization,
         serialNumber: serialNumber,
         status: true,
+        plan: plan,
       );
       return status;
     } on DioException catch (e) {
-      print(e);
+      log(e.toString());
       return e.response!.statusCode!;
     } finally {
       loadDevices(all: false, page: 1);
       loadCompleteDeviceInfo(id: id);
       _addLoading = false;
-      notifyListeners();
-    }
-  }
-
-  //
-  // Load Basic Device Info
-  //
-  Future<void> loadBasicDeviceInfo({required int id}) async {
-    _completeInfoLoading = true;
-    notifyListeners();
-
-    try {} catch (e) {
-      print(e.toString());
-    } finally {
-      _completeInfoLoading = false;
       notifyListeners();
     }
   }
@@ -296,7 +335,6 @@ class DeviceProvider with ChangeNotifier {
       _completeDeviceInfo = await api.fetchDevicePageInfo(id: id);
       _device = await api.fetchBasicDeviceInfo(id: id);
     } catch (e) {
-      print("error loading complete device info: $e");
       _completeDeviceInfo = null;
       _device = null;
     } finally {

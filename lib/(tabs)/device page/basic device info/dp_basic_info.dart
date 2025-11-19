@@ -28,6 +28,14 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
       {"title": 'نام نهاد / خصوصی', "value": basicData?.administration},
       {"title": 'نام نصاب', "value": basicData?.creator},
       {"title": 'وضعیت', "value": basicData?.status},
+      {
+        "title": 'پلن',
+        "value": basicData?.plan == "free"
+            ? "رایگان"
+            : basicData?.plan == "optimized"
+            ? "بهینه"
+            : basicData?.plan,
+      },
     ];
 
     return MyExpansionTile(

@@ -1,11 +1,14 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
 
@@ -23,6 +26,10 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
   String? parentInitialValue;
   String? provinceInitialValue;
   String? cityInitialValue;
+  String? planInitialValue;
+  String? date;
+  String? startDate;
+  String? endDate;
 
   @override
   void initState() {
@@ -34,6 +41,34 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
     parentInitialValue = deviceProvider.lastSelectedAdmin;
     provinceInitialValue = deviceProvider.lastSelectedProvince;
     cityInitialValue = deviceProvider.lastSelectedCity;
+    planInitialValue = deviceProvider.lastSelectedPlan;
+    startDate = deviceProvider.lastStartDate;
+    endDate = deviceProvider.lastEndDate;
+
+    // Reconstruct date display string if dates are saved
+    if (startDate != null && endDate != null) {
+      try {
+        // Parse the compact date format (YYYY-MM-DD) with dashes
+        final startParts = startDate!.split('-');
+        final endParts = endDate!.split('-');
+
+        final start = Jalali(
+          int.parse(startParts[0]),
+          int.parse(startParts[1]),
+          int.parse(startParts[2]),
+        );
+        final end = Jalali(
+          int.parse(endParts[0]),
+          int.parse(endParts[1]),
+          int.parse(endParts[2]),
+        );
+
+        date = "${start.formatFullDate()} تا ${end.formatFullDate()}";
+      } catch (e) {
+        log("Error parsing saved dates: $e");
+        date = null;
+      }
+    }
   }
 
   @override
@@ -102,6 +137,14 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
             .toList(),
         "initialValue": cityInitialValue,
       },
+      {
+        "label": "پلن",
+        "items": [
+          myDropDownItem(value: "free", label: "رایگان"),
+          myDropDownItem(value: "optimized", label: "بهینه"),
+        ],
+        "initialValue": planInitialValue,
+      },
     ];
 
     //
@@ -126,6 +169,7 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
               if (label == "وزارت‌خانه") parentInitialValue = null;
               if (label == "استان") provinceInitialValue = null;
               if (label == "شهر") cityInitialValue = null;
+              if (label == "پلن") planInitialValue = null;
             }),
             onChanged: (value) => setState(() {
               final label = filterOptions[index]["label"] as String;
@@ -139,6 +183,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
                 provinceInitialValue = value;
               } else if (label == "شهر") {
                 cityInitialValue = value;
+              } else if (label == "پلن") {
+                planInitialValue = value;
               }
             }),
             items:
@@ -146,6 +192,93 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
             label: filterOptions[index]["label"] as String,
             placeholder: "انتخاب کنید",
             initialValue: filterOptions[index]["initialValue"] as String?,
+          ),
+        ),
+
+        //
+        // Date range picker
+        //
+        Padding(
+          padding: const EdgeInsets.only(top: 5.0, bottom: 10),
+          child: Row(
+            spacing: 10,
+            children: [
+              Text("بازه زمانی نصب:"),
+              if (date != null)
+                Expanded(
+                  child: Text(
+                    date.toString(),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: Colors.white),
+                  ),
+                ),
+              Row(
+                spacing: 5,
+                children: [
+                  if (date != null)
+                    MyIconButton(
+                      onPressed: () {
+                        setState(() {
+                          date = null;
+                          startDate = null;
+                          endDate = null;
+                        });
+                      },
+                      border: Border.all(color: Colors.grey.shade700),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      child: Icon(
+                        Icons.clear,
+                        size: 15,
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
+                  MyIconButton(
+                    //
+                    // Date Range Picker
+                    //
+                    onPressed: () async {
+                      var picked = await myRangePicker(context);
+
+                      if (picked != null) {
+                        setState(() {
+                          startDate = picked.start
+                              .formatCompactDate()
+                              .replaceAll('/', '-');
+                          endDate = picked.end.formatCompactDate().replaceAll(
+                            '/',
+                            '-',
+                          );
+                          date =
+                              "${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}";
+                        });
+                      }
+                    },
+                    border: Border.all(color: Colors.grey.shade700),
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                    child: Row(
+                      spacing: 5,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.date_range_rounded,
+                          size: 15,
+                          color: Theme.of(context).hintColor,
+                        ),
+                        if (date == null)
+                          Text(
+                            "انتخاب بازه",
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
 
@@ -168,6 +301,9 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
               city: cityInitialValue,
               organization: orgInitialValue,
               province: provinceInitialValue,
+              plan: planInitialValue,
+              start: startDate,
+              end: endDate,
             );
 
             Navigator.pop(context);

@@ -150,6 +150,15 @@ class _DeviceListState extends State<DeviceList> {
                 all: false,
                 page: 1,
                 search: value,
+                // Preserve existing filters
+                installer: deviceProvider.lastSelectedInstaller,
+                organization: deviceProvider.lastSelectedOrg,
+                administration: deviceProvider.lastSelectedAdmin,
+                province: deviceProvider.lastSelectedProvince,
+                city: deviceProvider.lastSelectedCity,
+                plan: deviceProvider.lastSelectedPlan,
+                start: deviceProvider.lastStartDate,
+                end: deviceProvider.lastEndDate,
               );
             },
             searchController: searchController,
@@ -170,6 +179,57 @@ class _DeviceListState extends State<DeviceList> {
                   ),
                 ),
               ],
+            ),
+
+          //
+          // Active Filters Indicator
+          //
+          if (deviceProvider.filterCount > 0)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.filter_alt, size: 16, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "${deviceProvider.filterCount} فیلتر فعال",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: Colors.white),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      deviceProvider.clearFilters();
+                      await deviceProvider.loadDevices(
+                        all: false,
+                        page: 1,
+                        search: searchValue.isEmpty ? null : searchValue,
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      minimumSize: Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      "پاک کردن فیلترها",
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
 
           //

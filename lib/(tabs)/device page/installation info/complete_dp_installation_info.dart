@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:provider/provider.dart';
@@ -161,7 +162,9 @@ class _CompleteDpInstallationInfoState
                     setState(() {
                       installationDateLabel = pickedDate.formatFullDate();
                       installationDate = pickedDate.formatCompactDate();
-                      print(installationDate);
+                      if (kDebugMode) {
+                        print(installationDate);
+                      }
                     });
                   }
                 },

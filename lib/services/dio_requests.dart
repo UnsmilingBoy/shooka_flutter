@@ -59,7 +59,6 @@ class ApiService {
     try {
       final response = await dio.post('/api/shouka/users/profile');
 
-      log(response.data["data"].toString());
       return User.fromJson(response.data["data"]);
     } on DioException catch (e) {
       throw Exception("Failed to get user profile: ${e.response?.statusCode}");
@@ -103,10 +102,8 @@ class ApiService {
         "profile_image": "data:image/jpeg;base64,$profilePic",
     };
 
-    log(body.toString());
     try {
       final response = await dio.post('/api/users/', data: body);
-      log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add user: ${e.response}");
@@ -120,7 +117,6 @@ class ApiService {
     try {
       final response = await dio.delete('/api/users/$id/');
 
-      log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to delete user: ${e.response?.statusCode}");
@@ -168,11 +164,8 @@ class ApiService {
       "is_staff": isStaff,
     };
 
-    log("user update body: $body");
-
     try {
       final response = await dio.patch('/api/users/$userId/', data: body);
-      log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception(
@@ -197,7 +190,6 @@ class ApiService {
         '/api/users/$userId/change_password/',
         data: body,
       );
-      log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to change password: ${e.response?.statusCode}");
@@ -230,7 +222,6 @@ class ApiService {
         '/api/shouka/events/list/',
         data: queryParams,
       );
-      log("${response.data}");
 
       final List<dynamic> data = response.data["results"];
       return data.map((json) => Event.fromJson(json)).toList();
@@ -249,10 +240,8 @@ class ApiService {
   }) async {
     var body = {"device": device, "title": title, "events": events};
 
-    log(body.toString());
     try {
       final response = await dio.post('/api/shouka/events/add/', data: body);
-      log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add event: ${e.response}");
@@ -271,6 +260,9 @@ class ApiService {
     String? province,
     String? city,
     String? search,
+    String? plan,
+    String? start,
+    String? end,
   }) async {
     final queryParams = {
       "all": all == true ? "true" : "false",
@@ -282,6 +274,9 @@ class ApiService {
       if (province != null) "province": province,
       if (city != null) "city": city,
       if (search != null) "search": search,
+      if (plan != null) "plan": plan,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
     };
 
     log("query params for devices are: $queryParams");
@@ -291,7 +286,6 @@ class ApiService {
         '/api/shouka/devices-list/',
         data: queryParams,
       );
-      log(response.data.toString());
 
       if (response.statusCode == 200) {
         final List<dynamic> data = page != null
@@ -321,6 +315,7 @@ class ApiService {
     required int location,
     required int organization,
     required bool status,
+    String? plan,
     String? latLong,
     required List<String> images,
   }) async {
@@ -332,16 +327,14 @@ class ApiService {
       "location": location,
       "organization": organization,
       "status": status,
-      "plan": "free", //TODO: Change This to selected plan
+      if (plan != null) "plan": plan,
       "lat_long": latLong,
       "details": {"name": name, "serial_number": serialNumber},
       "images": images,
     };
 
-    log(body.toString());
     try {
       final response = await dio.post('/api/shouka/devices/add', data: body);
-      log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       log("Failed to add device: ${e.response}");
@@ -361,6 +354,7 @@ class ApiService {
     int? location,
     int? organization,
     bool? status,
+    String? plan,
     String? latLong,
   }) async {
     var body = {
@@ -374,13 +368,12 @@ class ApiService {
       if (location != null) "location": location,
       if (organization != null) "organization": organization,
       if (status != null) "status": status,
+      if (plan != null) "plan": plan,
       if (latLong != null) "lat_long": latLong,
     };
 
-    log(body.toString());
     try {
       final response = await dio.post('/api/shouka/devices/edit', data: body);
-      log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       log("Failed to edit device: ${e.response}");
@@ -398,7 +391,6 @@ class ApiService {
         data: {"id": id},
       );
 
-      log(response.data.toString());
       return Device.fromJson(response.data["data"]);
     } on DioException catch (e) {
       throw Exception(
@@ -417,7 +409,6 @@ class ApiService {
         data: {"device_id": id},
       );
 
-      log(response.data.toString());
       return CompleteDeviceInfo.fromJson(response.data["data"]);
     } on DioException catch (e) {
       throw Exception(
@@ -527,13 +518,11 @@ class ApiService {
       ...body,
     };
 
-    log(sendBody.toString());
     try {
       final response = await dio.post(
         '/api/shouka/device/edit-info/',
         data: sendBody,
       );
-      log(response.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       log("Failed to update device: ${e.response}");
@@ -549,14 +538,12 @@ class ApiService {
     required List<int> idList,
   }) async {
     var body = {"device_id": deviceId, "images_id": idList};
-    print(body);
 
     try {
       final response = await dio.post(
         '/apiv2/device/delete-images/',
         data: body,
       );
-      log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to remove images: ${e.response?.statusCode}");
@@ -570,7 +557,6 @@ class ApiService {
     try {
       final response = await dio.post('/api/shouka/get_option_for_insert/');
 
-      log("${response.data}");
       return response.data;
     } on DioException catch (e) {
       throw Exception(
@@ -598,8 +584,6 @@ class ApiService {
         data: queryParams,
       );
 
-      log("${response.data}");
-
       final List<dynamic> data = response.data["results"];
       final int totalPages = response.data["total_pages"];
       return {
@@ -625,11 +609,9 @@ class ApiService {
       "organization": name,
       "administration": administration,
     };
-    print(body);
 
     try {
       final response = await dio.post('/api/shouka/objects/edit', data: body);
-      log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to edit org: ${e.response?.statusCode}");
@@ -651,7 +633,6 @@ class ApiService {
 
     try {
       final response = await dio.post('/api/shouka/objects/add', data: body);
-      log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add org: ${e.response?.statusCode}");
@@ -677,7 +658,6 @@ class ApiService {
         data: queryParams,
       );
 
-      log("${response.data}");
       final List<dynamic> data = response.data["results"];
       final int totalPages = response.data["total_pages"];
       return {
@@ -706,7 +686,6 @@ class ApiService {
 
     try {
       final response = await dio.post('/api/shouka/objects/edit', data: body);
-      log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to edit location: ${e.response?.statusCode}");
@@ -724,7 +703,6 @@ class ApiService {
 
     try {
       final response = await dio.post('/api/shouka/objects/add', data: body);
-      log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add location: ${e.response?.statusCode}");
@@ -763,8 +741,6 @@ class ApiService {
         '/api/shouka/objects/engineroomfeature/',
         data: body,
       );
-
-      log(response.data.toString());
 
       final List<dynamic> data = response.data["results"];
       final int totalPages = response.data["total_pages"];

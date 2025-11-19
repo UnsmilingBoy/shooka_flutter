@@ -6,6 +6,7 @@ class Outlinetextfield extends StatefulWidget {
   final String? placeholder;
   final double? height;
   final bool? isPassword;
+  final bool? isSerialNumber;
   final Function(String value)? onSubmitted;
   const Outlinetextfield({
     super.key,
@@ -14,6 +15,7 @@ class Outlinetextfield extends StatefulWidget {
     this.height,
     this.isPassword,
     this.onSubmitted,
+    this.isSerialNumber,
   });
 
   @override
@@ -32,6 +34,10 @@ class _OutlinetextfieldState extends State<Outlinetextfield> {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      textDirection: widget.isSerialNumber == true
+          ? TextDirection.ltr
+          : TextDirection.rtl,
+      textAlign: TextAlign.right,
       onSubmitted: widget.onSubmitted,
       style: Theme.of(context).textTheme.labelMedium,
       obscureText: isPassword == true,

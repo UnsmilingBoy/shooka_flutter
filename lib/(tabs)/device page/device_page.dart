@@ -8,6 +8,7 @@ import 'package:shooka_flutter/(tabs)/device%20page/components/dp_events.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/installation%20info/dp_installation_info.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/usage%20info/dp_usage_info.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
 
@@ -27,6 +28,7 @@ class _DevicePageState extends State<DevicePage> {
       context.read<DeviceProvider>().loadCompleteDeviceInfo(
         id: widget.deviceId,
       );
+      context.read<EventProvider>().loadEvents(device: widget.deviceId);
     });
   }
 
@@ -89,7 +91,7 @@ class _DevicePageState extends State<DevicePage> {
                   //
                   // Events
                   //
-                  DpEvents(deviceId: widget.deviceId),
+                  DpEvents(),
                 ],
               ),
             ),

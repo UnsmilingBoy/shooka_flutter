@@ -91,7 +91,9 @@ class ImageService {
         }
       }
     } catch (e) {
-      print('Error picking multiple images: $e');
+      if (kDebugMode) {
+        print('Error picking multiple images: $e');
+      }
       return [];
     }
   }

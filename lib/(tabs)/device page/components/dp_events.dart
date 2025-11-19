@@ -6,23 +6,8 @@ import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 
-class DpEvents extends StatefulWidget {
-  final int deviceId;
-  const DpEvents({super.key, required this.deviceId});
-
-  @override
-  State<DpEvents> createState() => _DpEventsState();
-}
-
-class _DpEventsState extends State<DpEvents> {
-  @override
-  void initState() {
-    super.initState();
-
-    Future.microtask(() {
-      context.read<EventProvider>().loadEvents(device: widget.deviceId);
-    });
-  }
+class DpEvents extends StatelessWidget {
+  const DpEvents({super.key});
 
   @override
   Widget build(BuildContext context) {

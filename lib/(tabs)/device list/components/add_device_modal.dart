@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
@@ -37,6 +38,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
   // String? installerInitialValue;
   String? featureInitialValue;
   String? provinceInitialValue;
+  String? planInitialValue;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +91,14 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             )
             .toList(),
       },
+      {
+        "label": "پلن*",
+        "initialValue": planInitialValue,
+        "items": [
+          myDropDownItem(value: "free", label: "آزاد"),
+          myDropDownItem(value: "optimized", label: "بهینه"),
+        ],
+      },
       // {
       //   "label": "نصاب",
       //   "initialValue": installerInitialValue,
@@ -115,6 +125,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
           itemBuilder: (context, index) => Padding(
             padding: const EdgeInsets.only(bottom: 10.0),
             child: Outlinetextfieldwithlabel(
+              isSerialNumber:
+                  textfieldList[index]["controller"] == _serialNumberController,
               label: textfieldList[index]["label"] as String,
               controller:
                   textfieldList[index]["controller"] as TextEditingController,
@@ -141,6 +153,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                   featureInitialValue = null;
                 }
                 if (label == "شهر و استان*") provinceInitialValue = null;
+                if (label == "پلن*") planInitialValue = null;
               }),
               onChanged: (value) => setState(() {
                 final label = dropdownList[index]["label"] as String;
@@ -150,6 +163,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                   featureInitialValue = value;
                 } else if (label == "شهر و استان*") {
                   provinceInitialValue = value;
+                } else if (label == "پلن*") {
+                  planInitialValue = value;
                 }
               }),
               initialValue: dropdownList[index]["initialValue"] as String?,
@@ -258,7 +273,11 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                   );
 
                   if (result != null) {
-                    print('Selected: ${result.latitude}, ${result.longitude}');
+                    if (kDebugMode) {
+                      print(
+                        'Selected: ${result.latitude}, ${result.longitude}',
+                      );
+                    }
                     setState(() {
                       latLong = "${result.latitude}, ${result.longitude}";
                     });
@@ -372,7 +391,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 locationController.text == "" ||
                 orgInitialValue == null ||
                 featureInitialValue == null ||
-                provinceInitialValue == null) {
+                provinceInitialValue == null ||
+                planInitialValue == null) {
               flatErrorToast(title: "لطفا همه ی اطلاعات را وارد کنید.");
             } else if (!RegExp(
               r'^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$',
@@ -389,6 +409,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 engineRoomFeature: featureInitialValue!,
                 location: int.tryParse(provinceInitialValue!)!,
                 organization: int.tryParse(orgInitialValue!)!,
+                plan: planInitialValue,
                 latLong: latLong,
                 images: base64Images,
               );
