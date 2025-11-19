@@ -26,8 +26,8 @@ class AuthInterceptor extends Interceptor {
 
     // If 401, redirect to login immediately (no refresh token in single token auth)
     if (status == 401) {
-      // Clear stored token
-      await auth.logout();
+      // Clear stored token WITHOUT calling backend (to prevent infinite loop)
+      await auth.logout(callBackend: false);
 
       // Redirect to login
       navigatorKey.currentState?.pushNamedAndRemoveUntil(

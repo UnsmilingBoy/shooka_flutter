@@ -300,7 +300,7 @@ class ApiService {
         return {
           "pages": response.data["total_pages"],
           "data": data.map((json) => Device.fromJson(json)).toList(),
-          "headers": response.headers,
+          "percent": response.data["device_connectivity_percent"],
         };
       } else {
         throw Exception('Failed to load devices');
@@ -512,6 +512,12 @@ class ApiService {
       };
     } else if (objectType == "engineroomimages") {
       body = {"object_type": "engineroomimages", "images": images};
+      log("Sending ${images?.length ?? 0} images to backend");
+      if (images != null && images.isNotEmpty) {
+        log(
+          "First image preview (first 100 chars): ${images[0].substring(0, images[0].length > 100 ? 100 : images[0].length)}",
+        );
+      }
     }
 
     dynamic sendBody = {
@@ -615,16 +621,14 @@ class ApiService {
   }) async {
     var body = {
       "id": id,
+      "object_type": "Organization",
       "organization": name,
       "administration": administration,
     };
     print(body);
 
     try {
-      final response = await dio.post(
-        '/apiv2/objects/organization/edit/',
-        data: body,
-      );
+      final response = await dio.post('/api/shouka/objects/edit', data: body);
       log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
@@ -639,13 +643,14 @@ class ApiService {
     required String name,
     required String administration,
   }) async {
-    var body = {"organization": name, "administration": administration};
+    var body = {
+      "organization": name,
+      "administration": administration,
+      "object_type": "organization",
+    };
 
     try {
-      final response = await dio.post(
-        '/apiv2/objects/organization/add/',
-        data: body,
-      );
+      final response = await dio.post('/api/shouka/objects/add', data: body);
       log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
@@ -692,13 +697,15 @@ class ApiService {
     String? province,
     required int id,
   }) async {
-    var body = {"id": id, "city": city, "province": province};
+    var body = {
+      "id": id,
+      "city": city,
+      "province": province,
+      "object_type": "location",
+    };
 
     try {
-      final response = await dio.post(
-        '/apiv2/objects/location/edit/',
-        data: body,
-      );
+      final response = await dio.post('/api/shouka/objects/edit', data: body);
       log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
@@ -713,13 +720,10 @@ class ApiService {
     required String city,
     required String province,
   }) async {
-    var body = {"city": city, "province": province};
+    var body = {"city": city, "province": province, "object_type": "location"};
 
     try {
-      final response = await dio.post(
-        '/apiv2/objects/location/add/',
-        data: body,
-      );
+      final response = await dio.post('/api/shouka/objects/add', data: body);
       log(response.data.toString());
       return response.statusCode ?? -1;
     } on DioException catch (e) {
@@ -732,9 +736,9 @@ class ApiService {
   //
   Future<dynamic> fetchApkVersion() async {
     try {
-      final response = await dio.get('/apiv2/apk-version/');
+      final response = await dio.get('/api/shouka/apk-version/');
 
-      log("${response.data}");
+      log("GET APK VERSION: ${response.data}");
       return response.data;
     } on DioException catch (e) {
       throw Exception("Failed to get apk version: ${e.response}");

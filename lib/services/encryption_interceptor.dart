@@ -14,6 +14,9 @@ class EncryptionInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
+      // Log the endpoint being called
+      log('API Request: ${options.method} ${options.path}');
+
       // Encrypt request data if it exists
       if (options.data != null) {
         String plainData;

@@ -51,21 +51,25 @@ class AuthService {
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout({bool callBackend = true}) async {
     try {
       // Get token from storage
       final token = await storage.read(key: _kToken);
 
-      if (token != null) {
+      // Only call backend if explicitly requested (not on 401 errors to avoid infinite loop)
+      if (token != null && callBackend) {
         // Call backend logout endpoint if available
         try {
           final res = await dio.post(
-            "$baseUrl/api/shouka/logout/",
+            "$baseUrl/api/shouka/logout",
             options: Options(
               headers: {
                 "Authorization": "Token $token",
                 "Content-Type": "application/json",
               },
+              extra: {
+                'skipAuthInterceptor': true,
+              }, // Prevent auth interceptor from triggering on logout
             ),
             data: {"token": token},
           );
@@ -75,6 +79,7 @@ class AuthService {
           }
         } catch (e) {
           log("Backend logout failed: $e");
+          // Don't throw - continue with local cleanup
         }
       }
 

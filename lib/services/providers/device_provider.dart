@@ -126,18 +126,20 @@ class DeviceProvider with ChangeNotifier {
       _devices = response["data"];
       _devicesTotalPages = response["pages"];
 
-      // Try to read from headers (works on mobile/desktop if CORS allows it on web)
-      final percentHeader = response["headers"]?["device-connectivity-percent"];
-      log("percent header: $percentHeader");
+      // Get percent from response
+      final percentValue = response["percent"];
 
-      if (percentHeader != null && percentHeader.isNotEmpty) {
-        activeDevicesPercentage =
-            double.tryParse(percentHeader[0])?.round() ?? 0;
+      if (percentValue != null) {
+        // Handle both string and numeric types
+        if (percentValue is String) {
+          activeDevicesPercentage = double.tryParse(percentValue)?.round() ?? 0;
+        } else if (percentValue is num) {
+          activeDevicesPercentage = percentValue.round();
+        } else {
+          activeDevicesPercentage = 0;
+        }
       } else {
-        // Fallback: check if the server includes it in response body
-        // If not available anywhere, default to 0
-        activeDevicesPercentage = response["percent"] ?? 0;
-        log("Using fallback for percent, got: $activeDevicesPercentage");
+        activeDevicesPercentage = 0;
       }
     } catch (e) {
       _devices = [];
@@ -200,7 +202,7 @@ class DeviceProvider with ChangeNotifier {
 
     // Prepend the base64 prefix to each image
     final List<String> formattedImages = images
-        .map((img) => "data:image/png;base64,$img")
+        .map((img) => "data:image/jpeg;base64,$img")
         .toList();
 
     try {
@@ -454,10 +456,14 @@ class DeviceProvider with ChangeNotifier {
     _updateCompleteInfoLoading = true;
     notifyListeners();
 
+    log("Adding ${images.length} images for device $deviceId");
+
     // Prepend the base64 prefix to each image
     final List<String> formattedImages = images
-        .map((img) => "data:image/png;base64,$img")
+        .map((img) => "data:image/jpeg;base64,$img")
         .toList();
+
+    log("Formatted images count: ${formattedImages.length}");
 
     try {
       int status = await api.updateCompleteDeviceInfo(
@@ -465,12 +471,19 @@ class DeviceProvider with ChangeNotifier {
         objectType: "engineroomimages",
         images: formattedImages,
       );
+      log("Add images status: $status");
       return status;
     } on DioException catch (e) {
+      log("Error adding images: ${e.response?.data}");
       print(e);
       return e.response!.statusCode!;
     } finally {
-      loadCompleteDeviceInfo(id: deviceId);
+      // Add a small delay to allow backend to process
+      await Future.delayed(Duration(milliseconds: 500));
+      await loadCompleteDeviceInfo(id: deviceId);
+      log(
+        "Reloaded device info, images count: ${_completeDeviceInfo?.engineroomImages.length ?? 0}",
+      );
       _updateCompleteInfoLoading = false;
       notifyListeners();
     }
