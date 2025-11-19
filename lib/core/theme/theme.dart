@@ -24,6 +24,7 @@ class AppTheme {
       primary: Colors.blue[500]!,
       secondary: Colors.amber[700]!,
       surface: Colors.white,
+      onPrimaryFixedVariant: Colors.grey[800]!,
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.grey[100]!,
@@ -136,6 +137,7 @@ class AppTheme {
       surface: Color.fromARGB(255, 35, 39, 58),
       error: Colors.red.shade900,
       errorContainer: Colors.grey[700],
+      onPrimaryFixedVariant: Colors.white,
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Color.fromARGB(255, 24, 27, 41),

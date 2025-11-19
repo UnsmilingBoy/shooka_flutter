@@ -193,14 +193,20 @@ class _DeviceListState extends State<DeviceList> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.filter_alt, size: 16, color: Colors.white),
+                  Icon(
+                    Icons.filter_alt,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.onPrimaryFixedVariant,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       "${deviceProvider.filterCount} فیلتر فعال",
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelSmall?.copyWith(color: Colors.white),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onPrimaryFixedVariant,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -223,7 +229,9 @@ class _DeviceListState extends State<DeviceList> {
                     child: Text(
                       "پاک کردن فیلترها",
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onPrimaryFixedVariant,
                         decoration: TextDecoration.underline,
                       ),
                     ),
