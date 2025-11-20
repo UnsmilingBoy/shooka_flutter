@@ -541,7 +541,7 @@ class ApiService {
 
     try {
       final response = await dio.post(
-        '/apiv2/device/delete-images/',
+        '/api/shouka/device/delete-images/',
         data: body,
       );
       return response.statusCode ?? -1;

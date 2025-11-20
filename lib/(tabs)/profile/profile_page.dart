@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
-import 'package:shooka_flutter/(tabs)/profile/components/change_password_modal.dart';
-import 'package:shooka_flutter/(tabs)/profile/components/edit_profile_modal.dart';
 import 'package:shooka_flutter/services/auth_service.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
@@ -95,31 +92,17 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(bottom: 7.0),
-                          child: GestureDetector(
-                            onTap: () => showMaterialModalBottomSheet(
-                              enableDrag: false,
-                              context: context,
-                              builder: (context) => EditProfileModal(
-                                email: user.email,
-                                name: name,
-                                phoneNumber: user.phoneNumber,
-                                username: user.username,
-                              ),
-                            ),
-                            child: CircleAvatar(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                              radius: 60,
-                              child: Text(
-                                user!.firstName.isNotEmpty
-                                    ? user.firstName[0].toUpperCase()
-                                    : "U",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.apply(color: Colors.white),
-                              ),
+                          child: CircleAvatar(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            radius: 60,
+                            child: Text(
+                              user!.firstName.isNotEmpty
+                                  ? user.firstName[0].toUpperCase()
+                                  : "U",
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.apply(color: Colors.white),
                             ),
                           ),
                         ),
@@ -146,16 +129,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   itemBuilder: (context, index) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5.0),
                     child: ListTile(
-                      onTap: () => showMaterialModalBottomSheet(
-                        enableDrag: false,
-                        context: context,
-                        builder: (context) => EditProfileModal(
-                          email: user.email,
-                          name: name,
-                          phoneNumber: user.phoneNumber,
-                          username: user.username,
-                        ),
-                      ),
                       contentPadding: EdgeInsets.symmetric(horizontal: 5),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -192,120 +165,50 @@ class _ProfilePageState extends State<ProfilePage> {
                   spacing: 10,
                   children: [
                     //
-                    // Edit Profile Button
+                    // Signout Button
                     //
                     ContainerButton(
-                      color: Theme.of(context).primaryColor,
+                      color: Theme.of(context).colorScheme.error,
                       borderRadius: 10,
                       padding: EdgeInsets.all(15),
                       fillWidth: true,
                       child: Row(
-                        spacing: 5,
                         mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 5,
                         children: [
-                          Icon(Icons.edit, size: 18, color: Colors.white),
+                          logOutLoading
+                              ? Loading()
+                              : Icon(
+                                  Icons.logout,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
                           Text(
-                            "ویرایش",
+                            "خروج از حساب",
                             style: Theme.of(
                               context,
                             ).textTheme.labelLarge?.apply(color: Colors.white),
                           ),
                         ],
                       ),
-                      onPressed: () => showMaterialModalBottomSheet(
-                        enableDrag: false,
-                        context: context,
-                        builder: (context) => EditProfileModal(
-                          email: user.email,
-                          name: name,
-                          phoneNumber: user.phoneNumber,
-                          username: user.username,
-                        ),
-                      ),
-                    ),
-
-                    Row(
-                      spacing: 10,
-                      children: [
-                        //
-                        // Change Password Button
-                        //
-                        Expanded(
-                          child: ContainerButton(
-                            color: Theme.of(context).colorScheme.secondary,
-                            borderRadius: 10,
-                            padding: EdgeInsets.all(15),
-                            child: Row(
-                              spacing: 5,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.password_outlined,
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
-                                Text(
-                                  "تغییر رمز عبور",
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.apply(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                            onPressed: () => showMaterialModalBottomSheet(
-                              enableDrag: false,
-                              context: context,
-                              builder: (context) => ChangePasswordModal(),
-                            ),
-                          ),
-                        ),
-
-                        //
-                        // Signout Button
-                        //
-                        Expanded(
-                          child: ContainerButton(
-                            color: Theme.of(context).colorScheme.error,
-                            borderRadius: 10,
-                            padding: EdgeInsets.all(15),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              spacing: 5,
-                              children: [
-                                logOutLoading
-                                    ? Loading()
-                                    : Icon(
-                                        Icons.logout,
-                                        size: 18,
-                                        color: Colors.white,
-                                      ),
-                                Text(
-                                  "خروج از حساب",
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.apply(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                            onPressed: () async {
-                              final auth = Provider.of<AuthService>(
-                                context,
-                                listen: false,
-                              );
-                              setState(() {
-                                logOutLoading = true;
-                              });
-                              await auth.logout();
-                              setState(() {
-                                logOutLoading = false;
-                              });
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/login',
-                                (route) => false,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                      onPressed: () async {
+                        final auth = Provider.of<AuthService>(
+                          context,
+                          listen: false,
+                        );
+                        setState(() {
+                          logOutLoading = true;
+                        });
+                        await auth.logout();
+                        setState(() {
+                          logOutLoading = false;
+                        });
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/login',
+                          (route) => false,
+                        );
+                      },
                     ),
                   ],
                 ),

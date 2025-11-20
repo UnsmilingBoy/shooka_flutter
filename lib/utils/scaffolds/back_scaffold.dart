@@ -7,6 +7,7 @@ class BackScaffold extends StatefulWidget {
   final String backRoute;
   final String backLabel;
   final Widget? floatingActionButton;
+  final VoidCallback? onRefresh;
   const BackScaffold({
     super.key,
     required this.body,
@@ -14,6 +15,7 @@ class BackScaffold extends StatefulWidget {
     required this.backRoute,
     required this.backLabel,
     this.floatingActionButton,
+    this.onRefresh,
   });
 
   @override
@@ -37,7 +39,18 @@ class _BackScaffoldState extends State<BackScaffold> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: 1200),
               child: AppBar(
-                title: Text(widget.label),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(widget.label),
+                    if (widget.onRefresh != null)
+                      IconButton(
+                        icon: Icon(Icons.refresh),
+                        onPressed: widget.onRefresh,
+                        tooltip: 'بروزرسانی',
+                      ),
+                  ],
+                ),
                 centerTitle: true,
                 actions: [
                   InkWell(

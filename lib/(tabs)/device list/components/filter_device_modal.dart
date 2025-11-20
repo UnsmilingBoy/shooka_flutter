@@ -49,8 +49,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
     if (startDate != null && endDate != null) {
       try {
         // Parse the compact date format (YYYY-MM-DD) with dashes
-        final startParts = startDate!.split('-');
-        final endParts = endDate!.split('-');
+        final startParts = startDate!.split('/');
+        final endParts = endDate!.split('/');
 
         final start = Jalali(
           int.parse(startParts[0]),
@@ -245,13 +245,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
 
                       if (picked != null) {
                         setState(() {
-                          startDate = picked.start
-                              .formatCompactDate()
-                              .replaceAll('/', '-');
-                          endDate = picked.end.formatCompactDate().replaceAll(
-                            '/',
-                            '-',
-                          );
+                          startDate = picked.start.formatCompactDate();
+                          endDate = picked.end.formatCompactDate();
                           date =
                               "${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}";
                         });

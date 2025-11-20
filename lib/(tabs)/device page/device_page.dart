@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/device%20images/components/device_image_slider.dart';
@@ -24,75 +25,93 @@ class _DevicePageState extends State<DevicePage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await Future.wait([
       context.read<DeviceProvider>().loadCompleteDeviceInfo(
         id: widget.deviceId,
-      );
-      context.read<EventProvider>().loadEvents(device: widget.deviceId);
-    });
+      ),
+      context.read<EventProvider>().loadEvents(device: widget.deviceId),
+    ]);
+  }
+
+  Future<void> _refreshData() async {
+    await _loadData();
   }
 
   @override
   Widget build(BuildContext context) {
     final deviceProvider = context.watch<DeviceProvider>();
+    final bool isDesktop =
+        kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS;
 
     return BackScaffold(
       label: "جزئیات موتورخانه",
       backRoute: "/device_list",
       backLabel: "موتورخانه‌ها",
+      onRefresh: isDesktop ? _refreshData : null,
 
       //
       // Body
       //
       body: deviceProvider.completeInfoLoading
           ? Center(child: Loading())
-          : SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 10,
-                children: [
-                  if (deviceProvider.completeDeviceInfo != null &&
-                      deviceProvider
-                          .completeDeviceInfo!
-                          .engineroomImages
-                          .isNotEmpty)
-                    ImageSlider(
-                      imagePathList: deviceProvider
-                          .completeDeviceInfo!
-                          .engineroomImages
-                          .map((item) => item.image)
-                          .toList(),
-                    ),
-                  //
-                  // Device Information Tile
-                  //
-                  BasicDeviceInformation(),
+          : RefreshIndicator(
+              onRefresh: _refreshData,
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 10,
+                  children: [
+                    if (deviceProvider.completeDeviceInfo != null &&
+                        deviceProvider
+                            .completeDeviceInfo!
+                            .engineroomImages
+                            .isNotEmpty)
+                      ImageSlider(
+                        imagePathList: deviceProvider
+                            .completeDeviceInfo!
+                            .engineroomImages
+                            .map((item) => item.image)
+                            .toList(),
+                      ),
+                    //
+                    // Device Information Tile
+                    //
+                    BasicDeviceInformation(),
 
-                  //
-                  //  Install Location Info
-                  //
-                  InstallationLocationInfo(),
+                    //
+                    //  Install Location Info
+                    //
+                    InstallationLocationInfo(),
 
-                  //
-                  //  More Device Info
-                  //
-                  UsageInfo(),
+                    //
+                    //  More Device Info
+                    //
+                    UsageInfo(),
 
-                  //
-                  // Installation Info
-                  //
-                  InstallationInfo(),
+                    //
+                    // Installation Info
+                    //
+                    InstallationInfo(),
 
-                  //
-                  // Add Pictures
-                  //
-                  DeviceImages(),
+                    //
+                    // Add Pictures
+                    //
+                    DeviceImages(),
 
-                  //
-                  // Events
-                  //
-                  DpEvents(),
-                ],
+                    //
+                    // Events
+                    //
+                    DpEvents(),
+                  ],
+                ),
               ),
             ),
     );

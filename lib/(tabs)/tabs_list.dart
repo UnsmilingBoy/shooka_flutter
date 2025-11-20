@@ -36,9 +36,9 @@ final tabsList = [
     "href": ["/locations"],
     "icon": Icons.location_on,
   },
-  {
-    'label': 'لیست کاربران',
-    "href": ["/users"],
-    "icon": Icons.group,
-  },
+  // {
+  //   'label': 'لیست کاربران',
+  //   "href": ["/users"],
+  //   "icon": Icons.group,
+  // },
 ];
