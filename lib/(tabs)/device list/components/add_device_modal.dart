@@ -1,5 +1,5 @@
 import 'dart:developer';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
@@ -211,11 +211,20 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                       if (imageUrl != null)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            imageUrl,
+                          child: CachedNetworkImage(
+                            imageUrl: imageUrl,
                             width: double.infinity,
                             fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
+                            placeholder: (context, url) => Container(
+                              padding: EdgeInsets.all(20),
+                              color: Colors.grey.shade800,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) {
                               return Container(
                                 padding: EdgeInsets.all(20),
                                 color: Colors.grey.shade800,

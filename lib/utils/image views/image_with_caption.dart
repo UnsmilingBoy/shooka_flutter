@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ImageWithCaption extends StatelessWidget {
@@ -17,12 +18,15 @@ class ImageWithCaption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget networkPreview(String url, {BoxFit? fit}) {
-      return Image.network(
-        url,
+      return CachedNetworkImage(
+        imageUrl: url,
         fit: fit,
-        errorBuilder: (context, error, stackTrace) {
+        placeholder: (context, url) => Container(
+          color: Colors.grey.shade800,
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+        errorWidget: (context, url, error) {
           if (localImagepath != null) {
-            print("Loading local image due to network error: $error");
             return Image.asset(localImagepath!, fit: fit ?? BoxFit.contain);
           }
           return Container(
