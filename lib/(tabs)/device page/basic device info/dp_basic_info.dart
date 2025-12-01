@@ -31,9 +31,9 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
       {
         "title": 'پلن',
         "value": basicData?.plan == "free"
-            ? "رایگان"
+            ? "آزاد"
             : basicData?.plan == "optimized"
-            ? "بهینه"
+            ? "طرح بهینه سازی شرکت گاز"
             : basicData?.plan,
       },
     ];

@@ -140,8 +140,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
       {
         "label": "پلن",
         "items": [
-          myDropDownItem(value: "free", label: "رایگان"),
-          myDropDownItem(value: "optimized", label: "بهینه"),
+          myDropDownItem(value: "free", label: "آزاد"),
+          myDropDownItem(value: "optimized", label: "طرح بهینه سازی شرکت گاز"),
         ],
         "initialValue": planInitialValue,
       },

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
@@ -67,7 +65,7 @@ class _DeviceTileState extends State<DeviceTile> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final showDetailsInRow = screenWidth > 600;
+    final isWideScreen = screenWidth > 800;
 
     // Parse latLong into LatLng
     LatLng? deviceLatLng;
@@ -93,174 +91,157 @@ class _DeviceTileState extends State<DeviceTile> {
         ),
       ),
       borderRadius: widget.borderRadius,
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: isWideScreen ? 16 : 0,
+      ),
       color: widget.color,
 
       //
-      // The actual tile.
+      // Wide screen layout: spread fields like columns
       //
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(
-          overflow: TextOverflow.ellipsis,
-          widget.name,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 4,
-          children: [
-            Text(
-              overflow: TextOverflow.ellipsis,
-              "سازمان: ${widget.org}",
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-
-            //
-            // Show details in a row on larger screens only
-            //
-            if (showDetailsInRow &&
-                (widget.installationDate != null ||
-                    widget.address != null ||
-                    widget.status != null ||
-                    widget.creator != null))
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    // Installation Date
-                    if (widget.installationDate != null) ...[
-                      Icon(Icons.calendar_today, size: 12, color: Colors.grey),
-                      SizedBox(width: 4),
-                      Text(
-                        widget.installationDate!,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                      ),
-                    ],
-                    // Divider
-                    if (widget.installationDate != null &&
-                        (widget.address != null ||
-                            widget.status != null ||
-                            widget.creator != null))
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Container(
-                          height: 12,
-                          width: 1,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    // Address
-                    if (widget.address != null) ...[
-                      Icon(Icons.location_on, size: 12, color: Colors.grey),
-                      SizedBox(width: 4),
-                      Text(
-                        widget.address!,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                      ),
-                    ],
-                    // Divider
-                    if (widget.address != null &&
-                        (widget.creator != null || widget.status != null))
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Container(
-                          height: 12,
-                          width: 1,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    // Creator
-                    if (widget.creator != null) ...[
-                      Icon(Icons.person, size: 12, color: Colors.grey),
-                      SizedBox(width: 4),
-                      Text(
-                        widget.creator!,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                      ),
-                    ],
-                    // Divider
-                    if (widget.creator != null && widget.status != null)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Container(
-                          height: 12,
-                          width: 1,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    // Status
-                    if (widget.status != null) ...[
-                      Icon(Icons.check, size: 12, color: Colors.grey),
-                      SizedBox(width: 4),
-                      Text(
-                        widget.status!,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                      ),
-                    ],
-                  ],
+      child: isWideScreen
+          ? Row(
+              children: [
+                // Name
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    widget.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                 ),
+                // Organization
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    widget.org,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                // Creator
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    widget.creator ?? '-',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                // Installation Date
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    widget.installationDate ?? '-',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                // Address
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    widget.address ?? '-',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                // Status
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    widget.status ?? '-',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                // Connection status
+                SizedBox(
+                  width: 40,
+                  child: Center(
+                    child: Tooltip(
+                      key: _tooltipKey,
+                      message: "موتورخانه ${widget.isConnected} است.",
+                      child: Icon(
+                        size: 12,
+                        Icons.circle,
+                        color: widget.isConnected == "متصل"
+                            ? Colors.green
+                            : Colors.red,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          //
+          // Mobile layout: original ListTile
+          //
+          : ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                overflow: TextOverflow.ellipsis,
+                widget.name,
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-          ],
-        ),
-        trailing: Column(
-          spacing: 7,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Tooltip(
-              key: _tooltipKey,
-              message: "موتورخانه ${widget.isConnected} است.",
-              child: Icon(
-                size: 15,
-                Icons.circle,
-                color: widget.isConnected == "متصل" ? Colors.green : Colors.red,
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  Text(
+                    overflow: TextOverflow.ellipsis,
+                    "سازمان: ${widget.org}",
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
+              ),
+              trailing: Column(
+                spacing: 7,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Tooltip(
+                    key: _tooltipKey,
+                    message: "موتورخانه ${widget.isConnected} است.",
+                    child: Icon(
+                      size: 15,
+                      Icons.circle,
+                      color: widget.isConnected == "متصل"
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                  ),
+
+                  //
+                  // Navigation Button
+                  //
+                  if (widget.latLong != null && !kIsWeb)
+                    MyIconButton(
+                      padding: EdgeInsets.all(3),
+                      child: Icon(Icons.navigation_rounded, size: 18),
+                      onPressed: () async {
+                        final lat = deviceLatLng!.latitude;
+                        final lng = deviceLatLng.longitude;
+
+                        // For mobile (Android/iOS), use geo: URI for app chooser
+                        String url = 'geo:$lat,$lng?q=$lat,$lng';
+
+                        try {
+                          await launchUrl(
+                            Uri.parse(url),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text('خطا: $e')));
+                        }
+                      },
+                    ),
+                ],
               ),
             ),
-
-            //
-            // Navigation Button
-            //
-            if (widget.latLong != null && !kIsWeb)
-              MyIconButton(
-                padding: EdgeInsets.all(3),
-                child: Icon(Icons.navigation_rounded, size: 18),
-                onPressed: () async {
-                  final lat = deviceLatLng!.latitude;
-                  final lng = deviceLatLng.longitude;
-
-                  // For web and Windows, use Google Maps URL
-                  // For mobile (Android/iOS), use geo: URI for app chooser
-                  String url;
-                  if (kIsWeb || Platform.isWindows) {
-                    url =
-                        'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-                  } else {
-                    url = 'geo:$lat,$lng?q=$lat,$lng';
-                  }
-
-                  try {
-                    await launchUrl(
-                      Uri.parse(url),
-                      mode: LaunchMode.externalApplication,
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('خطا: $e')));
-                  }
-                },
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

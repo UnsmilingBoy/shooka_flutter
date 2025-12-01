@@ -96,7 +96,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
         "initialValue": planInitialValue,
         "items": [
           myDropDownItem(value: "free", label: "آزاد"),
-          myDropDownItem(value: "optimized", label: "بهینه"),
+          myDropDownItem(value: "optimized", label: "طرح بهینه سازی شرکت گاز"),
         ],
       },
       // {
