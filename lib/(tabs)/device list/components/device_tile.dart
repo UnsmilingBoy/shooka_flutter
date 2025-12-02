@@ -19,6 +19,7 @@ class DeviceTile extends StatefulWidget {
   final String? status;
   final String? creator;
   final String? latLong;
+  final String plan;
 
   const DeviceTile({
     super.key,
@@ -34,6 +35,7 @@ class DeviceTile extends StatefulWidget {
     required this.status,
     required this.creator,
     required this.latLong,
+    required this.plan,
   });
 
   @override
@@ -93,7 +95,7 @@ class _DeviceTileState extends State<DeviceTile> {
       borderRadius: widget.borderRadius,
       padding: EdgeInsets.symmetric(
         horizontal: 20,
-        vertical: isWideScreen ? 16 : 0,
+        vertical: isWideScreen ? 25 : 0,
       ),
       color: widget.color,
 
@@ -132,7 +134,7 @@ class _DeviceTileState extends State<DeviceTile> {
                 ),
                 // Installation Date
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: Text(
                     widget.installationDate ?? '-',
                     overflow: TextOverflow.ellipsis,
@@ -141,9 +143,17 @@ class _DeviceTileState extends State<DeviceTile> {
                 ),
                 // Address
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: Text(
                     widget.address ?? '-',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    widget.plan,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelSmall,
                   ),

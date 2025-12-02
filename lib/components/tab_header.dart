@@ -9,6 +9,8 @@ class TabHeader extends StatelessWidget {
   final String searchPlaceholder;
   final bool? noFilter;
   final Function(String value)? onSubmitted;
+  final VoidCallback? onExport;
+  final bool exportLoading;
   const TabHeader({
     super.key,
     required this.searchController,
@@ -16,6 +18,8 @@ class TabHeader extends StatelessWidget {
     required this.searchPlaceholder,
     this.noFilter,
     this.onSubmitted,
+    this.onExport,
+    this.exportLoading = false,
   });
 
   @override
@@ -33,6 +37,26 @@ class TabHeader extends StatelessWidget {
             ),
           ),
         ),
+        // Only show export button on larger screens (width > 800)
+        if (onExport != null && MediaQuery.of(context).size.width > 800)
+          SizedBox(
+            height: 50,
+            width: 50,
+            child: MyIconButton(
+              onPressed: exportLoading ? null : onExport,
+              color: Theme.of(context).colorScheme.primary,
+              child: exportLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(Icons.file_download_outlined, color: Colors.white),
+            ),
+          ),
         if (noFilter != true)
           SizedBox(
             height: 50,

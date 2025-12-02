@@ -305,6 +305,56 @@ class ApiService {
   }
 
   //
+  // Fetch Devices For Export
+  //
+  Future<List<Map<String, dynamic>>> fetchDevicesForExport({
+    int? installer,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? search,
+    String? plan,
+    String? start,
+    String? end,
+  }) async {
+    final queryParams = {
+      "is_exported": true,
+      if (installer != null) "installer": installer,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (search != null) "search": search,
+      if (plan != null) "plan": plan,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+    };
+
+    log("query params for export are: $queryParams");
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/devices-list/',
+        data: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List
+            ? response.data
+            : response.data["results"] ?? response.data["data"] ?? [];
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load devices for export');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get device list for export: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
   // Add Device
   //
   Future<int> addDevice({

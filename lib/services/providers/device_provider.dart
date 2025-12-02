@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/export_service.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 
 class DeviceProvider with ChangeNotifier {
@@ -552,6 +553,34 @@ class DeviceProvider with ChangeNotifier {
       loadCompleteDeviceInfo(id: deviceId);
       removeImageLoading = false;
       notifyListeners();
+    }
+  }
+
+  //
+  //  Export Devices to Excel
+  //
+  Future<void> exportDevicesToExcel() async {
+    try {
+      log('Starting device export with current filters...');
+      final devices = await api.fetchDevicesForExport(
+        installer: lastSelectedInstaller,
+        organization: lastSelectedOrg,
+        administration: lastSelectedAdmin,
+        province: lastSelectedProvince,
+        city: lastSelectedCity,
+        search: lastSearchedText,
+        plan: lastSelectedPlan,
+        start: lastStartDate,
+        end: lastEndDate,
+      );
+      log('Fetched ${devices.length} devices for export');
+
+      final exportService = ExportService();
+      await exportService.exportDevices(devices);
+      log('Export completed successfully');
+    } catch (e) {
+      log('Error exporting devices: $e');
+      rethrow;
     }
   }
 }

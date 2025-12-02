@@ -48,7 +48,9 @@ class Device {
       details: DeviceDetails.fromJson(json['details'] ?? {}),
       status: json['status'] == true
           ? "تایید شده"
-          : "رد شده", // can be true / false / null
+          : json['status'] == false
+          ? "رد شده"
+          : "در حال بررسی",
       administration: json['administration'] ?? '',
       creator: json['creator'] ?? '',
       isConnected: json['is_connected'] == true ? "متصل" : "قطع",
@@ -57,7 +59,7 @@ class Device {
       city: json["city"] ?? "",
       province: json["province"] ?? "",
       serialNumber: json["serial_number"] ?? "",
-      plan: json["plan"] ?? "",
+      plan: json["plan"] == "free" ? "آزاد" : "طرح بهینه سازی",
     );
   }
 }

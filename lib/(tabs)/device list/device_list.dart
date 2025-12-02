@@ -6,10 +6,10 @@ import 'package:shooka_flutter/(tabs)/device%20list/components/filter_device_mod
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
-import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
+import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class DeviceList extends StatefulWidget {
   final bool openAddDevice;
@@ -23,6 +23,7 @@ class DeviceList extends StatefulWidget {
 class _DeviceListState extends State<DeviceList> {
   final ScrollController _scrollController = ScrollController();
   late final DeviceProvider _deviceProvider;
+  bool _exportLoading = false;
 
   @override
   void initState() {
@@ -113,12 +114,28 @@ class _DeviceListState extends State<DeviceList> {
 
   String searchValue = "";
 
+  Future<void> _handleExport() async {
+    setState(() => _exportLoading = true);
+    try {
+      await _deviceProvider.exportDevicesToExcel();
+      filledSuccessToast(title: 'فایل اکسل با موفقیت دانلود شد');
+    } catch (e) {
+      flatErrorToast(
+        title: 'خطا در دانلود فایل اکسل',
+        description: e.toString(),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _exportLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
 
     final deviceProvider = context.watch<DeviceProvider>();
-    final generalProvider = context.watch<GeneralProvider>();
 
     final devices = deviceProvider.devices;
 
@@ -164,6 +181,8 @@ class _DeviceListState extends State<DeviceList> {
             searchController: searchController,
             filterModal: FilterDeviceModal(),
             searchPlaceholder: "جستجوی موتورخانه...",
+            onExport: _handleExport,
+            exportLoading: _exportLoading,
           ),
 
           //
@@ -280,7 +299,7 @@ class _DeviceListState extends State<DeviceList> {
                     ),
                   ),
                   Expanded(
-                    flex: 2,
+                    flex: 1,
                     child: Text(
                       'تاریخ نصب',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -289,9 +308,18 @@ class _DeviceListState extends State<DeviceList> {
                     ),
                   ),
                   Expanded(
-                    flex: 2,
+                    flex: 1,
                     child: Text(
                       'شهر',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      'پلن',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -357,17 +385,10 @@ class _DeviceListState extends State<DeviceList> {
                             " - ",
                           ),
                           latLong: devices[index].latLong,
-                          address:
-                              (generalProvider.filters?["locations"] as List?)
-                                  ?.firstWhere(
-                                    (location) =>
-                                        location["id"] ==
-                                        devices[index].location,
-                                    orElse: () => null,
-                                  )?["location"]?[1] ??
-                              "",
+                          address: devices[index].city,
                           status: devices[index].status,
                           creator: devices[index].creator,
+                          plan: devices[index].plan ?? "-",
                         ),
                       );
                     },

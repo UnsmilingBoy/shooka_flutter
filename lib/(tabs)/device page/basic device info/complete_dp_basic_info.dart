@@ -45,7 +45,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
       id: basicData?.engineRoomFeature ?? -1,
       returnNameOnly: true,
     );
-    planInitialValue = basicData?.plan;
+    planInitialValue = basicData?.plan == "آزاد" ? "free" : "optimized";
   }
 
   @override
@@ -96,8 +96,8 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
         "label": "پلن",
         "initialValue": planInitialValue,
         "items": [
-          myDropDownItem(value: "free", label: "رایگان"),
-          myDropDownItem(value: "optimized", label: "بهینه"),
+          myDropDownItem(value: "free", label: "آزاد"),
+          myDropDownItem(value: "optimized", label: "طرح بهینه‌سازی"),
         ],
       },
     ];
@@ -113,6 +113,8 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
           itemBuilder: (context, index) => Padding(
             padding: const EdgeInsets.only(bottom: 10.0),
             child: Outlinetextfieldwithlabel(
+              isSerialNumber:
+                  textfieldList[index]["controller"] == _serialNumberController,
               label: textfieldList[index]["label"] as String,
               controller:
                   textfieldList[index]["controller"] as TextEditingController,
