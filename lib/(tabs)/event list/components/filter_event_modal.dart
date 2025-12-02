@@ -7,8 +7,7 @@ import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 
 class FilterEventModal extends StatefulWidget {
   const FilterEventModal({super.key});
@@ -51,7 +50,7 @@ class _FilterEventModalState extends State<FilterEventModal> {
         //
 
         // Title Dropdown
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           onChanged: (value) => setState(() {
             selectedTitle = value;
           }),
@@ -59,8 +58,8 @@ class _FilterEventModalState extends State<FilterEventModal> {
             selectedTitle = null;
           }),
           items: (generalProvider.filters?["event_title"] ?? [])
-              .map<DropdownMenuItem<String>>(
-                (title) => myDropDownItem(value: title, label: title),
+              .map<DropdownItemModel>(
+                (title) => DropdownItemModel(value: title, label: title),
               )
               .toList(),
           label: "عناوین:",
@@ -69,13 +68,13 @@ class _FilterEventModalState extends State<FilterEventModal> {
         ),
 
         // Creator Dropdown
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           onChanged: (value) => setState(() {
             selectedCreator = value;
           }),
           items: (generalProvider.filters?["installers"] ?? [])
-              .map<DropdownMenuItem<String>>(
-                (creator) => myDropDownItem(
+              .map<DropdownItemModel>(
+                (creator) => DropdownItemModel(
                   value: creator["id"].toString(),
                   label: creator["installer"].toString(),
                 ),
@@ -90,7 +89,7 @@ class _FilterEventModalState extends State<FilterEventModal> {
         ),
 
         // Device Dropdown
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           onChanged: (value) => setState(() {
             selectedDevice = value;
           }),
@@ -98,8 +97,8 @@ class _FilterEventModalState extends State<FilterEventModal> {
             selectedDevice = null;
           }),
           items: (generalProvider.filters?["devices"] ?? [])
-              .map<DropdownMenuItem<String>>(
-                (device) => myDropDownItem(
+              .map<DropdownItemModel>(
+                (device) => DropdownItemModel(
                   value: device["id"].toString(),
                   label: device["name"].toString(),
                 ),

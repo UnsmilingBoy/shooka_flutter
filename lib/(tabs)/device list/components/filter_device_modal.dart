@@ -9,8 +9,7 @@ import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 
 class FilterDeviceModal extends StatefulWidget {
   const FilterDeviceModal({super.key});
@@ -80,8 +79,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
       {
         "label": "نصاب",
         "items": (generalProvider.filters?["installers"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (installer) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (installer) => DropdownItemModel(
                 value: installer["id"].toString(),
                 label: installer["installer"].toString(),
               ),
@@ -92,8 +91,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
       {
         "label": "سازمان",
         "items": (generalProvider.filters?["organizations"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (organization) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (organization) => DropdownItemModel(
                 value: organization["organization"].toString(),
                 label: organization["organization"].toString(),
               ),
@@ -104,8 +103,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
       {
         "label": "وزارت‌خانه",
         "items": (generalProvider.filters?["administration"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (administration) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (administration) => DropdownItemModel(
                 value: administration["administration"].toString(),
                 label: administration["administration"].toString(),
               ),
@@ -119,8 +118,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         "items": (generalProvider.filters?["locations"] ?? [])
             .map((location) => location["location"][0].toString())
             .toSet()
-            .map<DropdownMenuItem<String>>(
-              (province) => myDropDownItem(value: province, label: province),
+            .map<DropdownItemModel>(
+              (province) => DropdownItemModel(value: province, label: province),
             )
             .toList(),
         "initialValue": provinceInitialValue,
@@ -131,8 +130,8 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         "items": (generalProvider.filters?["locations"] ?? [])
             .map((location) => location["location"][1].toString())
             .toSet()
-            .map<DropdownMenuItem<String>>(
-              (city) => myDropDownItem(value: city, label: city),
+            .map<DropdownItemModel>(
+              (city) => DropdownItemModel(value: city, label: city),
             )
             .toList(),
         "initialValue": cityInitialValue,
@@ -140,8 +139,11 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
       {
         "label": "پلن",
         "items": [
-          myDropDownItem(value: "free", label: "آزاد"),
-          myDropDownItem(value: "optimized", label: "طرح بهینه سازی شرکت گاز"),
+          DropdownItemModel(value: "free", label: "آزاد"),
+          DropdownItemModel(
+            value: "optimized",
+            label: "طرح بهینه سازی شرکت گاز",
+          ),
         ],
         "initialValue": planInitialValue,
       },
@@ -161,7 +163,7 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
           physics: NeverScrollableScrollPhysics(),
           padding: EdgeInsets.all(0),
           itemCount: filterOptions.length,
-          itemBuilder: (context, index) => DropdownWithLabel(
+          itemBuilder: (context, index) => SearchableDropdownWithLabel(
             iconOnPressed: () => setState(() {
               final label = filterOptions[index]["label"] as String;
               if (label == "نصاب") installerInitialValue = null;
@@ -187,8 +189,7 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
                 planInitialValue = value;
               }
             }),
-            items:
-                filterOptions[index]["items"] as List<DropdownMenuItem<String>>,
+            items: filterOptions[index]["items"] as List<DropdownItemModel>,
             label: filterOptions[index]["label"] as String,
             placeholder: "انتخاب کنید",
             initialValue: filterOptions[index]["initialValue"] as String?,
