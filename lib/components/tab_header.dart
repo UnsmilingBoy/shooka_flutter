@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield.dart';
 
 class TabHeader extends StatelessWidget {
@@ -46,15 +47,8 @@ class TabHeader extends StatelessWidget {
               onPressed: exportLoading ? null : onExport,
               color: Theme.of(context).colorScheme.primary,
               child: exportLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(Icons.file_download_outlined, color: Colors.white),
+                  ? Loading()
+                  : Icon(Icons.download_rounded, color: Colors.white),
             ),
           ),
         if (noFilter != true)

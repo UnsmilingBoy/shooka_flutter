@@ -29,108 +29,98 @@ class ExportService {
       final sheetName = excel.tables.keys.first;
       final sheet = excel[sheetName];
 
+      // Define Vazirmatn font style for cells
+      final cellStyle = CellStyle(
+        fontFamily: 'Vazirmatn',
+        fontSize: 11,
+        horizontalAlign: HorizontalAlign.Right,
+        verticalAlign: VerticalAlign.Center,
+      );
+
       // Start from row 2 (row 1 is header in template)
       int rowIndex = 1;
 
       for (var device in devices) {
         // Column 0: ردیف (Row number)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          rowIndex.toString(),
+        final cell0 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex),
         );
+        cell0.value = TextCellValue(rowIndex.toString());
+        cell0.cellStyle = cellStyle;
 
         // Column 1: اسامی نصب (Name)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          device['name']?.toString() ?? '',
+        final cell1 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
         );
+        cell1.value = TextCellValue(device['name']?.toString() ?? '');
+        cell1.cellStyle = cellStyle;
 
         // Column 2: شماره اشتراک (Subscription number)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
+        final cell2 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
+        );
+        cell2.value = TextCellValue(
           device['meter_subscription_number']?.toString() ?? '',
         );
+        cell2.cellStyle = cellStyle;
 
         // Column 3: شهر (City)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          device['city']?.toString() ?? '',
+        final cell3 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
         );
+        cell3.value = TextCellValue(device['city']?.toString() ?? '');
+        cell3.cellStyle = cellStyle;
 
         // Column 4: تاریخ نصب (Installation date)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          device['created_at']?.toString() ?? '',
+        final cell4 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
         );
+        cell4.value = TextCellValue(device['created_at']?.toString() ?? '');
+        cell4.cellStyle = cellStyle;
 
         // Column 5: موبایل مشترک (Subscriber mobile)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          device['phone_number1']?.toString() ?? '',
+        final cell5 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex),
         );
+        cell5.value = TextCellValue(device['phone_number1']?.toString() ?? '');
+        cell5.cellStyle = cellStyle;
 
         // Column 6: شماره سریال دستگاه (Device serial number)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          device['serial_number']?.toString() ?? '',
+        final cell6 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex),
         );
+        cell6.value = TextCellValue(device['serial_number']?.toString() ?? '');
+        cell6.cellStyle = cellStyle;
 
         // Column 7: توضیحات (Description/Installation address)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          device['linker_person1']?.toString() ?? '',
+        final cell7 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex),
         );
+        cell7.value = TextCellValue(device['linker_person1']?.toString() ?? '');
+        cell7.cellStyle = cellStyle;
 
         // Column 8: اسامی نصاب (Installer name/Creator)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          device['creator']?.toString() ?? '',
+        final cell8 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex),
         );
+        cell8.value = TextCellValue(device['creator']?.toString() ?? '');
+        cell8.cellStyle = cellStyle;
 
         // Column 9: شماره قرارداد (Contract number - not in API)
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
-          '',
+        final cell9 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex),
         );
+        cell9.value = TextCellValue('');
+        cell9.cellStyle = cellStyle;
 
-        // آدرس
-        sheet
-            .cell(
-              CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex),
-            )
-            .value = TextCellValue(
+        // Column 10: آدرس (Address)
+        final cell10 = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex),
+        );
+        cell10.value = TextCellValue(
           device['installation_address']?.toString() ?? '',
         );
+        cell10.cellStyle = cellStyle;
 
         rowIndex++;
       }
@@ -153,11 +143,17 @@ class ExportService {
   Future<void> _saveFile(Uint8List bytes, String fileName) async {
     if (kIsWeb) {
       // Web: Download using browser
-      final blob = html.Blob([bytes]);
+      final blob = html.Blob([
+        bytes,
+      ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute('download', fileName)
-        ..click();
+      final anchor = html.AnchorElement()
+        ..href = url
+        ..download = fileName
+        ..style.display = 'none';
+      html.document.body?.append(anchor);
+      anchor.click();
+      anchor.remove();
       html.Url.revokeObjectUrl(url);
     } else {
       // Mobile/Desktop: Save to downloads folder
