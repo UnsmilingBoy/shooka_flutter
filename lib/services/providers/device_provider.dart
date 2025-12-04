@@ -186,7 +186,8 @@ class DeviceProvider with ChangeNotifier {
       end: end,
       search: search,
     );
-    notifyListeners();
+    // Use Future.microtask to avoid calling notifyListeners during build
+    Future.microtask(() => notifyListeners());
 
     try {
       final response = await api.fetchDevices(
@@ -519,7 +520,8 @@ class DeviceProvider with ChangeNotifier {
   //
   Future<void> loadCompleteDeviceInfo({required int id}) async {
     _completeInfoLoading = true;
-    notifyListeners();
+    // Use Future.microtask to avoid calling notifyListeners during build
+    Future.microtask(() => notifyListeners());
 
     try {
       _completeDeviceInfo = await api.fetchDevicePageInfo(id: id);

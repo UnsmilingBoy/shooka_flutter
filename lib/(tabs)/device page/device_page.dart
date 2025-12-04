@@ -25,7 +25,10 @@ class _DevicePageState extends State<DevicePage> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Use addPostFrameCallback to ensure context is ready and avoid calling notifyListeners during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {

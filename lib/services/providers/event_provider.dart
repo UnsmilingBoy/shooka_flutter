@@ -61,7 +61,8 @@ class EventProvider with ChangeNotifier {
       lastSearchedText = null;
     }
 
-    notifyListeners();
+    // Use Future.microtask to avoid calling notifyListeners during build
+    Future.microtask(() => notifyListeners());
 
     try {
       _events = await api.fetchEventList(
