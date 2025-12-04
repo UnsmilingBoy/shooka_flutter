@@ -5,6 +5,7 @@ import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/models/device_filter_state.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
@@ -12,7 +13,9 @@ import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
 import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 
 class FilterDeviceModal extends StatefulWidget {
-  const FilterDeviceModal({super.key});
+  final DeviceListMode mode;
+
+  const FilterDeviceModal({super.key, this.mode = DeviceListMode.all});
 
   @override
   State<FilterDeviceModal> createState() => _FilterDeviceModalState();
@@ -34,15 +37,17 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
   void initState() {
     super.initState();
     final deviceProvider = Provider.of<DeviceProvider>(context, listen: false);
-    // Use provider fields for last selected values (if you add them)
-    orgInitialValue = deviceProvider.lastSelectedOrg;
-    installerInitialValue = deviceProvider.lastSelectedInstaller?.toString();
-    parentInitialValue = deviceProvider.lastSelectedAdmin;
-    provinceInitialValue = deviceProvider.lastSelectedProvince;
-    cityInitialValue = deviceProvider.lastSelectedCity;
-    planInitialValue = deviceProvider.lastSelectedPlan;
-    startDate = deviceProvider.lastStartDate;
-    endDate = deviceProvider.lastEndDate;
+    final filterState = deviceProvider.getFilterState(widget.mode);
+
+    // Use filter state from the current mode
+    orgInitialValue = filterState.selectedOrg;
+    installerInitialValue = filterState.selectedInstaller?.toString();
+    parentInitialValue = filterState.selectedAdmin;
+    provinceInitialValue = filterState.selectedProvince;
+    cityInitialValue = filterState.selectedCity;
+    planInitialValue = filterState.selectedPlan;
+    startDate = filterState.startDate;
+    endDate = filterState.endDate;
 
     // Reconstruct date display string if dates are saved
     if (startDate != null && endDate != null) {
@@ -285,11 +290,13 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
           saveText: "فیلتر",
           onSave: () {
             log("installer is: $installerInitialValue");
+            final filterState = deviceProvider.getFilterState(widget.mode);
 
-            deviceProvider.loadDevices(
+            deviceProvider.loadDevicesForMode(
+              mode: widget.mode,
               all: false,
               page: 1,
-              search: deviceProvider.lastSearchedText,
+              search: filterState.searchedText,
               installer: installerInitialValue != null
                   ? int.tryParse(installerInitialValue ?? "-1")
                   : null,

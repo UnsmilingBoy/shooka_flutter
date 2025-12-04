@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
+import 'package:shooka_flutter/models/device_filter_state.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 import 'package:shooka_flutter/services/export_service.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
@@ -13,49 +14,150 @@ class DeviceProvider with ChangeNotifier {
   GeneralProvider? _generalProvider;
 
   DeviceProvider({required this.api, GeneralProvider? generalProvider})
-    : _generalProvider = generalProvider;
+    : _generalProvider = generalProvider {
+    // Initialize filter state for each mode
+    _filterStates = {
+      DeviceListMode.all: DeviceFilterState(),
+      DeviceListMode.rejected: DeviceFilterState(),
+      DeviceListMode.suspended: DeviceFilterState(),
+    };
+  }
 
   // Setter used by ProxyProvider or manual wiring to inject the GeneralProvider later
   void setGeneralProvider(GeneralProvider general) =>
       _generalProvider = general;
 
-  // State
-  List<Device> _devices = [];
+  // Filter states for each mode
+  late final Map<DeviceListMode, DeviceFilterState> _filterStates;
+
+  // Device lists for each mode
+  final Map<DeviceListMode, List<Device>> _deviceLists = {
+    DeviceListMode.all: [],
+    DeviceListMode.rejected: [],
+    DeviceListMode.suspended: [],
+  };
+
+  // Loading states for each mode
+  final Map<DeviceListMode, bool> _loadingStates = {
+    DeviceListMode.all: false,
+    DeviceListMode.rejected: false,
+    DeviceListMode.suspended: false,
+  };
+
+  // Other state
   CompleteDeviceInfo? _completeDeviceInfo;
   Device? _device;
   int activeDevicesPercentage = 0;
-  bool _isLoading = false;
+  int _rejectedDevicesCount = 0;
   bool _addLoading = false;
   bool _completeInfoLoading = false;
   bool _updateCompleteInfoLoading = false;
   bool removeImageLoading = false;
-  int? lastSelectedInstaller;
-  String? lastSearchedText;
-  String? lastSelectedOrg;
-  String? lastSelectedAdmin;
-  String? lastSelectedProvince;
-  String? lastSelectedCity;
-  String? lastSelectedPlan;
-  String? lastStartDate;
-  String? lastEndDate;
-  int filterCount = 0;
-  int _devicesPage = 1;
-  int _devicesTotalPages = 1;
-  bool _devicesNextPageLoading = false;
+
+  // Getters for filter state by mode
+  DeviceFilterState getFilterState(DeviceListMode mode) => _filterStates[mode]!;
 
   // Getters
-  List<Device> get devices => _devices;
-  bool get isLoading => _isLoading;
+  List<Device> get devices => _deviceLists[DeviceListMode.all]!;
+  List<Device> get rejectedDevices => _deviceLists[DeviceListMode.rejected]!;
+  List<Device> get suspendedDevices => _deviceLists[DeviceListMode.suspended]!;
+
+  List<Device> getDevices(DeviceListMode mode) => _deviceLists[mode]!;
+  bool getLoading(DeviceListMode mode) => _loadingStates[mode]!;
+
+  bool get isLoading => _loadingStates[DeviceListMode.all]!;
+  bool get rejectedLoading => _loadingStates[DeviceListMode.rejected]!;
+  bool get suspendedLoading => _loadingStates[DeviceListMode.suspended]!;
+
   bool get addLoading => _addLoading;
   bool get completeInfoLoading => _completeInfoLoading;
   CompleteDeviceInfo? get completeDeviceInfo => _completeDeviceInfo;
   bool get updateCompleteInfoLoading => _updateCompleteInfoLoading;
   Device? get device => _device;
-  int get devicesPage => _devicesPage;
-  int get devicesTotalPages => _devicesTotalPages;
-  bool get devicesNextPageLoading => _devicesNextPageLoading;
 
-  Future<void> loadDevices({
+  // Pagination getters (for backward compatibility)
+  int get devicesPage => _filterStates[DeviceListMode.all]!.page;
+  int get devicesTotalPages => _filterStates[DeviceListMode.all]!.totalPages;
+  bool get devicesNextPageLoading =>
+      _filterStates[DeviceListMode.all]!.isNextPageLoading;
+  int get rejectedDevicesPage => _filterStates[DeviceListMode.rejected]!.page;
+  int get rejectedDevicesTotalPages =>
+      _filterStates[DeviceListMode.rejected]!.totalPages;
+  bool get rejectedDevicesNextPageLoading =>
+      _filterStates[DeviceListMode.rejected]!.isNextPageLoading;
+  int get suspendedDevicesPage => _filterStates[DeviceListMode.suspended]!.page;
+  int get suspendedDevicesTotalPages =>
+      _filterStates[DeviceListMode.suspended]!.totalPages;
+  bool get suspendedDevicesNextPageLoading =>
+      _filterStates[DeviceListMode.suspended]!.isNextPageLoading;
+
+  int get rejectedDevicesCount => _rejectedDevicesCount;
+
+  // Filter count getters (for backward compatibility)
+  int get filterCount => _filterStates[DeviceListMode.all]!.filterCount;
+  int get rejectedFilterCount =>
+      _filterStates[DeviceListMode.rejected]!.filterCount;
+  int get suspendedFilterCount =>
+      _filterStates[DeviceListMode.suspended]!.filterCount;
+
+  // Legacy filter getters for backward compatibility
+  int? get lastSelectedInstaller =>
+      _filterStates[DeviceListMode.all]!.selectedInstaller;
+  String? get lastSearchedText =>
+      _filterStates[DeviceListMode.all]!.searchedText;
+  String? get lastSelectedOrg => _filterStates[DeviceListMode.all]!.selectedOrg;
+  String? get lastSelectedAdmin =>
+      _filterStates[DeviceListMode.all]!.selectedAdmin;
+  String? get lastSelectedProvince =>
+      _filterStates[DeviceListMode.all]!.selectedProvince;
+  String? get lastSelectedCity =>
+      _filterStates[DeviceListMode.all]!.selectedCity;
+  String? get lastSelectedPlan =>
+      _filterStates[DeviceListMode.all]!.selectedPlan;
+  String? get lastStartDate => _filterStates[DeviceListMode.all]!.startDate;
+  String? get lastEndDate => _filterStates[DeviceListMode.all]!.endDate;
+
+  int? get lastRejectedSelectedInstaller =>
+      _filterStates[DeviceListMode.rejected]!.selectedInstaller;
+  String? get lastRejectedSearchedText =>
+      _filterStates[DeviceListMode.rejected]!.searchedText;
+  String? get lastRejectedSelectedOrg =>
+      _filterStates[DeviceListMode.rejected]!.selectedOrg;
+  String? get lastRejectedSelectedAdmin =>
+      _filterStates[DeviceListMode.rejected]!.selectedAdmin;
+  String? get lastRejectedSelectedProvince =>
+      _filterStates[DeviceListMode.rejected]!.selectedProvince;
+  String? get lastRejectedSelectedCity =>
+      _filterStates[DeviceListMode.rejected]!.selectedCity;
+  String? get lastRejectedSelectedPlan =>
+      _filterStates[DeviceListMode.rejected]!.selectedPlan;
+  String? get lastRejectedStartDate =>
+      _filterStates[DeviceListMode.rejected]!.startDate;
+  String? get lastRejectedEndDate =>
+      _filterStates[DeviceListMode.rejected]!.endDate;
+
+  int? get lastSuspendedSelectedInstaller =>
+      _filterStates[DeviceListMode.suspended]!.selectedInstaller;
+  String? get lastSuspendedSearchedText =>
+      _filterStates[DeviceListMode.suspended]!.searchedText;
+  String? get lastSuspendedSelectedOrg =>
+      _filterStates[DeviceListMode.suspended]!.selectedOrg;
+  String? get lastSuspendedSelectedAdmin =>
+      _filterStates[DeviceListMode.suspended]!.selectedAdmin;
+  String? get lastSuspendedSelectedProvince =>
+      _filterStates[DeviceListMode.suspended]!.selectedProvince;
+  String? get lastSuspendedSelectedCity =>
+      _filterStates[DeviceListMode.suspended]!.selectedCity;
+  String? get lastSuspendedSelectedPlan =>
+      _filterStates[DeviceListMode.suspended]!.selectedPlan;
+  String? get lastSuspendedStartDate =>
+      _filterStates[DeviceListMode.suspended]!.startDate;
+  String? get lastSuspendedEndDate =>
+      _filterStates[DeviceListMode.suspended]!.endDate;
+
+  /// Unified method to load devices for any mode
+  Future<void> loadDevicesForMode({
+    required DeviceListMode mode,
     required bool all,
     int? page,
     int? installer,
@@ -68,76 +170,22 @@ class DeviceProvider with ChangeNotifier {
     String? start,
     String? end,
   }) async {
-    _isLoading = true;
-    _devicesPage = 1; // Reset page counter when loading devices
+    final filterState = _filterStates[mode]!;
 
-    filterCount = 0;
+    _loadingStates[mode] = true;
+    filterState.resetPagination();
 
-    // For fitering state
-    if (installer != null) {
-      lastSelectedInstaller = installer;
-      filterCount++;
-    } else {
-      lastSelectedInstaller = null;
-    }
-
-    if (organization != null) {
-      lastSelectedOrg = organization;
-      filterCount++;
-    } else {
-      lastSelectedOrg = null;
-    }
-
-    if (administration != null) {
-      lastSelectedAdmin = administration;
-      filterCount++;
-    } else {
-      lastSelectedAdmin = null;
-    }
-
-    if (province != null) {
-      lastSelectedProvince = province;
-      filterCount++;
-    } else {
-      lastSelectedProvince = null;
-    }
-
-    if (city != null) {
-      lastSelectedCity = city;
-      filterCount++;
-    } else {
-      lastSelectedCity = null;
-    }
-
-    if (plan != null) {
-      lastSelectedPlan = plan;
-      filterCount++;
-    } else {
-      lastSelectedPlan = null;
-    }
-
-    if (start != null) {
-      lastStartDate = start;
-      filterCount++;
-    } else {
-      lastStartDate = null;
-    }
-
-    if (end != null) {
-      lastEndDate = end;
-      // Don't increment filterCount for end date if start is already counted
-      // as they represent a single date range filter
-    } else {
-      lastEndDate = null;
-    }
-
-    if (search != null) {
-      lastSearchedText = search;
-    }
-
-    if (filterCount == 0 && search == null) {
-      lastSearchedText = null;
-    }
+    filterState.updateFilters(
+      installer: installer,
+      organization: organization,
+      administration: administration,
+      province: province,
+      city: city,
+      plan: plan,
+      start: start,
+      end: end,
+      search: search,
+    );
     notifyListeners();
 
     try {
@@ -153,85 +201,228 @@ class DeviceProvider with ChangeNotifier {
         plan: plan,
         start: start,
         end: end,
+        isRejected: mode == DeviceListMode.rejected ? true : null,
+        isSuspended: mode == DeviceListMode.suspended ? true : null,
       );
 
-      _devices = response["data"];
-      _devicesTotalPages = response["pages"];
+      _deviceLists[mode] = response["data"];
+      filterState.totalPages = response["pages"];
 
-      // Get percent from response
-      final percentValue = response["percent"];
+      // Get rejected devices count from response (only for normal mode)
+      if (mode == DeviceListMode.all) {
+        final rejectedCount = response["rejected_count"];
+        if (rejectedCount != null) {
+          if (rejectedCount is int) {
+            _rejectedDevicesCount = rejectedCount;
+          } else if (rejectedCount is num) {
+            _rejectedDevicesCount = rejectedCount.toInt();
+          } else {
+            _rejectedDevicesCount = 0;
+          }
+        }
 
-      if (percentValue != null) {
-        // Handle both string and numeric types
-        if (percentValue is String) {
-          activeDevicesPercentage = double.tryParse(percentValue)?.round() ?? 0;
-        } else if (percentValue is num) {
-          activeDevicesPercentage = percentValue.round();
+        // Get percent from response
+        final percentValue = response["percent"];
+        if (percentValue != null) {
+          if (percentValue is String) {
+            activeDevicesPercentage =
+                double.tryParse(percentValue)?.round() ?? 0;
+          } else if (percentValue is num) {
+            activeDevicesPercentage = percentValue.round();
+          } else {
+            activeDevicesPercentage = 0;
+          }
         } else {
           activeDevicesPercentage = 0;
         }
-      } else {
-        activeDevicesPercentage = 0;
       }
     } catch (e) {
-      _devices = [];
-      debugPrint("Error fetching devices: $e");
+      _deviceLists[mode] = [];
+      debugPrint("Error fetching devices for mode $mode: $e");
     } finally {
-      _isLoading = false;
+      _loadingStates[mode] = false;
       notifyListeners();
     }
   }
 
+  /// Load all devices (backward compatibility)
+  Future<void> loadDevices({
+    required bool all,
+    int? page,
+    int? installer,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? search,
+    String? plan,
+    String? start,
+    String? end,
+  }) async {
+    await loadDevicesForMode(
+      mode: DeviceListMode.all,
+      all: all,
+      page: page,
+      installer: installer,
+      organization: organization,
+      administration: administration,
+      province: province,
+      city: city,
+      search: search,
+      plan: plan,
+      start: start,
+      end: end,
+    );
+  }
+
+  /// Load rejected devices (backward compatibility)
+  Future<void> loadRejectedDevices({
+    required bool all,
+    int? page,
+    int? installer,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? search,
+    String? plan,
+    String? start,
+    String? end,
+  }) async {
+    await loadDevicesForMode(
+      mode: DeviceListMode.rejected,
+      all: all,
+      page: page,
+      installer: installer,
+      organization: organization,
+      administration: administration,
+      province: province,
+      city: city,
+      search: search,
+      plan: plan,
+      start: start,
+      end: end,
+    );
+  }
+
+  /// Load suspended devices
+  Future<void> loadSuspendedDevices({
+    required bool all,
+    int? page,
+    int? installer,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? search,
+    String? plan,
+    String? start,
+    String? end,
+  }) async {
+    await loadDevicesForMode(
+      mode: DeviceListMode.suspended,
+      all: all,
+      page: page,
+      installer: installer,
+      organization: organization,
+      administration: administration,
+      province: province,
+      city: city,
+      search: search,
+      plan: plan,
+      start: start,
+      end: end,
+    );
+  }
+
   //
-  // Device Next Page
+  // Unified Next Page for any mode
   //
-  Future<void> devicesNextPage() async {
-    if (_devicesPage < _devicesTotalPages) {
-      _devicesPage++;
-      _devicesNextPageLoading = true;
+  Future<void> nextPageForMode(DeviceListMode mode) async {
+    final filterState = _filterStates[mode]!;
+
+    if (filterState.page < filterState.totalPages) {
+      filterState.page++;
+      filterState.isNextPageLoading = true;
       notifyListeners();
 
       try {
         final nextPageDevices = await api.fetchDevices(
           all: false,
-          page: _devicesPage,
-          search: lastSearchedText,
-          administration: lastSelectedAdmin,
-          installer: lastSelectedInstaller,
-          organization: lastSelectedOrg,
-          province: lastSelectedProvince,
-          city: lastSelectedCity,
-          plan: lastSelectedPlan,
-          start: lastStartDate,
-          end: lastEndDate,
+          page: filterState.page,
+          search: filterState.searchedText,
+          administration: filterState.selectedAdmin,
+          installer: filterState.selectedInstaller,
+          organization: filterState.selectedOrg,
+          province: filterState.selectedProvince,
+          city: filterState.selectedCity,
+          plan: filterState.selectedPlan,
+          start: filterState.startDate,
+          end: filterState.endDate,
+          isRejected: mode == DeviceListMode.rejected ? true : null,
+          isSuspended: mode == DeviceListMode.suspended ? true : null,
         );
-        _devices.addAll(
-          nextPageDevices["data"],
-        ); // append results to existing list
+        _deviceLists[mode]!.addAll(nextPageDevices["data"]);
       } catch (e) {
-        _devices = [];
-        debugPrint("Error fetching devices: $e");
+        debugPrint("Error fetching next page for mode $mode: $e");
       } finally {
-        _devicesNextPageLoading = false;
+        filterState.isNextPageLoading = false;
         notifyListeners();
       }
     }
   }
 
   //
+  // Device Next Page (backward compatibility)
+  //
+  Future<void> devicesNextPage() async {
+    await nextPageForMode(DeviceListMode.all);
+  }
+
+  //
   // Clear All Filters
   //
   void clearFilters() {
-    lastSelectedInstaller = null;
-    lastSelectedOrg = null;
-    lastSelectedAdmin = null;
-    lastSelectedProvince = null;
-    lastSelectedCity = null;
-    lastSelectedPlan = null;
-    lastStartDate = null;
-    lastEndDate = null;
-    filterCount = 0;
+    _filterStates[DeviceListMode.all]!.clearFilters();
     notifyListeners();
+  }
+
+  //
+  // Clear Rejected Filters
+  //
+  void clearRejectedFilters() {
+    _filterStates[DeviceListMode.rejected]!.clearFilters();
+    notifyListeners();
+  }
+
+  //
+  // Clear Suspended Filters
+  //
+  void clearSuspendedFilters() {
+    _filterStates[DeviceListMode.suspended]!.clearFilters();
+    notifyListeners();
+  }
+
+  //
+  // Clear Filters for mode
+  //
+  void clearFiltersForMode(DeviceListMode mode) {
+    _filterStates[mode]!.clearFilters();
+    notifyListeners();
+  }
+
+  //
+  // Rejected Devices Next Page (backward compatibility)
+  //
+  Future<void> rejectedDevicesNextPage() async {
+    await nextPageForMode(DeviceListMode.rejected);
+  }
+
+  //
+  // Suspended Devices Next Page
+  //
+  Future<void> suspendedDevicesNextPage() async {
+    await nextPageForMode(DeviceListMode.suspended);
   }
 
   //
@@ -599,24 +790,13 @@ class DeviceProvider with ChangeNotifier {
       );
 
       if (result == 200) {
-        // Update the device in the local list
-        final index = _devices.indexWhere((d) => d.id == deviceId);
-        if (index != -1) {
-          // Reload devices to get updated status
-          await loadDevices(
-            all: false,
-            page: 1,
-            search: lastSearchedText,
-            installer: lastSelectedInstaller,
-            organization: lastSelectedOrg,
-            administration: lastSelectedAdmin,
-            province: lastSelectedProvince,
-            city: lastSelectedCity,
-            plan: lastSelectedPlan,
-            start: lastStartDate,
-            end: lastEndDate,
-          );
-        }
+        // Reload all device lists since status change can move device between lists
+        // Reload in parallel for better performance
+        await Future.wait([
+          _reloadListWithCurrentFilters(DeviceListMode.all),
+          _reloadListWithCurrentFilters(DeviceListMode.rejected),
+          _reloadListWithCurrentFilters(DeviceListMode.suspended),
+        ]);
         log('Device status updated successfully');
       }
 
@@ -625,5 +805,24 @@ class DeviceProvider with ChangeNotifier {
       log('Error updating device status: $e');
       rethrow;
     }
+  }
+
+  /// Helper method to reload a device list with its current filters
+  Future<void> _reloadListWithCurrentFilters(DeviceListMode mode) async {
+    final filterState = _filterStates[mode]!;
+    await loadDevicesForMode(
+      mode: mode,
+      all: false,
+      page: 1,
+      search: filterState.searchedText,
+      installer: filterState.selectedInstaller,
+      organization: filterState.selectedOrg,
+      administration: filterState.selectedAdmin,
+      province: filterState.selectedProvince,
+      city: filterState.selectedCity,
+      plan: filterState.selectedPlan,
+      start: filterState.startDate,
+      end: filterState.endDate,
+    );
   }
 }

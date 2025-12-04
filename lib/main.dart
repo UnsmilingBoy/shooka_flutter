@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/device_list.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/rejected_device_list.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/suspended_device_list.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/events_list.dart';
 import 'package:shooka_flutter/(tabs)/locations/locations.dart';
 import 'package:shooka_flutter/(tabs)/login%20page/login.dart';
@@ -116,6 +118,8 @@ class MyApp extends StatelessWidget {
                 '/profile': (context) => const ProfilePage(),
                 '/device_list': (context) =>
                     const DeviceList(openAddDevice: false),
+                '/rejected_devices': (context) => const RejectedDeviceList(),
+                '/suspended_devices': (context) => const SuspendedDeviceList(),
                 // I handle '/device_page' in DeviceTile with MaterialPageRoute and set its RouteSetting name to '/device_page' for passing device id.
                 '/add_device': (context) =>
                     const DeviceList(openAddDevice: true),

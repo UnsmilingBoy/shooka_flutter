@@ -42,6 +42,9 @@ class _MyHomePageState extends State<MyHomePage> {
     final activeDevicesPercentage = context
         .watch<DeviceProvider>()
         .activeDevicesPercentage;
+    final rejectedDevicesCount = context
+        .watch<DeviceProvider>()
+        .rejectedDevicesCount;
 
     bool deviceLoading = context.watch<DeviceProvider>().isLoading;
 
@@ -61,6 +64,43 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
+
+            // Rejected devices warning
+            if (rejectedDevicesCount > 0)
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(context, "/rejected_devices"),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "شما $rejectedDevicesCount موتورخانه رد شده دارید. برای مشاهده کلیک کنید.",
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelMedium?.copyWith(color: Colors.red),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             //
             // A Row With Two Container Tiles Providing Some Info (Boilers Status and count)

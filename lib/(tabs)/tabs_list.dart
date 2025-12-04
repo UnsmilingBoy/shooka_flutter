@@ -13,8 +13,31 @@ final tabsList = [
   },
   {
     'label': 'موتورخانه‌ها',
-    "href": ['/device_list', '/add_device', '/device_page'],
+    "href": [
+      '/device_list',
+      '/add_device',
+      '/device_page',
+      '/rejected_devices',
+      '/suspended_devices',
+    ],
     "icon": Icons.devices,
+    "children": [
+      {
+        'label': 'همه موتورخانه‌ها',
+        "href": ['/device_list', '/add_device', '/device_page'],
+        "icon": Icons.list,
+      },
+      {
+        'label': 'در حال بررسی',
+        "href": ['/suspended_devices'],
+        "icon": Icons.hourglass_empty,
+      },
+      {
+        'label': 'موتورخانه های رد شده',
+        "href": ['/rejected_devices'],
+        "icon": Icons.cancel_outlined,
+      },
+    ],
   },
   {
     'label': 'رویداد‌ها',

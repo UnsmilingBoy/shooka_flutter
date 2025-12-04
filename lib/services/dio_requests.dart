@@ -263,6 +263,8 @@ class ApiService {
     String? plan,
     String? start,
     String? end,
+    bool? isRejected,
+    bool? isSuspended,
   }) async {
     final queryParams = {
       "all": all == true ? "true" : "false",
@@ -277,6 +279,8 @@ class ApiService {
       if (plan != null) "plan": plan,
       if (start != null) "start": start,
       if (end != null) "end": end,
+      if (isRejected != null) "is_rejected": isRejected,
+      if (isSuspended != null) "is_suspended": isSuspended,
     };
 
     log("query params for devices are: $queryParams");
@@ -295,6 +299,7 @@ class ApiService {
           "pages": response.data["total_pages"],
           "data": data.map((json) => Device.fromJson(json)).toList(),
           "percent": response.data["device_connectivity_percent"],
+          "rejected_count": response.data["rejected_devices_count"],
         };
       } else {
         throw Exception('Failed to load devices');

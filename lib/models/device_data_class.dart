@@ -8,6 +8,7 @@ class Device {
   final DeviceDetails details;
   final String? status;
   final bool? rawStatus; // true = approved, false = rejected, null = pending
+  final String? rejectionNote; // Rejection reason when rawStatus is false
   final String administration;
   final String creator;
   final String isConnected;
@@ -33,6 +34,7 @@ class Device {
     required this.details,
     this.status,
     this.rawStatus,
+    this.rejectionNote,
     required this.administration,
     required this.creator,
     required this.isConnected,
@@ -54,6 +56,7 @@ class Device {
           : json['status'] == false
           ? "رد شده"
           : "در حال بررسی",
+      rejectionNote: json['rejection_note'],
       administration: json['administration'] ?? '',
       creator: json['creator'] ?? '',
       isConnected: json['is_connected'] == true ? "متصل" : "قطع",
