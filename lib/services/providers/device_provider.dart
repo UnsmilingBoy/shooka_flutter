@@ -266,7 +266,6 @@ class DeviceProvider with ChangeNotifier {
         name: name,
         organization: organization,
         serialNumber: serialNumber,
-        status: true,
         plan: plan,
         images: formattedImages, // Use the new list here
       );
@@ -310,7 +309,6 @@ class DeviceProvider with ChangeNotifier {
         name: name,
         organization: organization,
         serialNumber: serialNumber,
-        status: true,
         plan: plan,
       );
       return status;
@@ -580,6 +578,51 @@ class DeviceProvider with ChangeNotifier {
       log('Export completed successfully');
     } catch (e) {
       log('Error exporting devices: $e');
+      rethrow;
+    }
+  }
+
+  //
+  //  Update Device Status (Approve/Reject)
+  //
+  Future<int> updateDeviceStatus({
+    required int deviceId,
+    required bool status,
+    String? rejectionNote,
+  }) async {
+    try {
+      log('Updating device $deviceId status to: $status');
+      int result = await api.updateDeviceStatus(
+        deviceId: deviceId,
+        status: status,
+        rejectionNote: rejectionNote,
+      );
+
+      if (result == 200) {
+        // Update the device in the local list
+        final index = _devices.indexWhere((d) => d.id == deviceId);
+        if (index != -1) {
+          // Reload devices to get updated status
+          await loadDevices(
+            all: false,
+            page: 1,
+            search: lastSearchedText,
+            installer: lastSelectedInstaller,
+            organization: lastSelectedOrg,
+            administration: lastSelectedAdmin,
+            province: lastSelectedProvince,
+            city: lastSelectedCity,
+            plan: lastSelectedPlan,
+            start: lastStartDate,
+            end: lastEndDate,
+          );
+        }
+        log('Device status updated successfully');
+      }
+
+      return result;
+    } catch (e) {
+      log('Error updating device status: $e');
       rethrow;
     }
   }

@@ -326,7 +326,7 @@ class _DeviceListState extends State<DeviceList> {
                     ),
                   ),
                   Expanded(
-                    flex: 1,
+                    flex: 2,
                     child: Text(
                       'وضعیت',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -387,6 +387,7 @@ class _DeviceListState extends State<DeviceList> {
                           latLong: devices[index].latLong,
                           address: devices[index].city,
                           status: devices[index].status,
+                          rawStatus: devices[index].rawStatus,
                           creator: devices[index].creator,
                           plan: devices[index].plan ?? "-",
                         ),

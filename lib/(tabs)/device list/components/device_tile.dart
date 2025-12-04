@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/components/device_status_modal.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/device_page.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
@@ -17,6 +19,7 @@ class DeviceTile extends StatefulWidget {
   final String? installationDate;
   final String? address;
   final String? status;
+  final bool? rawStatus; // true = approved, false = rejected, null = pending
   final String? creator;
   final String? latLong;
   final String plan;
@@ -33,6 +36,7 @@ class DeviceTile extends StatefulWidget {
     required this.installationDate,
     required this.address,
     required this.status,
+    this.rawStatus,
     required this.creator,
     required this.latLong,
     required this.plan,
@@ -62,6 +66,60 @@ class _DeviceTileState extends State<DeviceTile> {
         });
       });
     }
+  }
+
+  void _showStatusModal() {
+    showMaterialModalBottomSheet(
+      enableDrag: false,
+      context: context,
+      builder: (context) => DeviceStatusModal(
+        deviceId: widget.deviceId,
+        deviceName: widget.name,
+        currentStatus: widget.rawStatus,
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context) {
+    // Determine color and text based on status
+    Color statusColor;
+    String statusText;
+
+    if (widget.rawStatus == true) {
+      statusColor = Colors.green;
+      statusText = widget.status ?? 'تأیید شده';
+    } else if (widget.rawStatus == false) {
+      statusColor = Colors.red;
+      statusText = widget.status ?? 'رد شده';
+    } else {
+      statusColor = Colors.orange;
+      statusText = widget.status ?? 'در حال بررسی';
+    }
+
+    return GestureDetector(
+      onTap: _showStatusModal,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: statusColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: statusColor, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              statusText,
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: statusColor),
+            ),
+            SizedBox(width: 6),
+            Icon(Icons.edit_outlined, size: 14, color: statusColor),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -158,13 +216,12 @@ class _DeviceTileState extends State<DeviceTile> {
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                 ),
-                // Status
+                // Status badge (clickable to open modal)
                 Expanded(
-                  flex: 1,
-                  child: Text(
-                    widget.status ?? '-',
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall,
+                  flex: 2,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildStatusBadge(context),
                   ),
                 ),
                 // Connection status

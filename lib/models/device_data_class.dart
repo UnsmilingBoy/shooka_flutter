@@ -7,6 +7,7 @@ class Device {
   final int? location;
   final DeviceDetails details;
   final String? status;
+  final bool? rawStatus; // true = approved, false = rejected, null = pending
   final String administration;
   final String creator;
   final String isConnected;
@@ -31,6 +32,7 @@ class Device {
     this.location,
     required this.details,
     this.status,
+    this.rawStatus,
     required this.administration,
     required this.creator,
     required this.isConnected,
@@ -46,6 +48,7 @@ class Device {
       engineRoomFeature: json['engineroomfeature_id'],
       location: json['location_id'],
       details: DeviceDetails.fromJson(json['details'] ?? {}),
+      rawStatus: json['status'],
       status: json['status'] == true
           ? "تایید شده"
           : json['status'] == false

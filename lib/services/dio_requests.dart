@@ -364,7 +364,6 @@ class ApiService {
     required String engineRoomFeature,
     required int location,
     required int organization,
-    required bool status,
     String? plan,
     String? latLong,
     required List<String> images,
@@ -376,7 +375,7 @@ class ApiService {
       "engine_room_feature": engineRoomFeature,
       "location": location,
       "organization": organization,
-      "status": status,
+      // Don't send status - let backend set null (pending) by default
       if (plan != null) "plan": plan,
       "lat_long": latLong,
       "details": {"name": name, "serial_number": serialNumber},
@@ -403,10 +402,10 @@ class ApiService {
     String? engineRoomFeature,
     int? location,
     int? organization,
-    bool? status,
     String? plan,
     String? latLong,
   }) async {
+    // Note: status is not included here - use updateDeviceStatus() to change approval status
     var body = {
       "id": id,
       if (name != null) "name": name,
@@ -417,7 +416,6 @@ class ApiService {
       if (engineRoomFeature != null) "engine_room_feature": engineRoomFeature,
       if (location != null) "location": location,
       if (organization != null) "organization": organization,
-      if (status != null) "status": status,
       if (plan != null) "plan": plan,
       if (latLong != null) "lat_long": latLong,
     };
@@ -428,6 +426,34 @@ class ApiService {
     } on DioException catch (e) {
       log("Failed to edit device: ${e.response}");
       return e.response!.statusCode!;
+    }
+  }
+
+  //
+  // Update Device Status (Approve/Reject)
+  //
+  Future<int> updateDeviceStatus({
+    required int deviceId,
+    required bool status,
+    String? rejectionNote,
+  }) async {
+    var body = {
+      "device": deviceId,
+      "status": status,
+      if (rejectionNote != null && rejectionNote.isNotEmpty)
+        "rejection_note": rejectionNote,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/devices/update-status',
+        data: body,
+      );
+      log("Device status updated: ${response.data}");
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      log("Failed to update device status: ${e.response}");
+      return e.response?.statusCode ?? -1;
     }
   }
 
