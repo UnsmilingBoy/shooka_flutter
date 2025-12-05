@@ -365,18 +365,16 @@ class _DeviceTileState extends State<DeviceTile> {
               title: Text(
                 overflow: TextOverflow.ellipsis,
                 widget.name,
-                style: Theme.of(context).textTheme.titleSmall,
+                style: Theme.of(context).textTheme.titleSmall?.apply(
+                  color: widget.isSelected ? Colors.white : null,
+                ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 4,
-                children: [
-                  Text(
-                    overflow: TextOverflow.ellipsis,
-                    "سازمان: ${widget.org}",
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
+              subtitle: Text(
+                overflow: TextOverflow.ellipsis,
+                "سازمان: ${widget.org}",
+                style: Theme.of(context).textTheme.labelSmall?.apply(
+                  color: widget.isSelected ? Colors.grey.shade400 : null,
+                ),
               ),
               trailing: widget.showRejectionNote
                   // For rejected devices on mobile: only show rejection note button
