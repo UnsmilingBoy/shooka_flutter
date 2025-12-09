@@ -16,7 +16,7 @@ class DpEvents extends StatelessWidget {
 
     return MyExpansionTile(
       padding: EdgeInsets.all(0),
-      title: "رخدادها",
+      title: "رویدادها",
       children: [
         loading
             ? Padding(

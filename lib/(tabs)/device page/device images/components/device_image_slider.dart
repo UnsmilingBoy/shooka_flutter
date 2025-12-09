@@ -12,33 +12,78 @@ class ImageSlider extends StatefulWidget {
 
 class _ImageSliderState extends State<ImageSlider> {
   int _currentIndex = 0;
+  late CarouselSliderController _carouselController;
+
+  @override
+  void initState() {
+    super.initState();
+    _carouselController = CarouselSliderController();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isWeb = MediaQuery.of(context).size.width > 900;
+
     return Column(
       children: [
-        CarouselSlider(
-          options: CarouselOptions(
-            height: MediaQuery.of(context).size.width > 600 ? 400.0 : 250.0,
-            autoPlay: true,
-            enlargeCenterPage: true,
-            viewportFraction: 1,
-            aspectRatio: 16 / 9,
-            onPageChanged: (index, reason) {
-              setState(() => _currentIndex = index);
-            },
-          ),
-          items: widget.imagePathList.map((item) {
-            return Builder(
-              builder: (context) => ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: ImageWithCaption(
-                  networkImagePath: item,
-                  disableCaption: true,
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            CarouselSlider(
+              carouselController: _carouselController,
+              options: CarouselOptions(
+                height: MediaQuery.of(context).size.width > 600 ? 400.0 : 250.0,
+                autoPlay: true,
+                enlargeCenterPage: true,
+                viewportFraction: 1,
+                aspectRatio: 16 / 9,
+                onPageChanged: (index, reason) {
+                  setState(() => _currentIndex = index);
+                },
+              ),
+              items: widget.imagePathList.map((item) {
+                return Builder(
+                  builder: (context) => ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: ImageWithCaption(
+                      networkImagePath: item,
+                      disableCaption: true,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            // Previous button (web only)
+            if (isWeb)
+              Positioned(
+                left: 16,
+                child: IconButton(
+                  onPressed: () => _carouselController.nextPage(),
+                  icon: const Icon(Icons.chevron_right, size: 40),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black.withOpacity(0.3),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(5),
+                  ),
+                  tooltip: 'تصویر بعدی',
                 ),
               ),
-            );
-          }).toList(),
+            // Next button (web only)
+            if (isWeb)
+              Positioned(
+                right: 16,
+                child: IconButton(
+                  onPressed: () => _carouselController.previousPage(),
+                  icon: const Icon(Icons.chevron_left, size: 40),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black.withOpacity(0.3),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(5),
+                  ),
+                  tooltip: 'تصویر قبلی',
+                ),
+              ),
+          ],
         ),
 
         const SizedBox(height: 8),

@@ -304,6 +304,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     )?["location"]?[1] ??
                                 "",
                             status: devices[index].status,
+                            rawStatus: devices[index].rawStatus,
+                            rejectionNote: devices[index].rejectionNote,
                             creator: devices[index].creator,
                           ),
                         ),

@@ -4,8 +4,7 @@ import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/switches/my_switch.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textformfield.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
@@ -54,20 +53,19 @@ class _AddEventModalState extends State<AddEventModal> {
       title: "رویداد جدید",
       isLongList: true,
       children: [
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           initialValue: selectedDevice,
           iconOnPressed: () => setState(() {
             selectedDevice = null;
           }),
-          items: generalProvider.filters?["devices"]
-              .map<DropdownMenuItem<String>>(
-                (device) => myDropDownItem(
-                  value: device["name"].toString(), // ensure it's a String
+          items: (generalProvider.filters?["devices"] ?? [])
+              .map<DropdownItemModel>(
+                (device) => DropdownItemModel(
+                  value: device["name"].toString(),
                   label: device["name"].toString(),
                 ),
               )
               .toList(),
-
           onChanged: (value) {
             setState(() {
               selectedDevice = value;
@@ -80,7 +78,7 @@ class _AddEventModalState extends State<AddEventModal> {
         //
         // Select Title Dropdown
         //
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           initialValue: selectedEventTitle,
           iconOnPressed: () => setState(() {
             selectedEventTitle = null;
@@ -90,12 +88,10 @@ class _AddEventModalState extends State<AddEventModal> {
               selectedEventTitle = value;
             });
           },
-          items: generalProvider.filters?["event_title"]
-              .map<DropdownMenuItem<String>>(
-                (eventTitle) => myDropDownItem(
-                  value: eventTitle, // ensure it's a String
-                  label: eventTitle,
-                ),
+          items: (generalProvider.filters?["event_title"] ?? [])
+              .map<DropdownItemModel>(
+                (eventTitle) =>
+                    DropdownItemModel(value: eventTitle, label: eventTitle),
               )
               .toList(),
           label: "عنوان",

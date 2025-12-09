@@ -6,14 +6,14 @@ import 'package:latlong2/latlong.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/map.dart';
+import 'package:shooka_flutter/(tabs)/device%20list/components/safety_parameter_tile.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/multiple_image_service.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
@@ -40,6 +40,50 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
   String? provinceInitialValue;
   String? planInitialValue;
 
+  // Safety Parameters - dynamically managed based on checklist from API
+  Map<int, String?> safetyParameterValues = {};
+  Map<int, TextEditingController> safetyParameterNotes = {};
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _serialNumberController.dispose();
+    locationController.dispose();
+    // Dispose all safety parameter note controllers
+    for (var controller in safetyParameterNotes.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  // Helper method to check if all checklist items are filled
+  bool _hasIncompleteChecklist(GeneralProvider generalProvider) {
+    if (generalProvider.filters?["checklist"] == null) return false;
+
+    final checklist = generalProvider.filters!["checklist"] as List;
+    for (var item in checklist) {
+      final id = item["id"] as int;
+      if (!safetyParameterValues.containsKey(id) ||
+          safetyParameterValues[id] == null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Helper method to check if any rejected parameter lacks a note
+  bool _hasRejectedWithoutNote() {
+    for (var entry in safetyParameterValues.entries) {
+      if (entry.value == 'rejected') {
+        final noteController = safetyParameterNotes[entry.key];
+        if (noteController == null || noteController.text.isEmpty) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final generalProvider = context.watch<GeneralProvider>();
@@ -59,8 +103,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
         "label": "نام سازمان*",
         "initialValue": orgInitialValue,
         "items": (generalProvider.filters?["organizations"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (org) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (org) => DropdownItemModel(
                 value: org["id"].toString(),
                 label: org["organization"].toString(),
               ),
@@ -71,8 +115,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
         "label": "ویژگی موتورخانه*",
         "initialValue": featureInitialValue,
         "items": (generalProvider.filters?["features"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (feature) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (feature) => DropdownItemModel(
                 value: feature["main_3d_view"].toString(),
                 label: feature["main_3d_view"].toString(),
               ),
@@ -83,8 +127,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
         "label": "شهر و استان*",
         "initialValue": provinceInitialValue,
         "items": (generalProvider.filters?["locations"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (loc) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (loc) => DropdownItemModel(
                 value: loc["id"].toString(),
                 label: "${loc["location"][0]} - ${loc["location"][1]}",
               ),
@@ -95,8 +139,11 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
         "label": "پلن*",
         "initialValue": planInitialValue,
         "items": [
-          myDropDownItem(value: "free", label: "آزاد"),
-          myDropDownItem(value: "optimized", label: "طرح بهینه سازی شرکت گاز"),
+          DropdownItemModel(value: "free", label: "آزاد"),
+          DropdownItemModel(
+            value: "optimized",
+            label: "طرح بهینه سازی شرکت گاز",
+          ),
         ],
       },
       // {
@@ -143,37 +190,32 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
           physics: NeverScrollableScrollPhysics(),
           padding: EdgeInsets.all(0),
           itemCount: dropdownList.length,
-          itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: DropdownWithLabel(
-              iconOnPressed: () => setState(() {
-                final label = dropdownList[index]["label"] as String;
-                if (label == "نام سازمان*") orgInitialValue = null;
-                if (label == "ویژگی موتورخانه*") {
-                  featureInitialValue = null;
-                }
-                if (label == "شهر و استان*") provinceInitialValue = null;
-                if (label == "پلن*") planInitialValue = null;
-              }),
-              onChanged: (value) => setState(() {
-                final label = dropdownList[index]["label"] as String;
-                if (label == "نام سازمان*") {
-                  orgInitialValue = value;
-                } else if (label == "ویژگی موتورخانه*") {
-                  featureInitialValue = value;
-                } else if (label == "شهر و استان*") {
-                  provinceInitialValue = value;
-                } else if (label == "پلن*") {
-                  planInitialValue = value;
-                }
-              }),
-              initialValue: dropdownList[index]["initialValue"] as String?,
-              label: dropdownList[index]["label"] as String,
-              items:
-                  dropdownList[index]["items"]
-                      as List<DropdownMenuItem<String>>,
-              placeholder: "${dropdownList[index]["label"]}",
-            ),
+          itemBuilder: (context, index) => SearchableDropdownWithLabel(
+            iconOnPressed: () => setState(() {
+              final label = dropdownList[index]["label"] as String;
+              if (label == "نام سازمان*") orgInitialValue = null;
+              if (label == "ویژگی موتورخانه*") {
+                featureInitialValue = null;
+              }
+              if (label == "شهر و استان*") provinceInitialValue = null;
+              if (label == "پلن*") planInitialValue = null;
+            }),
+            onChanged: (value) => setState(() {
+              final label = dropdownList[index]["label"] as String;
+              if (label == "نام سازمان*") {
+                orgInitialValue = value;
+              } else if (label == "ویژگی موتورخانه*") {
+                featureInitialValue = value;
+              } else if (label == "شهر و استان*") {
+                provinceInitialValue = value;
+              } else if (label == "پلن*") {
+                planInitialValue = value;
+              }
+            }),
+            initialValue: dropdownList[index]["initialValue"] as String?,
+            label: dropdownList[index]["label"] as String,
+            items: dropdownList[index]["items"] as List<DropdownItemModel>,
+            placeholder: "انتخاب کنید",
           ),
         ),
 
@@ -258,6 +300,40 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             },
           ),
 
+        // Safety Parameters Section - dynamically generated from checklist
+        if (generalProvider.filters?["checklist"] != null)
+          ...List.generate(
+            (generalProvider.filters!["checklist"] as List).length,
+            (index) {
+              final checklistItem =
+                  (generalProvider.filters!["checklist"] as List)[index];
+              final id = checklistItem["id"] as int;
+
+              // Initialize controller if not exists
+              if (!safetyParameterNotes.containsKey(id)) {
+                safetyParameterNotes[id] = TextEditingController();
+              }
+
+              return SafetyParameterTile(
+                label: checklistItem["label"] ?? "",
+                description: checklistItem["description"] ?? "",
+                selectedValue: safetyParameterValues[id],
+                rejectionNoteController: safetyParameterNotes[id],
+                onChanged: (value) => setState(() {
+                  safetyParameterValues[id] = value;
+                  if (value != 'rejected') {
+                    safetyParameterNotes[id]?.clear();
+                  }
+                }),
+              );
+            },
+          ),
+
+        SizedBox(height: 10),
+
+        //
+        // LatLong Picker
+        //
         Padding(
           padding: const EdgeInsets.only(bottom: 10.0),
           child: Row(
@@ -315,6 +391,9 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
           ),
         ),
 
+        //
+        // Image Picker
+        //
         Padding(
           padding: const EdgeInsets.only(bottom: 10.0),
           child: Row(
@@ -409,6 +488,14 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
               flatErrorToast(
                 title: "فرمت شماره سریال اشتباه است.",
                 description: "مثال: 1111.2222.AAAA.FFFF",
+              );
+            } else if (_hasIncompleteChecklist(generalProvider)) {
+              flatErrorToast(
+                title: "لطفا همه پارامترهای ایمنی را تایید یا رد کنید.",
+              );
+            } else if (_hasRejectedWithoutNote()) {
+              flatErrorToast(
+                title: "لطفا برای پارامترهای رد شده، دلیل رد را وارد کنید.",
               );
             } else {
               final status = await deviceProvider.addDevice(

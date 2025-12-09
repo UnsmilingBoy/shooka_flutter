@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 
 class DropdownWithLabel extends StatefulWidget {
-  final String label;
+  final String? label;
+  final Widget? labelWidget;
   final String placeholder;
   final String? initialValue;
   final List<DropdownMenuItem<String>> items;
@@ -14,8 +15,8 @@ class DropdownWithLabel extends StatefulWidget {
     this.initialValue,
     required this.items,
     this.onChanged,
-
-    required this.label,
+    this.label,
+    this.labelWidget,
     required this.placeholder,
     this.iconOnPressed,
   });
@@ -31,7 +32,10 @@ class _DropdownWithLabelState extends State<DropdownWithLabel> {
       spacing: 3,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label),
+        if (widget.labelWidget != null)
+          widget.labelWidget!
+        else if (widget.label != null)
+          Text(widget.label!),
         Row(
           spacing: 5,
           crossAxisAlignment: CrossAxisAlignment.center,

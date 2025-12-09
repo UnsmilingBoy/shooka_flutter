@@ -5,6 +5,7 @@ import 'package:shooka_flutter/(tabs)/device%20page/device%20images/components/d
 import 'package:shooka_flutter/(tabs)/device%20page/basic%20device%20info/dp_basic_info.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/device%20images/dp_device_images.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/location%20info/dp_installation_location_info.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/safety%20parameters/dp_safety_parameters.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/components/dp_events.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/installation%20info/dp_installation_info.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/usage%20info/dp_usage_info.dart';
@@ -108,6 +109,11 @@ class _DevicePageState extends State<DevicePage> {
                     // Add Pictures
                     //
                     DeviceImages(),
+
+                    //
+                    // Safety Parameters
+                    //
+                    DpSafetyParameters(),
 
                     //
                     // Events
