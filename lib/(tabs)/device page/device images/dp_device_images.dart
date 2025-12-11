@@ -317,7 +317,9 @@ class _DeviceImagesState extends State<DeviceImages> {
                     ? Loading()
                     : Text(
                         "حذف تصاویر انتخاب شده",
-                        style: Theme.of(context).textTheme.labelMedium,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelMedium?.apply(color: Colors.white),
                       ),
               ),
             if (selectedForRemove.isNotEmpty)
@@ -328,7 +330,7 @@ class _DeviceImagesState extends State<DeviceImages> {
                     : () async {
                         await _exportSelectedImages(images);
                       },
-                color: Theme.of(context).primaryColor.withOpacity(0.8),
+                color: Theme.of(context).primaryColor,
                 padding: EdgeInsets.all(15),
                 fillWidth: true,
                 child: isExporting
