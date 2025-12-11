@@ -6,8 +6,7 @@ import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/consts/views_utils.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
@@ -72,8 +71,8 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
         "label": "نام سازمان",
         "initialValue": orgInitialValue,
         "items": (generalProvider.filters?["organizations"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (org) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (org) => DropdownItemModel(
                 value: org["id"].toString(),
                 label: org["organization"].toString(),
               ),
@@ -84,8 +83,8 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
         "label": "ویژگی موتورخانه",
         "initialValue": featureInitialValue,
         "items": (generalProvider.filters?["features"] ?? [])
-            .map<DropdownMenuItem<String>>(
-              (feature) => myDropDownItem(
+            .map<DropdownItemModel>(
+              (feature) => DropdownItemModel(
                 value: feature["main_3d_view"].toString(),
                 label: feature["main_3d_view"].toString(),
               ),
@@ -96,8 +95,8 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
         "label": "پلن",
         "initialValue": planInitialValue,
         "items": [
-          myDropDownItem(value: "free", label: "آزاد"),
-          myDropDownItem(value: "optimized", label: "طرح بهینه‌سازی"),
+          DropdownItemModel(value: "free", label: "آزاد"),
+          DropdownItemModel(value: "optimized", label: "طرح بهینه‌سازی"),
         ],
       },
     ];
@@ -131,34 +130,29 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
           physics: NeverScrollableScrollPhysics(),
           padding: EdgeInsets.all(0),
           itemCount: dropdownList.length,
-          itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: DropdownWithLabel(
-              iconOnPressed: () => setState(() {
-                final label = dropdownList[index]["label"] as String;
-                if (label == "نام سازمان") orgInitialValue = null;
-                if (label == "ویژگی موتورخانه") {
-                  featureInitialValue = null;
-                }
-                if (label == "پلن") planInitialValue = null;
-              }),
-              onChanged: (value) => setState(() {
-                final label = dropdownList[index]["label"] as String;
-                if (label == "نام سازمان") {
-                  orgInitialValue = value;
-                } else if (label == "ویژگی موتورخانه") {
-                  featureInitialValue = value;
-                } else if (label == "پلن") {
-                  planInitialValue = value;
-                }
-              }),
-              initialValue: dropdownList[index]["initialValue"] as String?,
-              label: dropdownList[index]["label"] as String,
-              items:
-                  dropdownList[index]["items"]
-                      as List<DropdownMenuItem<String>>,
-              placeholder: "${dropdownList[index]["label"]}",
-            ),
+          itemBuilder: (context, index) => SearchableDropdownWithLabel(
+            iconOnPressed: () => setState(() {
+              final label = dropdownList[index]["label"] as String;
+              if (label == "نام سازمان") orgInitialValue = null;
+              if (label == "ویژگی موتورخانه") {
+                featureInitialValue = null;
+              }
+              if (label == "پلن") planInitialValue = null;
+            }),
+            onChanged: (value) => setState(() {
+              final label = dropdownList[index]["label"] as String;
+              if (label == "نام سازمان") {
+                orgInitialValue = value;
+              } else if (label == "ویژگی موتورخانه") {
+                featureInitialValue = value;
+              } else if (label == "پلن") {
+                planInitialValue = value;
+              }
+            }),
+            initialValue: dropdownList[index]["initialValue"] as String?,
+            label: dropdownList[index]["label"] as String,
+            items: dropdownList[index]["items"] as List<DropdownItemModel>,
+            placeholder: "انتخاب کنید",
           ),
         ),
 

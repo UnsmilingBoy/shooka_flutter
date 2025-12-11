@@ -9,8 +9,7 @@ import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
@@ -113,7 +112,7 @@ class _CompleteDpInstallationLocationInfoState
           ),
         ),
 
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           iconOnPressed: () => setState(() {
             location = null;
           }),
@@ -123,14 +122,14 @@ class _CompleteDpInstallationLocationInfoState
           initialValue: location,
           label: "شهر و استان",
           items: (generalProvider.filters?["locations"] ?? [])
-              .map<DropdownMenuItem<String>>(
-                (loc) => myDropDownItem(
+              .map<DropdownItemModel>(
+                (loc) => DropdownItemModel(
                   value: loc["id"].toString(),
                   label: "${loc["location"][0]} - ${loc["location"][1]}",
                 ),
               )
               .toList(),
-          placeholder: "شهر و استان",
+          placeholder: "انتخاب کنید",
         ),
 
         Padding(

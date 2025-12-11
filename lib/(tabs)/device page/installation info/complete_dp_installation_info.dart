@@ -8,8 +8,7 @@ import 'package:shooka_flutter/services/image_service.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_date_picker.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/switches/my_switch.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
@@ -87,34 +86,34 @@ class _CompleteDpInstallationInfoState
     return BottomModalTemplate(
       title: "ویرایش اطلاعات موتورخانه",
       children: [
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           iconOnPressed: () => setState(() {
             _deviceModel = null;
           }),
           onChanged: (value) => setState(() => _deviceModel = value),
           initialValue: _deviceModel,
           items: [
-            myDropDownItem(value: "8relays", label: "8 رله‌ای"),
-            myDropDownItem(value: "12relays", label: "12 رله‌ای"),
-            myDropDownItem(value: "16relays", label: "16 رله‌ای"),
+            DropdownItemModel(value: "8relays", label: "8 رله‌ای"),
+            DropdownItemModel(value: "12relays", label: "12 رله‌ای"),
+            DropdownItemModel(value: "16relays", label: "16 رله‌ای"),
           ],
           label: "مدل دستگاه نصب شده",
-          placeholder: "انتخاب مدل دستگاه نصب شده",
+          placeholder: "انتخاب کنید",
         ),
 
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           iconOnPressed: () => setState(() {
             _connectionType = null;
           }),
           onChanged: (value) => setState(() => _connectionType = value),
           initialValue: _connectionType,
           items: [
-            myDropDownItem(value: "internet", label: "اینترنت"),
-            myDropDownItem(value: "interanet", label: "اینترانت"),
-            myDropDownItem(value: "ethernet", label: "اترنت"),
+            DropdownItemModel(value: "internet", label: "اینترنت"),
+            DropdownItemModel(value: "interanet", label: "اینترانت"),
+            DropdownItemModel(value: "ethernet", label: "اترنت"),
           ],
           label: "نوع ارتباط",
-          placeholder: "انتخاب نوع ارتباط",
+          placeholder: "انتخاب کنید",
         ),
 
         ListView.builder(

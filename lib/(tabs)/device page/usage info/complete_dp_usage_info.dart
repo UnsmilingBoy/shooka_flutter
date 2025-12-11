@@ -3,8 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdown_with_label.dart';
-import 'package:shooka_flutter/utils/dropdowns/dropdownitem.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/switches/my_switch.dart';
 // import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textfield_with_label.dart';
@@ -115,19 +114,19 @@ class _CompleteDpUsageInfoState extends State<CompleteDpUsageInfo> {
     return BottomModalTemplate(
       title: "ویرایش اطلاعات موتورخانه",
       children: [
-        DropdownWithLabel(
+        SearchableDropdownWithLabel(
           iconOnPressed: () => setState(() {
             _usage = null;
           }),
           onChanged: (value) => setState(() => _usage = value),
           initialValue: _usage,
           items: [
-            myDropDownItem(value: "heating", label: "گرمایشی"),
-            myDropDownItem(value: "sanitary", label: "آب گرم بهداشتی"),
-            myDropDownItem(value: "both", label: "هر دو"),
+            DropdownItemModel(value: "heating", label: "گرمایشی"),
+            DropdownItemModel(value: "sanitary", label: "آب گرم بهداشتی"),
+            DropdownItemModel(value: "both", label: "هر دو"),
           ],
           label: "کاربری موتورخانه",
-          placeholder: "کاربری موتورخانه",
+          placeholder: "انتخاب کنید",
         ),
 
         Padding(
