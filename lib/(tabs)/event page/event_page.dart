@@ -134,9 +134,7 @@ class EventPage extends StatelessWidget {
                         children: [
                           Icon(
                             message.text == "" ? Icons.close : Icons.check,
-                            color: message.text == ""
-                                ? Colors.red
-                                : Colors.green,
+                            color: Colors.green,
                           ),
                           Expanded(
                             child: Text("${message.category}: ${message.text}"),

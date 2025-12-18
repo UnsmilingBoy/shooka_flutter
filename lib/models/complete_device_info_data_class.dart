@@ -29,6 +29,7 @@ class CompleteDeviceInfo {
   final int numberOfCoilSourcesPumps;
   final int numberOfHotWaterPumps;
   final List<EngineroomImage> engineroomImages;
+  final List<ChecklistItemData> checklistItemsData;
 
   CompleteDeviceInfo({
     required this.phoneNumber1,
@@ -59,6 +60,7 @@ class CompleteDeviceInfo {
     required this.numberOfCoilSourcesPumps,
     required this.numberOfHotWaterPumps,
     required this.engineroomImages,
+    required this.checklistItemsData,
   });
 
   factory CompleteDeviceInfo.fromJson(Map<String, dynamic> json) {
@@ -95,6 +97,9 @@ class CompleteDeviceInfo {
       engineroomImages: (json['engineroom_images'] as List<dynamic>? ?? [])
           .map((e) => EngineroomImage.fromJson(e))
           .toList(),
+      checklistItemsData: (json['checklist_items_data'] as List<dynamic>? ?? [])
+          .map((e) => ChecklistItemData.fromJson(e))
+          .toList(),
     );
   }
 
@@ -127,6 +132,7 @@ class CompleteDeviceInfo {
     'number_of_coil_sources_pumps': numberOfCoilSourcesPumps,
     'number_of_hot_water_pumps': numberOfHotWaterPumps,
     'engineroom_images': engineroomImages.map((e) => e.toJson()).toList(),
+    'checklist_items_data': checklistItemsData.map((e) => e.toJson()).toList(),
   };
 
   static CompleteDeviceInfo fromJsonString(String str) =>
@@ -170,5 +176,51 @@ class EngineroomImage {
     'image': image,
     'created_at': createdAt,
     'updateed_at': updatedAt,
+  };
+}
+
+class ChecklistItemData {
+  final String device;
+  final String name;
+  final String label;
+  final String description;
+  final bool isApproved;
+  final String? notes;
+  final String editedBy;
+  final String timestamp;
+
+  ChecklistItemData({
+    required this.device,
+    required this.name,
+    required this.label,
+    required this.description,
+    required this.isApproved,
+    this.notes,
+    required this.editedBy,
+    required this.timestamp,
+  });
+
+  factory ChecklistItemData.fromJson(Map<String, dynamic> json) {
+    return ChecklistItemData(
+      device: json['device'] ?? '',
+      name: json['name'] ?? '',
+      label: json['label'] ?? '',
+      description: json['description'] ?? '',
+      isApproved: json['is_approved'] ?? false,
+      notes: json['notes'],
+      editedBy: json['edited_by'] ?? '',
+      timestamp: json['timestamp'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'device': device,
+    'name': name,
+    'label': label,
+    'description': description,
+    'is_approved': isApproved,
+    'notes': notes,
+    'edited_by': editedBy,
+    'timestamp': timestamp,
   };
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/safety_parameter_tile.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
@@ -15,28 +16,31 @@ class EditSafetyParameters extends StatefulWidget {
 
 class _EditSafetyParametersState extends State<EditSafetyParameters> {
   // Safety Parameters - dynamically managed based on checklist from API
-  Map<int, String?> safetyParameterValues = {};
-  Map<int, TextEditingController> safetyParameterNotes = {};
+  Map<String, String?> safetyParameterValues = {};
+  Map<String, TextEditingController> safetyParameterNotes = {};
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with mock data - replace with actual device data when backend supports it
-    // For example: id 3 and 6 are rejected
-    safetyParameterValues[3] = 'rejected';
-    safetyParameterNotes[3] = TextEditingController(
-      text: 'نیاز به نصب سرج ارستر',
-    );
-    safetyParameterValues[6] = 'rejected';
-    safetyParameterNotes[6] = TextEditingController(
-      text: 'نقشه سیم کشی موجود نیست',
-    );
+    // Initialize with actual device data from API
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final deviceProvider = context.read<DeviceProvider>();
+      final checklistItems =
+          deviceProvider.completeDeviceInfo?.checklistItemsData ?? [];
 
-    // Others are approved (will be set to approved when user interacts)
-    safetyParameterValues[1] = 'approved';
-    safetyParameterValues[2] = 'approved';
-    safetyParameterValues[4] = 'approved';
-    safetyParameterValues[5] = 'approved';
+      for (var item in checklistItems) {
+        safetyParameterValues[item.name] = item.isApproved
+            ? 'approved'
+            : 'rejected';
+        if (!item.isApproved && item.notes != null && item.notes!.isNotEmpty) {
+          safetyParameterNotes[item.name] = TextEditingController(
+            text: item.notes,
+          );
+        }
+      }
+      setState(() {});
+    });
   }
 
   // Helper method to check if all checklist items are filled
@@ -45,9 +49,9 @@ class _EditSafetyParametersState extends State<EditSafetyParameters> {
 
     final checklist = generalProvider.filters!["checklist"] as List;
     for (var item in checklist) {
-      final id = item["id"] as int;
-      if (!safetyParameterValues.containsKey(id) ||
-          safetyParameterValues[id] == null) {
+      final name = item["name"] as String;
+      if (!safetyParameterValues.containsKey(name) ||
+          safetyParameterValues[name] == null) {
         return true;
       }
     }
@@ -82,22 +86,22 @@ class _EditSafetyParametersState extends State<EditSafetyParameters> {
             (index) {
               final checklistItem =
                   (generalProvider.filters!["checklist"] as List)[index];
-              final id = checklistItem["id"] as int;
+              final name = checklistItem["name"] as String;
 
               // Initialize controller if not exists
-              if (!safetyParameterNotes.containsKey(id)) {
-                safetyParameterNotes[id] = TextEditingController();
+              if (!safetyParameterNotes.containsKey(name)) {
+                safetyParameterNotes[name] = TextEditingController();
               }
 
               return SafetyParameterTile(
                 label: checklistItem["label"] ?? "",
                 description: checklistItem["description"] ?? "",
-                selectedValue: safetyParameterValues[id],
-                rejectionNoteController: safetyParameterNotes[id],
+                selectedValue: safetyParameterValues[name],
+                rejectionNoteController: safetyParameterNotes[name],
                 onChanged: (value) => setState(() {
-                  safetyParameterValues[id] = value;
+                  safetyParameterValues[name] = value;
                   if (value != 'rejected') {
-                    safetyParameterNotes[id]?.clear();
+                    safetyParameterNotes[name]?.clear();
                   }
                 }),
               );
@@ -105,7 +109,7 @@ class _EditSafetyParametersState extends State<EditSafetyParameters> {
           ),
         SizedBox(height: 10),
         ModalBottomButtons(
-          loading: false, // deviceProvider.editLoading when backend is ready
+          loading: _isLoading,
           saveText: "ذخیره تغییرات",
           onSave: () async {
             if (_hasIncompleteChecklist(generalProvider)) {
@@ -117,12 +121,43 @@ class _EditSafetyParametersState extends State<EditSafetyParameters> {
                 title: "لطفا برای پارامترهای رد شده، دلیل رد را وارد کنید.",
               );
             } else {
-              // TODO: Call API to update safety parameters when backend is ready
-              // final status = await deviceProvider.updateSafetyParameters(...)
+              setState(() => _isLoading = true);
 
-              // For now, just show success message
-              filledSuccessToast(title: "پارامترهای ایمنی با موفقیت ثبت شد");
-              Navigator.pop(context);
+              final deviceProvider = context.read<DeviceProvider>();
+              final deviceId = deviceProvider.device?.id;
+
+              if (deviceId == null) {
+                flatErrorToast(title: "خطا: شناسه دستگاه یافت نشد");
+                setState(() => _isLoading = false);
+                return;
+              }
+
+              // Prepare checklist items for API
+              final checklistItems = safetyParameterValues.entries.map((entry) {
+                return {
+                  "name": entry.key,
+                  "is_approved": entry.value == 'approved',
+                  "note": entry.value == 'rejected'
+                      ? (safetyParameterNotes[entry.key]?.text ?? '')
+                      : '',
+                };
+              }).toList();
+
+              final status = await deviceProvider.updateSafetyParameters(
+                deviceId: deviceId,
+                checkListItems: checklistItems,
+              );
+
+              setState(() => _isLoading = false);
+
+              if (status == 200) {
+                filledSuccessToast(title: "پارامترهای ایمنی با موفقیت ثبت شد");
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              } else {
+                flatErrorToast(title: "خطا در ذخیره اطلاعات");
+              }
             }
           },
         ),

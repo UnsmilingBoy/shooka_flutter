@@ -535,6 +535,8 @@ class ApiService {
     String? modemSimcardSerialNumberImage, // base64
     // Engineroom Images
     List<String>? images, // base64
+    // Checklist Items
+    List<Map<String, dynamic>>? checkListItems,
   }) async {
     late dynamic body;
     if (objectType == "locationpublicinfo") {
@@ -590,6 +592,9 @@ class ApiService {
           "First image preview (first 100 chars): ${images[0].substring(0, images[0].length > 100 ? 100 : images[0].length)}",
         );
       }
+    } else if (objectType == "checklist") {
+      body = {"object_type": "checklist", "check_list_items": checkListItems};
+      log("Sending ${checkListItems?.length ?? 0} checklist items to backend");
     }
 
     dynamic sendBody = {

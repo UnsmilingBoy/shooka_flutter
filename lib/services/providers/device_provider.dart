@@ -720,6 +720,37 @@ class DeviceProvider with ChangeNotifier {
   }
 
   //
+  // Update Safety Parameters (Checklist)
+  //
+  Future<int> updateSafetyParameters({
+    required int deviceId,
+    required List<Map<String, dynamic>> checkListItems,
+  }) async {
+    _updateCompleteInfoLoading = true;
+    notifyListeners();
+
+    try {
+      int status = await api.updateCompleteDeviceInfo(
+        deviceId: deviceId,
+        objectType: "checklist",
+        checkListItems: checkListItems,
+      );
+      log("Update safety parameters status: $status");
+      return status;
+    } on DioException catch (e) {
+      log("Error updating safety parameters: ${e.response?.data}");
+      print(e);
+      return e.response?.statusCode ?? -1;
+    } finally {
+      // Reload device info to get updated checklist data
+      await Future.delayed(Duration(milliseconds: 500));
+      await loadCompleteDeviceInfo(id: deviceId);
+      _updateCompleteInfoLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
   //  Remove Engineroom Pictures
   //
   Future<int> removeEngineroomPictures({

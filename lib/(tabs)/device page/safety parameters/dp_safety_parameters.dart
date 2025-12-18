@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/safety%20parameters/edit_safety_parameters.dart';
-import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
 
 class DpSafetyParameters extends StatefulWidget {
@@ -13,20 +13,11 @@ class DpSafetyParameters extends StatefulWidget {
 }
 
 class _DpSafetyParametersState extends State<DpSafetyParameters> {
-  // Mock data - will be replaced with actual device data when backend supports it
-  final Map<int, Map<String, String>> mockSafetyData = {
-    1: {"status": "approved", "note": ""},
-    2: {"status": "approved", "note": ""},
-    3: {"status": "rejected", "note": "نیاز به نصب سرج ارستر"},
-    4: {"status": "approved", "note": ""},
-    5: {"status": "approved", "note": ""},
-    6: {"status": "rejected", "note": "نقشه سیم کشی موجود نیست"},
-  };
-
   @override
   Widget build(BuildContext context) {
-    final generalProvider = context.watch<GeneralProvider>();
-    final checklist = generalProvider.filters?["checklist"] as List?;
+    final deviceProvider = context.watch<DeviceProvider>();
+    final checklistItems =
+        deviceProvider.completeDeviceInfo?.checklistItemsData ?? [];
 
     return MyExpansionTile(
       initiallyExpanded: false,
@@ -36,20 +27,16 @@ class _DpSafetyParametersState extends State<DpSafetyParameters> {
         builder: (context) => EditSafetyParameters(),
       ),
       children: [
-        if (checklist != null && checklist.isNotEmpty)
+        if (checklistItems.isNotEmpty)
           ListView.builder(
             physics: NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            itemCount: checklist.length,
+            itemCount: checklistItems.length,
             itemBuilder: (context, index) {
-              final checklistItem = checklist[index];
-              final id = checklistItem["id"] as int;
-              final label = checklistItem["label"] ?? "";
-
-              // Get mock data for this item
-              final mockData =
-                  mockSafetyData[id] ?? {"status": "approved", "note": ""};
-              final isApproved = mockData["status"] == "approved";
+              final checklistItem = checklistItems[index];
+              final label = checklistItem.label;
+              final isApproved = checklistItem.isApproved;
+              final notes = checklistItem.notes;
 
               return Padding(
                 padding: const EdgeInsets.only(top: 10.0),
@@ -91,11 +78,11 @@ class _DpSafetyParametersState extends State<DpSafetyParameters> {
                         ),
                       ],
                     ),
-                    if (!isApproved && mockData["note"]!.isNotEmpty)
+                    if (!isApproved && notes != null && notes.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 5.0, right: 8.0),
                         child: Text(
-                          "دلیل رد: ${mockData["note"]}",
+                          "دلیل رد: $notes",
                           style: Theme.of(context).textTheme.labelSmall?.apply(
                             color: Colors.red.shade300,
                           ),
