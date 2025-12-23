@@ -498,6 +498,61 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 title: "لطفا برای پارامترهای رد شده، دلیل رد را وارد کنید.",
               );
             } else {
+              // Build check_list_items array from the safety parameters
+              List<Map<String, dynamic>>? checkListItems;
+              if (generalProvider.filters?["checklist"] != null) {
+                checkListItems = [];
+                final checklist = generalProvider.filters!["checklist"] as List;
+
+                // Ensure all checklist items are filled and valid
+                if (checklist.isEmpty) {
+                  flatErrorToast(
+                    title: "خطا در دریافت چک لیست. لطفا دوباره تلاش کنید.",
+                  );
+                  return;
+                }
+
+                for (var item in checklist) {
+                  final id = item["id"] as int;
+                  final name = item["name"] as String?;
+                  final selectedValue = safetyParameterValues[id];
+
+                  // This should never happen due to validation above, but double-check
+                  if (name == null || selectedValue == null) {
+                    flatErrorToast(
+                      title: "لطفا همه پارامترهای ایمنی را تایید یا رد کنید.",
+                    );
+                    return;
+                  }
+
+                  // For rejected items, ensure note is provided
+                  if (selectedValue == 'rejected') {
+                    final note = safetyParameterNotes[id]?.text ?? "";
+                    if (note.isEmpty) {
+                      flatErrorToast(
+                        title:
+                            "لطفا برای پارامترهای رد شده، دلیل رد را وارد کنید.",
+                      );
+                      return;
+                    }
+                  }
+
+                  checkListItems.add({
+                    "name": name,
+                    "is_approved": selectedValue == 'approved',
+                    "note": safetyParameterNotes[id]?.text ?? "",
+                  });
+                }
+
+                // Final validation: ensure we collected all items
+                if (checkListItems.length != checklist.length) {
+                  flatErrorToast(
+                    title: "لطفا همه پارامترهای ایمنی را تکمیل کنید.",
+                  );
+                  return;
+                }
+              }
+
               final status = await deviceProvider.addDevice(
                 name: _nameController.text,
                 serialNumber: _serialNumberController.text,
@@ -508,6 +563,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 plan: planInitialValue,
                 latLong: latLong,
                 images: base64Images,
+                checkListItems: checkListItems,
               );
 
               if (status >= 200 && status < 300) {

@@ -187,8 +187,6 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
           height: 200,
           child: ImageWithCaption(
             networkImagePath: completeData?.buildingImage,
-            localImagepath:
-                "assets/images/views/Hirkan_1Boiler_1Pump_2Coil.png",
             caption: "عکس ساختمان",
           ),
         ),

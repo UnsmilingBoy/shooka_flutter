@@ -439,6 +439,7 @@ class DeviceProvider with ChangeNotifier {
     String? plan,
     String? latLong,
     required List<String> images,
+    List<Map<String, dynamic>>? checkListItems,
   }) async {
     _addLoading = true;
 
@@ -460,6 +461,7 @@ class DeviceProvider with ChangeNotifier {
         serialNumber: serialNumber,
         plan: plan,
         images: formattedImages, // Use the new list here
+        checkListItems: checkListItems,
       );
       return status;
     } on DioException catch (e) {

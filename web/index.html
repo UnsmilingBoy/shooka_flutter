@@ -20,6 +20,14 @@
     <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
     <meta name="description" content="A new Flutter project." />
 
+    <!-- Prevent caching -->
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <!-- iOS meta tags & icons -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -31,8 +39,19 @@
 
     <title>shooka_flutter</title>
     <link rel="manifest" href="manifest.json" />
+
+    <script>
+      // Generate a cache-busting parameter based on build time
+      window.flutterWebVersion = Date.now();
+    </script>
   </head>
   <body>
-    <script src="flutter_bootstrap.js" async></script>
+    <script>
+      // Load flutter_bootstrap.js with cache busting
+      var script = document.createElement("script");
+      script.src = "flutter_bootstrap.js?v=" + window.flutterWebVersion;
+      script.async = true;
+      document.body.appendChild(script);
+    </script>
   </body>
 </html>

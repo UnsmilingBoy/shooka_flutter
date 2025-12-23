@@ -372,6 +372,7 @@ class ApiService {
     String? plan,
     String? latLong,
     required List<String> images,
+    List<Map<String, dynamic>>? checkListItems,
   }) async {
     var body = {
       "name": name,
@@ -385,10 +386,15 @@ class ApiService {
       "lat_long": latLong,
       "details": {"name": name, "serial_number": serialNumber},
       "images": images,
+      if (checkListItems != null && checkListItems.isNotEmpty)
+        "check_list_items": checkListItems,
     };
 
     try {
+      log("AddDevice Request Body: $body");
       final response = await dio.post('/api/shouka/devices/add', data: body);
+      log("AddDevice Response Status: ${response.statusCode}");
+      log("AddDevice Response Data: ${response.data}");
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       log("Failed to add device: ${e.response}");
