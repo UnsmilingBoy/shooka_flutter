@@ -20,6 +20,7 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
   Widget build(BuildContext context) {
     // final deviceProvider = context.watch<DeviceProvider>();
     final basicData = context.watch<DeviceProvider>().device;
+    final completeData = context.watch<DeviceProvider>().completeDeviceInfo;
     final features = context.watch<GeneralProvider>().filters["features"];
 
     var deviceInfoList = [
@@ -35,6 +36,12 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
             : basicData?.plan == "optimized"
             ? "طرح بهینه سازی شرکت گاز"
             : basicData?.plan,
+      },
+      {
+        "title": 'شماره اشتراک',
+        "value": completeData?.meterSubscriptionNumber == ""
+            ? '-'
+            : completeData?.meterSubscriptionNumber,
       },
     ];
 

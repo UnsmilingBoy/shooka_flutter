@@ -11,6 +11,10 @@ class EventTile extends StatefulWidget {
   final String timeCreated;
   final List<EventCategoryDetails> message;
   final double? borderRadius;
+  final bool isSelected;
+  final VoidCallback? onTap;
+  final bool compactMode;
+
   const EventTile({
     super.key,
     required this.title,
@@ -20,6 +24,9 @@ class EventTile extends StatefulWidget {
     this.borderRadius,
     required this.timeCreated,
     required this.message,
+    this.isSelected = false,
+    this.onTap,
+    this.compactMode = false,
   });
 
   @override
@@ -31,22 +38,26 @@ class _EventTileState extends State<EventTile> {
   Widget build(BuildContext context) {
     return ContainerButton(
       borderRadius: widget.borderRadius,
-      color: widget.color,
+      color: widget.isSelected
+          ? Theme.of(context).colorScheme.primaryContainer
+          : widget.color,
 
-      // Navigates to the event page and passes the event id.
-      onPressed: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          settings: RouteSettings(name: "/event_page"),
-          builder: (_) => EventPage(
-            creator: widget.author,
-            device: widget.device,
-            title: widget.title,
-            timeCreated: widget.timeCreated,
-            message: widget.message,
+      // If onTap is provided (split view mode), use it. Otherwise navigate normally.
+      onPressed:
+          widget.onTap ??
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              settings: RouteSettings(name: "/event_page"),
+              builder: (_) => EventPage(
+                creator: widget.author,
+                device: widget.device,
+                title: widget.title,
+                timeCreated: widget.timeCreated,
+                message: widget.message,
+              ),
+            ),
           ),
-        ),
-      ),
 
       //
       // The actual tile.

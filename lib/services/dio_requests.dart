@@ -199,22 +199,35 @@ class ApiService {
   //
   // Fetch Event List
   //
-  Future<List<Event>> fetchEventList({
+  Future<dynamic> fetchEventList({
+    required int page,
+    int? dataPerPage,
     int? creator,
     int? device,
     String? start,
     String? end,
     String? title,
     String? search,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? plan,
   }) async {
     final queryParams = {
-      "data_per_page": 1000,
+      "page": page,
+      "data_per_page": dataPerPage ?? 10,
       if (creator != null) "creator": creator,
       if (device != null) "device": device,
       if (start != null) "start": start,
       if (end != null) "end": end,
       if (title != null) "title": title,
       if (search != null) "search": search,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (plan != null) "plan": plan,
     };
 
     try {
@@ -223,8 +236,15 @@ class ApiService {
         data: queryParams,
       );
 
+      log("${response.data}");
+
       final List<dynamic> data = response.data["results"];
-      return data.map((json) => Event.fromJson(json)).toList();
+      final int totalPages = response.data["total_pages"];
+
+      return {
+        "pages": totalPages,
+        "results": data.map((json) => Event.fromJson(json)).toList(),
+      };
     } on DioException catch (e) {
       throw Exception("Failed to get events: ${e.response?.statusCode}");
     }

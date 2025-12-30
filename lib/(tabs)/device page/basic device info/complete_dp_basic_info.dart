@@ -20,6 +20,8 @@ class CompleteDpBasicInfo extends StatefulWidget {
 class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _serialNumberController = TextEditingController();
+  final TextEditingController _meterSubscriptionNumberController =
+      TextEditingController();
   String? orgInitialValue;
   String? installerInitialValue;
   String? featureInitialValue;
@@ -29,9 +31,12 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
     final deviceProvider = context.read<DeviceProvider>();
     final generalProvider = context.read<GeneralProvider>();
     final basicData = deviceProvider.device;
+    final completeData = deviceProvider.completeDeviceInfo;
 
     _nameController.text = basicData?.name ?? '';
     _serialNumberController.text = basicData?.serialNumber ?? '';
+    _meterSubscriptionNumberController.text =
+        completeData?.meterSubscriptionNumber ?? '';
     orgInitialValue = generalProvider.filters?["organizations"]
         .firstWhere(
           (f) => f['organization'] == basicData?.organization,
@@ -63,6 +68,10 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
       {
         "label": "آپدیت شماره سریال دستگاه",
         "controller": _serialNumberController,
+      },
+      {
+        "label": "شماره اشتراک",
+        "controller": _meterSubscriptionNumberController,
       },
     ];
 
@@ -169,6 +178,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
                 description: "مثال: 1111.2222.AAAA.FFFF",
               );
             } else {
+              // First, edit the basic device info
               final status = await deviceProvider.editDevice(
                 id: deviceProvider.device?.id ?? -1,
                 name: _nameController.text,
@@ -180,9 +190,27 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
                 plan: planInitialValue,
               );
 
-              if (status >= 200 && status < 300) {
+              // Then, update meter subscription number separately
+              int meterStatus = 200;
+              if (_meterSubscriptionNumberController.text.isNotEmpty &&
+                  _meterSubscriptionNumberController.text !=
+                      deviceProvider
+                          .completeDeviceInfo
+                          ?.meterSubscriptionNumber) {
+                meterStatus = await deviceProvider.updateLocationPublicInfo(
+                  deviceId: deviceProvider.device?.id ?? -1,
+                  meterSubscriptionNumber: int.tryParse(
+                    _meterSubscriptionNumberController.text,
+                  ),
+                );
+              }
+
+              if (status >= 200 &&
+                  status < 300 &&
+                  meterStatus >= 200 &&
+                  meterStatus < 300) {
                 if (kDebugMode) {
-                  print("status is$status");
+                  print("status is$status, meter status is $meterStatus");
                 }
                 filledSuccessToast(title: "اطلاعات با موفقیت ثبت شد.");
               } else {
