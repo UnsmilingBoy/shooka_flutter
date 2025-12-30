@@ -11,6 +11,7 @@ import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
+import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class EventsTab extends StatefulWidget {
   final bool openAddEvent;
@@ -25,6 +26,9 @@ class _EventsTabState extends State<EventsTab> {
 
   // Split view state
   Event? _selectedEvent;
+
+  // Export loading state
+  bool _exportLoading = false;
 
   @override
   void initState() {
@@ -125,6 +129,23 @@ class _EventsTabState extends State<EventsTab> {
     });
   }
 
+  Future<void> _handleExport() async {
+    setState(() => _exportLoading = true);
+    try {
+      await context.read<EventProvider>().exportEventsToWord();
+      filledSuccessToast(title: 'فایل ورد با موفقیت دانلود شد');
+    } catch (e) {
+      flatErrorToast(
+        title: 'خطا در دانلود فایل ورد',
+        description: e.toString(),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _exportLoading = false);
+      }
+    }
+  }
+
   String searchValue = "";
 
   @override
@@ -205,6 +226,8 @@ class _EventsTabState extends State<EventsTab> {
                 searchController: searchController,
                 filterModal: FilterEventModal(),
                 searchPlaceholder: "جستجوی رویداد...",
+                onExport: _handleExport,
+                exportLoading: _exportLoading,
               ),
               SizedBox(height: 10),
 
@@ -286,6 +309,8 @@ class _EventsTabState extends State<EventsTab> {
           searchController: searchController,
           filterModal: FilterEventModal(),
           searchPlaceholder: "جستجوی رویداد...",
+          onExport: _handleExport,
+          exportLoading: _exportLoading,
         ),
 
         //

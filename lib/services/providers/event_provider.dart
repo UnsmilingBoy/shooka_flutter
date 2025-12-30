@@ -1,6 +1,8 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/export_service.dart';
 
 class EventProvider with ChangeNotifier {
   final ApiService api;
@@ -197,6 +199,34 @@ class EventProvider with ChangeNotifier {
       loadEvents();
       _addLoading = false;
       notifyListeners();
+    }
+  }
+
+  //
+  // Export Events to Word
+  //
+  Future<void> exportEventsToWord() async {
+    try {
+      log('Starting events export with current filters...');
+      final events = await api.fetchEventsForExport(
+        creator: lastSelectedCreator,
+        device: lastSelectedDevice,
+        title: lastSelectedTitle,
+        search: lastSearchedText,
+        organization: lastSelectedOrganization,
+        administration: lastSelectedAdministration,
+        province: lastSelectedProvince,
+        city: lastSelectedCity,
+        plan: lastSelectedPlan,
+      );
+      log('Fetched ${events.length} events for export');
+
+      final exportService = ExportService();
+      await exportService.exportEvents(events);
+      log('Export completed successfully');
+    } catch (e) {
+      log('Error exporting events: $e');
+      rethrow;
     }
   }
 }

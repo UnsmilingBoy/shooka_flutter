@@ -822,6 +822,58 @@ class ApiService {
   }
 
   //
+  // Fetch Events For Export
+  //
+  Future<List<Event>> fetchEventsForExport({
+    int? creator,
+    int? device,
+    String? start,
+    String? end,
+    String? title,
+    String? search,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? plan,
+  }) async {
+    final body = {
+      "page": 1,
+      "data_per_page": 2000,
+      if (creator != null) "creator": creator,
+      if (device != null) "device": device,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+      if (title != null) "title": title,
+      if (search != null) "search": search,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (plan != null) "plan": plan,
+    };
+
+    log("Fetching events for export with params: $body");
+
+    try {
+      final response = await dio.post('/api/shouka/events/list/', data: body);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List
+            ? response.data
+            : response.data["results"] ?? response.data["data"] ?? [];
+        return data.map((item) => Event.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load events for export');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get events list for export: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
   // Get APK Version
   //
   Future<dynamic> fetchApkVersion() async {
