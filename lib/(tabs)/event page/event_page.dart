@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/components/edit_event_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20page/event_content.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
@@ -21,10 +23,41 @@ class EventPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+
     return BackScaffold(
       label: "جزئیات رویداد",
       backRoute: "/events",
       backLabel: "رویدادها",
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          if (isDesktop) {
+            showDialog(
+              context: context,
+              builder: (context) => EditEventModal(
+                deviceName: device,
+                title: title,
+                timestamp: timeCreated,
+                eventCategoryDetails: message,
+              ),
+            );
+          } else {
+            showMaterialModalBottomSheet(
+              context: context,
+              enableDrag: false,
+              builder: (context) => EditEventModal(
+                deviceName: device,
+                title: title,
+                timestamp: timeCreated,
+                eventCategoryDetails: message,
+              ),
+            );
+          }
+        },
+        label: Text("ویرایش"),
+        icon: Icon(Icons.edit),
+      ),
       body: SingleChildScrollView(
         child: EventContent(
           title: title,

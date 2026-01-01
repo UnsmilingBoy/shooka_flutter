@@ -216,7 +216,7 @@ class _FilterEventModalState extends State<FilterEventModal> {
             selectedPlan = null;
           }),
           items: [
-            DropdownItemModel(value: "optimized", label: "بهینه شده"),
+            DropdownItemModel(value: "optimized", label: "طرح بهینه سازی"),
             DropdownItemModel(value: "free", label: "رایگان"),
           ],
           label: "پلن:",

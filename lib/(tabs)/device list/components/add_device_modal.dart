@@ -351,11 +351,17 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 ),
               MyIconButton(
                 onPressed: () async {
-                  final result = await showMaterialModalBottomSheet<LatLng>(
-                    context: context,
-                    enableDrag: false,
-                    builder: (context) => const MapPickerModal(),
-                  );
+                  final isDesktop = MediaQuery.of(context).size.width > 900;
+                  final result = isDesktop
+                      ? await showDialog<LatLng>(
+                          context: context,
+                          builder: (context) => const MapPickerModal(),
+                        )
+                      : await showMaterialModalBottomSheet<LatLng>(
+                          context: context,
+                          enableDrag: false,
+                          builder: (context) => const MapPickerModal(),
+                        );
 
                   if (result != null) {
                     if (kDebugMode) {

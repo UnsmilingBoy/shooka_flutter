@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/components/edit_event_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20page/event_content.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 
@@ -24,6 +26,9 @@ class EventDetailPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -54,6 +59,35 @@ class EventDetailPanel extends StatelessWidget {
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    if (isDesktop) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => EditEventModal(
+                          deviceName: device,
+                          title: title,
+                          timestamp: timeCreated,
+                          eventCategoryDetails: message,
+                        ),
+                      );
+                    } else {
+                      showMaterialModalBottomSheet(
+                        context: context,
+                        enableDrag: false,
+                        builder: (context) => EditEventModal(
+                          deviceName: device,
+                          title: title,
+                          timestamp: timeCreated,
+                          eventCategoryDetails: message,
+                        ),
+                      );
+                    }
+                  },
+                  tooltip: 'ویرایش',
+                  iconSize: 20,
                 ),
                 if (onClose != null)
                   IconButton(

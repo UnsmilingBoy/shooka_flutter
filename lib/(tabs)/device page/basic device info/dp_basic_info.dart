@@ -48,10 +48,21 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
     return MyExpansionTile(
       initiallyExpanded: true,
       title: "اطلاعات موتورخانه",
-      completeOnPressed: () => showMaterialModalBottomSheet(
-        context: context,
-        builder: (context) => CompleteDpBasicInfo(),
-      ),
+      completeOnPressed: () {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(
+            context: context,
+            builder: (context) => CompleteDpBasicInfo(),
+          );
+        } else {
+          showMaterialModalBottomSheet(
+            context: context,
+            builder: (context) => CompleteDpBasicInfo(),
+          );
+        }
+      },
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),

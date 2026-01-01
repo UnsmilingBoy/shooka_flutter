@@ -49,11 +49,17 @@ class _EventsTabState extends State<EventsTab> {
     // Opens the add event modal if the route was "/add_event"
     if (widget.openAddEvent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showMaterialModalBottomSheet(
-          enableDrag: false,
-          context: context,
-          builder: (context) => AddEventModal(),
-        );
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(context: context, builder: (context) => AddEventModal());
+        } else {
+          showMaterialModalBottomSheet(
+            enableDrag: false,
+            context: context,
+            builder: (context) => AddEventModal(),
+          );
+        }
       });
     }
   }
@@ -61,6 +67,22 @@ class _EventsTabState extends State<EventsTab> {
   void _onEventListChanged() {
     // Check after list updates (e.g., after add/edit/delete)
     if (mounted && !context.read<EventProvider>().fetchLoading) {
+      // Update selected event with fresh data if it's currently shown
+      if (_selectedEvent != null) {
+        final events = context.read<EventProvider>().events;
+        final updatedEvent = events.firstWhere(
+          (event) =>
+              event.timestamp == _selectedEvent!.timestamp &&
+              event.deviceName == _selectedEvent!.deviceName,
+          orElse: () => _selectedEvent!,
+        );
+        if (mounted) {
+          setState(() {
+            _selectedEvent = updatedEvent;
+          });
+        }
+      }
+
       Future.delayed(Duration(milliseconds: 200), () {
         if (mounted) {
           _checkAndLoadMoreIfNeeded();

@@ -269,6 +269,32 @@ class ApiService {
   }
 
   //
+  // Edit Event
+  //
+  Future<int> editEvent({
+    required String deviceName,
+    required String title,
+    required String timestamp,
+    required int userId,
+    required List<dynamic> events,
+  }) async {
+    var body = {
+      "device_name": deviceName,
+      "title": title,
+      "timestamp": timestamp,
+      "user_id": userId,
+      "events": events,
+    };
+
+    try {
+      final response = await dio.post('/api/shouka/events/edit/', data: body);
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to edit event: ${e.response}");
+    }
+  }
+
+  //
   // Fetch Device List
   //
   Future<dynamic> fetchDevices({

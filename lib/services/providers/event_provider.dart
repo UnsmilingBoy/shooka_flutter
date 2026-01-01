@@ -196,7 +196,62 @@ class EventProvider with ChangeNotifier {
       print(e);
       return -1;
     } finally {
-      loadEvents();
+      // Reload events with preserved filters
+      loadEvents(
+        creator: lastSelectedCreator,
+        device: lastSelectedDevice,
+        title: lastSelectedTitle,
+        search: lastSearchedText,
+        organization: lastSelectedOrganization,
+        administration: lastSelectedAdministration,
+        province: lastSelectedProvince,
+        city: lastSelectedCity,
+        plan: lastSelectedPlan,
+      );
+      _addLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Edit Event
+  //
+  Future<int> editEvent({
+    required String deviceName,
+    required String title,
+    required String timestamp,
+    required int userId,
+    required List<dynamic> events,
+  }) async {
+    _addLoading = true;
+
+    notifyListeners();
+
+    try {
+      int status = await api.editEvent(
+        deviceName: deviceName,
+        title: title,
+        timestamp: timestamp,
+        userId: userId,
+        events: events,
+      );
+      return status;
+    } catch (e) {
+      print(e);
+      return -1;
+    } finally {
+      // Reload events with preserved filters
+      loadEvents(
+        creator: lastSelectedCreator,
+        device: lastSelectedDevice,
+        title: lastSelectedTitle,
+        search: lastSearchedText,
+        organization: lastSelectedOrganization,
+        administration: lastSelectedAdministration,
+        province: lastSelectedProvince,
+        city: lastSelectedCity,
+        plan: lastSelectedPlan,
+      );
       _addLoading = false;
       notifyListeners();
     }

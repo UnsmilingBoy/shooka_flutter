@@ -179,16 +179,34 @@ class _LocationsTabState extends State<LocationsTab> {
                       return Padding(
                         padding: const EdgeInsets.only(top: 10.0),
                         child: LocationTile(
-                          onPressed: () => showMaterialModalBottomSheet(
-                            enableDrag: false,
-                            context: context,
-                            builder: (context) => AddLocationModal(
-                              isEdit: true,
-                              id: locations[index].id,
-                              city: locations[index].city,
-                              province: locations[index].province,
-                            ),
-                          ),
+                          onPressed: () {
+                            final screenWidth = MediaQuery.of(
+                              context,
+                            ).size.width;
+                            final isDesktop = screenWidth > 900;
+                            if (isDesktop) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AddLocationModal(
+                                  isEdit: true,
+                                  id: locations[index].id,
+                                  city: locations[index].city,
+                                  province: locations[index].province,
+                                ),
+                              );
+                            } else {
+                              showMaterialModalBottomSheet(
+                                enableDrag: false,
+                                context: context,
+                                builder: (context) => AddLocationModal(
+                                  isEdit: true,
+                                  id: locations[index].id,
+                                  city: locations[index].city,
+                                  province: locations[index].province,
+                                ),
+                              );
+                            }
+                          },
 
                           color: Theme.of(context).colorScheme.surface,
                           city: locations[index].city,

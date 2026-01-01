@@ -125,10 +125,7 @@ class EventContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: 3,
                     children: [
-                      Icon(
-                        message.text == "" ? Icons.close : Icons.check,
-                        color: Colors.green,
-                      ),
+                      Icon(Icons.check, color: Colors.green),
                       Expanded(
                         child: Text("${message.category}: ${message.text}"),
                       ),

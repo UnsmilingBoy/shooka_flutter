@@ -49,10 +49,21 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
     ];
     return MyExpansionTile(
       title: "اطلاعات محل نصب",
-      completeOnPressed: () async => showMaterialModalBottomSheet(
-        context: context,
-        builder: (context) => const CompleteDpInstallationLocationInfo(),
-      ),
+      completeOnPressed: () async {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(
+            context: context,
+            builder: (context) => const CompleteDpInstallationLocationInfo(),
+          );
+        } else {
+          showMaterialModalBottomSheet(
+            context: context,
+            builder: (context) => const CompleteDpInstallationLocationInfo(),
+          );
+        }
+      },
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),
