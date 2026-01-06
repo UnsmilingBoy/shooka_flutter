@@ -339,7 +339,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
           child: Row(
             spacing: 10,
             children: [
-              Text("مختصات: "),
+              Text("مختصات*: "),
               if (latLong != null)
                 Expanded(
                   child: Text(
@@ -488,6 +488,10 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 provinceInitialValue == null ||
                 planInitialValue == null) {
               flatErrorToast(title: "لطفا همه ی اطلاعات را وارد کنید.");
+            } else if (latLong == null) {
+              flatErrorToast(
+                title: "لطفا مختصات موتورخانه را از روی نقشه انتخاب کنید.",
+              );
             } else if (!RegExp(
               r'^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$',
             ).hasMatch(_serialNumberController.text)) {

@@ -60,35 +60,35 @@ class EventDetailPanel extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    if (isDesktop) {
-                      showDialog(
-                        context: context,
-                        builder: (context) => EditEventModal(
-                          deviceName: device,
-                          title: title,
-                          timestamp: timeCreated,
-                          eventCategoryDetails: message,
-                        ),
-                      );
-                    } else {
-                      showMaterialModalBottomSheet(
-                        context: context,
-                        enableDrag: false,
-                        builder: (context) => EditEventModal(
-                          deviceName: device,
-                          title: title,
-                          timestamp: timeCreated,
-                          eventCategoryDetails: message,
-                        ),
-                      );
-                    }
-                  },
-                  tooltip: 'ویرایش',
-                  iconSize: 20,
-                ),
+                // IconButton(
+                //   icon: Icon(Icons.edit),
+                //   onPressed: () {
+                //     if (isDesktop) {
+                //       showDialog(
+                //         context: context,
+                //         builder: (context) => EditEventModal(
+                //           deviceName: device,
+                //           title: title,
+                //           timestamp: timeCreated,
+                //           eventCategoryDetails: message,
+                //         ),
+                //       );
+                //     } else {
+                //       showMaterialModalBottomSheet(
+                //         context: context,
+                //         enableDrag: false,
+                //         builder: (context) => EditEventModal(
+                //           deviceName: device,
+                //           title: title,
+                //           timestamp: timeCreated,
+                //           eventCategoryDetails: message,
+                //         ),
+                //       );
+                //     }
+                //   },
+                //   tooltip: 'ویرایش',
+                //   iconSize: 20,
+                // ),
                 if (onClose != null)
                   IconButton(
                     icon: Icon(Icons.close),

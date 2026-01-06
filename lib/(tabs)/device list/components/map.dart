@@ -411,7 +411,7 @@ class _MapPickerModalState extends State<MapPickerModal> {
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.primaryColor,
+                        color: Theme.of(context).primaryColor,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
