@@ -30,34 +30,34 @@ class EventPage extends StatelessWidget {
       label: "جزئیات رویداد",
       backRoute: "/events",
       backLabel: "رویدادها",
-      // floatingActionButton: FloatingActionButton.extended(
-      //   onPressed: () {
-      //     if (isDesktop) {
-      //       showDialog(
-      //         context: context,
-      //         builder: (context) => EditEventModal(
-      //           deviceName: device,
-      //           title: title,
-      //           timestamp: timeCreated,
-      //           eventCategoryDetails: message,
-      //         ),
-      //       );
-      //     } else {
-      //       showMaterialModalBottomSheet(
-      //         context: context,
-      //         enableDrag: false,
-      //         builder: (context) => EditEventModal(
-      //           deviceName: device,
-      //           title: title,
-      //           timestamp: timeCreated,
-      //           eventCategoryDetails: message,
-      //         ),
-      //       );
-      //     }
-      //   },
-      //   label: Text("ویرایش"),
-      //   icon: Icon(Icons.edit),
-      // ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          if (isDesktop) {
+            showDialog(
+              context: context,
+              builder: (context) => EditEventModal(
+                deviceName: device,
+                title: title,
+                timestamp: timeCreated,
+                eventCategoryDetails: message,
+              ),
+            );
+          } else {
+            showMaterialModalBottomSheet(
+              context: context,
+              enableDrag: false,
+              builder: (context) => EditEventModal(
+                deviceName: device,
+                title: title,
+                timestamp: timeCreated,
+                eventCategoryDetails: message,
+              ),
+            );
+          }
+        },
+        label: Text("ویرایش"),
+        icon: Icon(Icons.edit),
+      ),
       body: SingleChildScrollView(
         child: EventContent(
           title: title,
