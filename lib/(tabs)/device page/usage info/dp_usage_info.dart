@@ -68,10 +68,21 @@ class _UsageInfoState extends State<UsageInfo> {
     ];
 
     return MyExpansionTile(
-      completeOnPressed: () => showMaterialModalBottomSheet(
-        context: context,
-        builder: (context) => const CompleteDpUsageInfo(),
-      ),
+      completeOnPressed: () {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(
+            context: context,
+            builder: (context) => const CompleteDpUsageInfo(),
+          );
+        } else {
+          showMaterialModalBottomSheet(
+            context: context,
+            builder: (context) => const CompleteDpUsageInfo(),
+          );
+        }
+      },
       title: "اطلاعات کاربری موتورخانه",
       children: [
         ListView.builder(

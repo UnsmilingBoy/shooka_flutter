@@ -183,16 +183,34 @@ class _OrganiztionsTabState extends State<OrganiztionsTab> {
                       return Padding(
                         padding: const EdgeInsets.only(top: 10.0),
                         child: OrgTile(
-                          onPressed: () => showMaterialModalBottomSheet(
-                            enableDrag: false,
-                            context: context,
-                            builder: (context) => AddOrgModal(
-                              isEdit: true,
-                              id: organizations[index].id,
-                              name: organizations[index].name,
-                              parent: organizations[index].administration,
-                            ),
-                          ),
+                          onPressed: () {
+                            final screenWidth = MediaQuery.of(
+                              context,
+                            ).size.width;
+                            final isDesktop = screenWidth > 900;
+                            if (isDesktop) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AddOrgModal(
+                                  isEdit: true,
+                                  id: organizations[index].id,
+                                  name: organizations[index].name,
+                                  parent: organizations[index].administration,
+                                ),
+                              );
+                            } else {
+                              showMaterialModalBottomSheet(
+                                enableDrag: false,
+                                context: context,
+                                builder: (context) => AddOrgModal(
+                                  isEdit: true,
+                                  id: organizations[index].id,
+                                  name: organizations[index].name,
+                                  parent: organizations[index].administration,
+                                ),
+                              );
+                            }
+                          },
                           color: Theme.of(context).colorScheme.surface,
                           orgName: organizations[index].name,
                           orgParent: organizations[index].administration,

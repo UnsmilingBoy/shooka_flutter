@@ -49,10 +49,21 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
     ];
     return MyExpansionTile(
       title: "اطلاعات محل نصب",
-      completeOnPressed: () async => showMaterialModalBottomSheet(
-        context: context,
-        builder: (context) => const CompleteDpInstallationLocationInfo(),
-      ),
+      completeOnPressed: () async {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(
+            context: context,
+            builder: (context) => const CompleteDpInstallationLocationInfo(),
+          );
+        } else {
+          showMaterialModalBottomSheet(
+            context: context,
+            builder: (context) => const CompleteDpInstallationLocationInfo(),
+          );
+        }
+      },
       children: [
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),
@@ -187,8 +198,6 @@ class _InstallationLocationInfoState extends State<InstallationLocationInfo> {
           height: 200,
           child: ImageWithCaption(
             networkImagePath: completeData?.buildingImage,
-            localImagepath:
-                "assets/images/views/Hirkan_1Boiler_1Pump_2Coil.png",
             caption: "عکس ساختمان",
           ),
         ),

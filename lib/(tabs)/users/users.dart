@@ -198,19 +198,40 @@ class _UsersTabState extends State<UsersTab> {
                       return Padding(
                         padding: const EdgeInsets.only(top: 10.0),
                         child: UserTile(
-                          onPressed: () => showMaterialModalBottomSheet(
-                            enableDrag: false,
-                            context: context,
-                            builder: (context) => AddUserModal(
-                              editMode: true,
-                              id: users[index].userId,
-                              userName: users[index].username,
-                              email: users[index].email,
-                              phoneNumber: users[index].phoneNumber,
-                              name: users[index].firstName,
-                              role: users[index].userRole.userRoleName,
-                            ),
-                          ),
+                          onPressed: () {
+                            final screenWidth = MediaQuery.of(
+                              context,
+                            ).size.width;
+                            final isDesktop = screenWidth > 900;
+                            if (isDesktop) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AddUserModal(
+                                  editMode: true,
+                                  id: users[index].userId,
+                                  userName: users[index].username,
+                                  email: users[index].email,
+                                  phoneNumber: users[index].phoneNumber,
+                                  name: users[index].firstName,
+                                  role: users[index].userRole.userRoleName,
+                                ),
+                              );
+                            } else {
+                              showMaterialModalBottomSheet(
+                                enableDrag: false,
+                                context: context,
+                                builder: (context) => AddUserModal(
+                                  editMode: true,
+                                  id: users[index].userId,
+                                  userName: users[index].username,
+                                  email: users[index].email,
+                                  phoneNumber: users[index].phoneNumber,
+                                  name: users[index].firstName,
+                                  role: users[index].userRole.userRoleName,
+                                ),
+                              );
+                            }
+                          },
                           color: Theme.of(context).colorScheme.surface,
                           name: users[index].firstName,
                           role: users[index].userRole.userRoleLabel,

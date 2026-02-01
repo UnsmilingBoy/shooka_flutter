@@ -199,22 +199,35 @@ class ApiService {
   //
   // Fetch Event List
   //
-  Future<List<Event>> fetchEventList({
+  Future<dynamic> fetchEventList({
+    required int page,
+    int? dataPerPage,
     int? creator,
     int? device,
     String? start,
     String? end,
     String? title,
     String? search,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? plan,
   }) async {
     final queryParams = {
-      "data_per_page": 1000,
+      "page": page,
+      "data_per_page": dataPerPage ?? 10,
       if (creator != null) "creator": creator,
       if (device != null) "device": device,
       if (start != null) "start": start,
       if (end != null) "end": end,
       if (title != null) "title": title,
       if (search != null) "search": search,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (plan != null) "plan": plan,
     };
 
     try {
@@ -223,8 +236,15 @@ class ApiService {
         data: queryParams,
       );
 
+      log("${response.data}");
+
       final List<dynamic> data = response.data["results"];
-      return data.map((json) => Event.fromJson(json)).toList();
+      final int totalPages = response.data["total_pages"];
+
+      return {
+        "pages": totalPages,
+        "results": data.map((json) => Event.fromJson(json)).toList(),
+      };
     } on DioException catch (e) {
       throw Exception("Failed to get events: ${e.response?.statusCode}");
     }
@@ -245,6 +265,32 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add event: ${e.response}");
+    }
+  }
+
+  //
+  // Edit Event
+  //
+  Future<int> editEvent({
+    required String deviceName,
+    required String title,
+    required String timestamp,
+    required int userId,
+    required List<dynamic> events,
+  }) async {
+    var body = {
+      "device_name": deviceName,
+      "title": title,
+      "timestamp": timestamp,
+      "user_id": userId,
+      "events": events,
+    };
+
+    try {
+      final response = await dio.post('/api/shouka/events/edit/', data: body);
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to edit event: ${e.response}");
     }
   }
 
@@ -372,6 +418,7 @@ class ApiService {
     String? plan,
     String? latLong,
     required List<String> images,
+    List<Map<String, dynamic>>? checkListItems,
   }) async {
     var body = {
       "name": name,
@@ -385,10 +432,15 @@ class ApiService {
       "lat_long": latLong,
       "details": {"name": name, "serial_number": serialNumber},
       "images": images,
+      if (checkListItems != null && checkListItems.isNotEmpty)
+        "check_list_items": checkListItems,
     };
 
     try {
+      log("AddDevice Request Body: $body");
       final response = await dio.post('/api/shouka/devices/add', data: body);
+      log("AddDevice Response Status: ${response.statusCode}");
+      log("AddDevice Response Data: ${response.data}");
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       log("Failed to add device: ${e.response}");
@@ -792,6 +844,58 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add location: ${e.response?.statusCode}");
+    }
+  }
+
+  //
+  // Fetch Events For Export
+  //
+  Future<List<Event>> fetchEventsForExport({
+    int? creator,
+    int? device,
+    String? start,
+    String? end,
+    String? title,
+    String? search,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? plan,
+  }) async {
+    final body = {
+      "page": 1,
+      "data_per_page": 2000,
+      if (creator != null) "creator": creator,
+      if (device != null) "device": device,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+      if (title != null) "title": title,
+      if (search != null) "search": search,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (plan != null) "plan": plan,
+    };
+
+    log("Fetching events for export with params: $body");
+
+    try {
+      final response = await dio.post('/api/shouka/events/list/', data: body);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List
+            ? response.data
+            : response.data["results"] ?? response.data["data"] ?? [];
+        return data.map((item) => Event.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load events for export');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get events list for export: ${e.response?.statusCode}",
+      );
     }
   }
 

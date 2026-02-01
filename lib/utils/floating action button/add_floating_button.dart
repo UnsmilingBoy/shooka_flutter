@@ -7,13 +7,22 @@ class AddFloatingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+
     return InkWell(
       borderRadius: BorderRadius.circular(1000),
-      onTap: () => showMaterialModalBottomSheet(
-        enableDrag: false,
-        context: context,
-        builder: (context) => addModal,
-      ),
+      onTap: () {
+        if (isDesktop) {
+          showDialog(context: context, builder: (context) => addModal);
+        } else {
+          showMaterialModalBottomSheet(
+            enableDrag: false,
+            context: context,
+            builder: (context) => addModal,
+          );
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,

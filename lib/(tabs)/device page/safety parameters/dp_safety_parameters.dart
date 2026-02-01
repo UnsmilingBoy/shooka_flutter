@@ -22,10 +22,21 @@ class _DpSafetyParametersState extends State<DpSafetyParameters> {
     return MyExpansionTile(
       initiallyExpanded: false,
       title: "پارامترهای ایمنی و الکتریکی",
-      completeOnPressed: () => showMaterialModalBottomSheet(
-        context: context,
-        builder: (context) => EditSafetyParameters(),
-      ),
+      completeOnPressed: () {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(
+            context: context,
+            builder: (context) => EditSafetyParameters(),
+          );
+        } else {
+          showMaterialModalBottomSheet(
+            context: context,
+            builder: (context) => EditSafetyParameters(),
+          );
+        }
+      },
       children: [
         if (checklistItems.isNotEmpty)
           ListView.builder(

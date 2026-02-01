@@ -83,15 +83,28 @@ class _DeviceTileState extends State<DeviceTile> {
   }
 
   void _showStatusModal() {
-    showMaterialModalBottomSheet(
-      enableDrag: false,
-      context: context,
-      builder: (context) => DeviceStatusModal(
-        deviceId: widget.deviceId,
-        deviceName: widget.name,
-        currentStatus: widget.rawStatus,
-      ),
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (context) => DeviceStatusModal(
+          deviceId: widget.deviceId,
+          deviceName: widget.name,
+          currentStatus: widget.rawStatus,
+        ),
+      );
+    } else {
+      showMaterialModalBottomSheet(
+        enableDrag: false,
+        context: context,
+        builder: (context) => DeviceStatusModal(
+          deviceId: widget.deviceId,
+          deviceName: widget.name,
+          currentStatus: widget.rawStatus,
+        ),
+      );
+    }
   }
 
   void _showRejectionNoteDialog() {

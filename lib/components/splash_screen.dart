@@ -171,15 +171,18 @@ class _SplashPageState extends State<SplashPage> {
             log('Home page data fetch timed out, proceeding anyway');
           },
         );
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, "/home");
         return;
       }
 
       // No token → go to login
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, "/login");
     } catch (e) {
       log('Error in _checkAuth: $e');
       // On any error, go to login to let user sign in fresh
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, "/login");
     }
   }

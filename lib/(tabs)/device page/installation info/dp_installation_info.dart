@@ -53,10 +53,21 @@ class _InstallationInfoState extends State<InstallationInfo> {
     ];
 
     return MyExpansionTile(
-      completeOnPressed: () => showMaterialModalBottomSheet(
-        context: context,
-        builder: (context) => const CompleteDpInstallationInfo(),
-      ),
+      completeOnPressed: () {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(
+            context: context,
+            builder: (context) => const CompleteDpInstallationInfo(),
+          );
+        } else {
+          showMaterialModalBottomSheet(
+            context: context,
+            builder: (context) => const CompleteDpInstallationInfo(),
+          );
+        }
+      },
       title: "اطلاعات نصب",
       children: [
         ListView.builder(

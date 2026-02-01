@@ -25,6 +25,9 @@ class TabHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+
     return Row(
       spacing: 10,
       children: [
@@ -56,11 +59,20 @@ class TabHeader extends StatelessWidget {
             height: 50,
             width: 50,
             child: MyIconButton(
-              onPressed: () => showMaterialModalBottomSheet(
-                enableDrag: false,
-                context: context,
-                builder: (context) => filterModal ?? SizedBox(),
-              ),
+              onPressed: () {
+                if (isDesktop) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => filterModal ?? SizedBox(),
+                  );
+                } else {
+                  showMaterialModalBottomSheet(
+                    enableDrag: false,
+                    context: context,
+                    builder: (context) => filterModal ?? SizedBox(),
+                  );
+                }
+              },
               color: Theme.of(context).colorScheme.secondary,
               child: Icon(Icons.filter_alt_rounded, color: Colors.white),
             ),

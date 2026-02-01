@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:shooka_flutter/models/event_data_class.dart';
 
 // ignore: avoid_web_libraries_in_flutter
 import 'package:universal_html/html.dart' as html;
@@ -139,13 +140,165 @@ class ExportService {
     }
   }
 
+  /// Export events to Word document
+  /// [events] - List of Event objects
+  Future<void> exportEvents(List<Event> events) async {
+    try {
+      log('Starting events export with ${events.length} events');
+
+      // Generate HTML content that can be opened in Word
+      final htmlContent = _generateEventsHtml(events);
+
+      // Convert to bytes with UTF-8 encoding with BOM for proper RTL display in Word
+      final List<int> bytes = [0xEF, 0xBB, 0xBF]; // UTF-8 BOM
+      bytes.addAll(utf8.encode(htmlContent));
+      final fileBytes = Uint8List.fromList(bytes);
+
+      await _saveFile(
+        fileBytes,
+        'events_export_${DateTime.now().millisecondsSinceEpoch}.doc',
+      );
+      log('Word file exported successfully with ${events.length} events');
+    } catch (e) {
+      log('Error exporting events to Word: $e');
+      rethrow;
+    }
+  }
+
+  /// Generate HTML content for events that can be opened in Word
+  String _generateEventsHtml(List<Event> events) {
+    final buffer = StringBuffer();
+    buffer.writeln('<html xmlns:o="urn:schemas-microsoft-com:office:office"');
+    buffer.writeln('xmlns:w="urn:schemas-microsoft-com:office:word"');
+    buffer.writeln('xmlns="http://www.w3.org/TR/REC-html40">');
+    buffer.writeln('<head>');
+    buffer.writeln(
+      '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">',
+    );
+    buffer.writeln('<meta name="ProgId" content="Word.Document">');
+    buffer.writeln('<style>');
+    buffer.writeln('@page { size: A4; margin: 2cm; }');
+    buffer.writeln(
+      'body { font-family: "B Nazanin", Tahoma, Arial; direction: rtl; font-size: 12pt; }',
+    );
+    buffer.writeln(
+      'h1 { text-align: center; color: #2c3e50; font-size: 18pt; margin-bottom: 20px; }',
+    );
+    buffer.writeln('h2 { font-size: 14pt; color: #34495e; margin: 10px 0; }');
+    buffer.writeln('h3 { font-size: 12pt; color: #7f8c8d; margin: 10px 0; }');
+    buffer.writeln(
+      '.header-info { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px; }',
+    );
+    buffer.writeln(
+      '.event { margin-bottom: 30px; border: 1px solid #bdc3c7; padding: 15px; page-break-inside: avoid; }',
+    );
+    buffer.writeln(
+      '.event-header { background-color: #ecf0f1; padding: 10px; margin-bottom: 10px; border-right: 4px solid #3498db; }',
+    );
+    buffer.writeln('.info-row { margin: 8px 0; padding: 5px; }');
+    buffer.writeln('.label { font-weight: bold; color: #2c3e50; }');
+    buffer.writeln(
+      '.detail { margin: 5px 0; padding: 8px; border-right: 2px solid #95a5a6; }',
+    );
+    buffer.writeln(
+      '.detail.checked { background-color: #d5f4e6; border-right-color: #27ae60; }',
+    );
+    buffer.writeln(
+      '.detail.unchecked { background-color: #fadbd8; border-right-color: #e74c3c; }',
+    );
+    buffer.writeln('.status-icon { font-weight: bold; margin-left: 5px; }');
+    buffer.writeln(
+      'hr { border: none; border-top: 1px solid #bdc3c7; margin: 20px 0; }',
+    );
+    buffer.writeln('</style>');
+    buffer.writeln('</head>');
+    buffer.writeln('<body>');
+
+    buffer.writeln('<div class="header-info">');
+    buffer.writeln('<h1>گزارش رویدادها</h1>');
+    buffer.writeln(
+      '<p><span class="label">تاریخ تولید:</span> ${_getCurrentPersianDate()}</p>',
+    );
+    buffer.writeln(
+      '<p><span class="label">تعداد رویدادها:</span> ${events.length}</p>',
+    );
+    buffer.writeln('</div>');
+
+    for (var i = 0; i < events.length; i++) {
+      final event = events[i];
+      buffer.writeln('<div class="event">');
+      buffer.writeln('<div class="event-header">');
+      buffer.writeln('<h2>رویداد ${i + 1}: ${_escapeHtml(event.title)}</h2>');
+      buffer.writeln('</div>');
+
+      buffer.writeln('<div class="info-row">');
+      buffer.writeln(
+        '<span class="label">دستگاه:</span> ${_escapeHtml(event.deviceName)}',
+      );
+      buffer.writeln('</div>');
+
+      buffer.writeln('<div class="info-row">');
+      buffer.writeln(
+        '<span class="label">ایجادکننده:</span> ${_escapeHtml(event.creator)}',
+      );
+      buffer.writeln('</div>');
+
+      buffer.writeln('<div class="info-row">');
+      buffer.writeln(
+        '<span class="label">زمان:</span> ${_escapeHtml(event.timestamp)}',
+      );
+      buffer.writeln('</div>');
+
+      buffer.writeln('<h3>جزئیات رویداد:</h3>');
+
+      for (var detail in event.eventCategoryDetails) {
+        final cssClass = detail.isChecked ? 'checked' : 'unchecked';
+        final status = detail.isChecked ? '✓' : '✗';
+        buffer.writeln('<div class="detail $cssClass">');
+        buffer.writeln('<span class="status-icon">$status</span>');
+        buffer.writeln(
+          '<span class="label">${_escapeHtml(detail.category)}:</span> ${_escapeHtml(detail.text)}',
+        );
+        buffer.writeln('</div>');
+      }
+
+      buffer.writeln('</div>');
+      if (i < events.length - 1) {
+        buffer.writeln('<hr/>');
+      }
+    }
+
+    buffer.writeln('</body>');
+    buffer.writeln('</html>');
+
+    return buffer.toString();
+  }
+
+  /// Escape HTML special characters
+  String _escapeHtml(String text) {
+    return text
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+  }
+
+  /// Get current Persian date
+  String _getCurrentPersianDate() {
+    final now = DateTime.now();
+    return '${now.year}/${now.month}/${now.day} - ${now.hour}:${now.minute}';
+  }
+
   /// Save file based on platform
   Future<void> _saveFile(Uint8List bytes, String fileName) async {
     if (kIsWeb) {
       // Web: Download using browser
-      final blob = html.Blob([
-        bytes,
-      ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      final mimeType = fileName.endsWith('.docx')
+          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+      final blob = html.Blob([bytes], mimeType);
       final url = html.Url.createObjectUrlFromBlob(blob);
       final anchor = html.AnchorElement()
         ..href = url

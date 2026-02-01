@@ -69,11 +69,17 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
     // Opens the add device modal if the route was "/add_device"
     if (widget.openAddDevice && widget.mode == DeviceListMode.all) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showMaterialModalBottomSheet(
-          enableDrag: false,
-          context: context,
-          builder: (context) => AddDeviceModal(),
-        );
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth > 900;
+        if (isDesktop) {
+          showDialog(context: context, builder: (context) => AddDeviceModal());
+        } else {
+          showMaterialModalBottomSheet(
+            enableDrag: false,
+            context: context,
+            builder: (context) => AddDeviceModal(),
+          );
+        }
       });
     }
   }

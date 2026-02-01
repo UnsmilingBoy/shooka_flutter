@@ -19,6 +19,7 @@ import 'package:shooka_flutter/(tabs)/home/home_page.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:shooka_flutter/services/auth_interceptor.dart';
 import 'package:shooka_flutter/services/auth_service.dart';
+import 'package:shooka_flutter/services/connection_error_interceptor.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 import 'package:shooka_flutter/services/encryption_interceptor.dart';
 import 'package:shooka_flutter/services/encryption_service.dart';
@@ -35,7 +36,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Updated base URL
-  final baseUrl = 'https://romaktech2.ir';
+  // final baseUrl = 'https://romaktech2.ir';
+  final baseUrl = 'https://teska-lab.romaksystem.com';
+
   final storage = const FlutterSecureStorage();
 
   // Initialize encryption service and keys
@@ -53,7 +56,8 @@ void main() async {
 
   final authService = AuthService(dio: dio, storage: storage, baseUrl: baseUrl);
 
-  // Add interceptors in order: Auth first, then Encryption
+  // Add interceptors in order: Connection Error, Auth, then Encryption
+  dio.interceptors.add(ConnectionErrorInterceptor());
   dio.interceptors.add(AuthInterceptor(authService));
   dio.interceptors.add(EncryptionInterceptor(encryptionService));
 
