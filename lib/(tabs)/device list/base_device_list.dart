@@ -88,6 +88,23 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
     // Check after list updates (e.g., after add/edit/delete)
     final isLoading = _deviceProvider.getLoading(widget.mode);
     if (mounted && !isLoading) {
+      // Update selected device name if it's currently selected
+      if (_selectedDeviceId != null) {
+        final devices = _deviceProvider.getDevices(widget.mode);
+        try {
+          final updatedDevice = devices.firstWhere(
+            (device) => device.id == _selectedDeviceId,
+          );
+          if (mounted) {
+            setState(() {
+              _selectedDeviceName = updatedDevice.name;
+            });
+          }
+        } catch (e) {
+          // Device not found in the list, keep current name
+        }
+      }
+
       Future.delayed(Duration(milliseconds: 200), () {
         if (mounted) {
           _checkAndLoadMoreIfNeeded();

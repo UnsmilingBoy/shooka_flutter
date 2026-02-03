@@ -413,6 +413,24 @@ class DeviceProvider with ChangeNotifier {
   }
 
   //
+  // Reload devices for a mode while preserving current filters
+  //
+  Future<void> reloadDevicesForMode(DeviceListMode mode) async {
+    await _reloadListWithCurrentFilters(mode);
+  }
+
+  //
+  // Reload all device modes while preserving their current filters
+  //
+  Future<void> reloadAllDeviceModes() async {
+    await Future.wait([
+      _reloadListWithCurrentFilters(DeviceListMode.all),
+      _reloadListWithCurrentFilters(DeviceListMode.rejected),
+      _reloadListWithCurrentFilters(DeviceListMode.suspended),
+    ]);
+  }
+
+  //
   // Rejected Devices Next Page (backward compatibility)
   //
   Future<void> rejectedDevicesNextPage() async {
@@ -468,7 +486,8 @@ class DeviceProvider with ChangeNotifier {
       log(e.toString());
       return e.response!.statusCode!;
     } finally {
-      loadDevices(all: false, page: 1);
+      // Reload all device modes while preserving their filters
+      await reloadAllDeviceModes();
       _generalProvider?.fetchFilters();
       _addLoading = false;
       notifyListeners();
@@ -510,7 +529,8 @@ class DeviceProvider with ChangeNotifier {
       log(e.toString());
       return e.response!.statusCode!;
     } finally {
-      loadDevices(all: false, page: 1);
+      // Reload all device modes while preserving their filters
+      await reloadAllDeviceModes();
       loadCompleteDeviceInfo(id: id);
       _addLoading = false;
       notifyListeners();
@@ -551,6 +571,7 @@ class DeviceProvider with ChangeNotifier {
     int? buildingMetrage,
     int? meterSubscriptionNumber,
     String? buildingImage, // base64
+    String? address,
     int? location,
     String? latLong,
   }) async {
@@ -558,8 +579,13 @@ class DeviceProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      if (location != null || latLong != null) {
-        await editDevice(id: deviceId, location: location, latLong: latLong);
+      if (location != null || latLong != null || address != null) {
+        await editDevice(
+          id: deviceId,
+          location: location,
+          latLong: latLong,
+          installationAddress: address,
+        );
       }
 
       int status = await api.updateCompleteDeviceInfo(
@@ -573,6 +599,7 @@ class DeviceProvider with ChangeNotifier {
         meterSubscriptionNumber: meterSubscriptionNumber,
         buildingImage: buildingImage,
       );
+
       return status;
     } on DioException catch (e) {
       print(e);
