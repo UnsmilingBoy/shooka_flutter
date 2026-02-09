@@ -12,6 +12,7 @@ class TabHeader extends StatelessWidget {
   final Function(String value)? onSubmitted;
   final VoidCallback? onExport;
   final bool exportLoading;
+  final List<Widget>? customButtons;
   const TabHeader({
     super.key,
     required this.searchController,
@@ -21,6 +22,7 @@ class TabHeader extends StatelessWidget {
     this.onSubmitted,
     this.onExport,
     this.exportLoading = false,
+    this.customButtons,
   });
 
   @override
@@ -41,6 +43,9 @@ class TabHeader extends StatelessWidget {
             ),
           ),
         ),
+        // Custom buttons (shown only on larger screens > 800)
+        if (customButtons != null && MediaQuery.of(context).size.width > 800)
+          ...customButtons!,
         // Only show export button on larger screens (width > 800)
         if (onExport != null && MediaQuery.of(context).size.width > 800)
           SizedBox(

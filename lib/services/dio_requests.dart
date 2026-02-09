@@ -236,7 +236,7 @@ class ApiService {
         data: queryParams,
       );
 
-      log("${response.data}");
+      // log("${response.data}");
 
       final List<dynamic> data = response.data["results"];
       final int totalPages = response.data["total_pages"];

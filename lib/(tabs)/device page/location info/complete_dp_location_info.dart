@@ -32,6 +32,7 @@ class _CompleteDpInstallationLocationInfoState
       TextEditingController();
   final TextEditingController phoneNumber1Controller = TextEditingController();
   final TextEditingController phoneNumber2Controller = TextEditingController();
+  final TextEditingController installationAddress = TextEditingController();
 
   String? _buildingImage;
 
@@ -62,6 +63,8 @@ class _CompleteDpInstallationLocationInfoState
     phoneNumber1Controller.text = completeData.phoneNumber1;
     phoneNumber2Controller.text = completeData.phoneNumber2;
 
+    installationAddress.text = basicData?.address ?? "-";
+
     location = generalProvider.filters?["locations"]
         .firstWhere(
           (f) => f['id'] == basicData?.location,
@@ -91,6 +94,7 @@ class _CompleteDpInstallationLocationInfoState
       // },
       {"label": "تلفن رابط اول", "controller": phoneNumber1Controller},
       {"label": "تلفن رابط دوم", "controller": phoneNumber2Controller},
+      {"label": "آدرس:", "controller": installationAddress},
     ];
 
     return BottomModalTemplate(
@@ -266,10 +270,12 @@ class _CompleteDpInstallationLocationInfoState
               deviceId: deviceProvider.device?.id ?? -1,
               linkerPerson1: _linkPerson1Controller.text,
               linkerPerson2: _linkPerson2Controller.text,
+
               buildingMetrage: int.tryParse(_buildingMetrageController.text),
               meterSubscriptionNumber: int.tryParse(
                 _meterSubscriptionNumberController.text,
               ),
+              address: installationAddress.text,
               buildingImage: _buildingImage,
               phoneNumber1: phoneNumber1Controller.text,
               phoneNumber2: phoneNumber2Controller.text,

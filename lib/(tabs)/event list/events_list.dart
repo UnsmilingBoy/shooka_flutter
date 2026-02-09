@@ -3,11 +3,13 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/add_event_modal.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/components/add_invoice_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/filter_event_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20page/event_detail_panel.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
+import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
@@ -168,6 +170,10 @@ class _EventsTabState extends State<EventsTab> {
     }
   }
 
+  void _handleAddInvoice() {
+    showDialog(context: context, builder: (context) => AddInvoiceModal());
+  }
+
   String searchValue = "";
 
   @override
@@ -250,6 +256,20 @@ class _EventsTabState extends State<EventsTab> {
                 searchPlaceholder: "جستجوی رویداد...",
                 onExport: _handleExport,
                 exportLoading: _exportLoading,
+                // customButtons: [
+                //   SizedBox(
+                //     height: 50,
+                //     width: 50,
+                //     child: MyIconButton(
+                //       onPressed: _handleAddInvoice,
+                //       color: Theme.of(context).colorScheme.tertiary,
+                //       child: Icon(
+                //         Icons.receipt_long_rounded,
+                //         color: Colors.white,
+                //       ),
+                //     ),
+                //   ),
+                // ],
               ),
               SizedBox(height: 10),
 
@@ -333,6 +353,17 @@ class _EventsTabState extends State<EventsTab> {
           searchPlaceholder: "جستجوی رویداد...",
           onExport: _handleExport,
           exportLoading: _exportLoading,
+          // customButtons: [
+          //   SizedBox(
+          //     height: 50,
+          //     width: 50,
+          //     child: MyIconButton(
+          //       onPressed: _handleAddInvoice,
+          //       color: Theme.of(context).colorScheme.tertiary,
+          //       child: Icon(Icons.receipt_long_rounded, color: Colors.white),
+          //     ),
+          //   ),
+          // ],
         ),
 
         //
