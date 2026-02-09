@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/(tabs)/accounting/accounting_tab.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/device_list.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/rejected_device_list.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/suspended_device_list.dart';
@@ -134,6 +135,7 @@ class MyApp extends StatelessWidget {
                 '/views': (context) => const ViewsTab(),
                 '/locations': (context) => const LocationsTab(),
                 '/users': (context) => const UsersTab(),
+                '/accounting': (context) => const AccountingTab(),
               },
               locale: const Locale("fa", "IR"),
               supportedLocales: const [Locale("fa", "IR"), Locale("en", "US")],

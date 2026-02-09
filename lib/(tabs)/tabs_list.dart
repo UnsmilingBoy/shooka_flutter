@@ -59,6 +59,11 @@ final tabsList = [
     "href": ["/locations"],
     "icon": Icons.location_on,
   },
+  {
+    'label': 'پنل حسابداری',
+    "href": ["/accounting"],
+    "icon": Icons.account_balance,
+  },
   // {
   //   'label': 'لیست کاربران',
   //   "href": ["/users"],
