@@ -13,6 +13,12 @@ class EventDetailPanel extends StatelessWidget {
   final String timeCreated;
   final List<EventCategoryDetails> message;
   final VoidCallback? onClose;
+  final int? eventGroupId;
+  final String? factorId;
+  final bool isCompleted;
+  final String? completedAt;
+  final bool isSent;
+  final String? sentAt;
 
   const EventDetailPanel({
     super.key,
@@ -22,6 +28,12 @@ class EventDetailPanel extends StatelessWidget {
     required this.timeCreated,
     required this.message,
     this.onClose,
+    this.eventGroupId,
+    this.factorId,
+    this.isCompleted = false,
+    this.completedAt,
+    this.isSent = false,
+    this.sentAt,
   });
 
   @override
@@ -60,35 +72,39 @@ class EventDetailPanel extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // IconButton(
-                //   icon: Icon(Icons.edit),
-                //   onPressed: () {
-                //     if (isDesktop) {
-                //       showDialog(
-                //         context: context,
-                //         builder: (context) => EditEventModal(
-                //           deviceName: device,
-                //           title: title,
-                //           timestamp: timeCreated,
-                //           eventCategoryDetails: message,
-                //         ),
-                //       );
-                //     } else {
-                //       showMaterialModalBottomSheet(
-                //         context: context,
-                //         enableDrag: false,
-                //         builder: (context) => EditEventModal(
-                //           deviceName: device,
-                //           title: title,
-                //           timestamp: timeCreated,
-                //           eventCategoryDetails: message,
-                //         ),
-                //       );
-                //     }
-                //   },
-                //   tooltip: 'ویرایش',
-                //   iconSize: 20,
-                // ),
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    if (isDesktop) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => EditEventModal(
+                          deviceName: device,
+                          title: title,
+                          timestamp: timeCreated,
+                          eventCategoryDetails: message,
+                          eventGroupId: eventGroupId,
+                          factorId: factorId,
+                        ),
+                      );
+                    } else {
+                      showMaterialModalBottomSheet(
+                        context: context,
+                        enableDrag: false,
+                        builder: (context) => EditEventModal(
+                          deviceName: device,
+                          title: title,
+                          timestamp: timeCreated,
+                          eventCategoryDetails: message,
+                          eventGroupId: eventGroupId,
+                          factorId: factorId,
+                        ),
+                      );
+                    }
+                  },
+                  tooltip: 'ویرایش',
+                  iconSize: 20,
+                ),
                 if (onClose != null)
                   IconButton(
                     icon: Icon(Icons.close),
@@ -110,6 +126,12 @@ class EventDetailPanel extends StatelessWidget {
                 creator: creator,
                 timeCreated: timeCreated,
                 message: message,
+                eventGroupId: eventGroupId,
+                factorId: factorId,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                isSent: isSent,
+                sentAt: sentAt,
               ),
             ),
           ),

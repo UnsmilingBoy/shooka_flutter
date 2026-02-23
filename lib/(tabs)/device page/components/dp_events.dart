@@ -39,6 +39,12 @@ class DpEvents extends StatelessWidget {
                     device: events[index].deviceName,
                     timeCreated: events[index].timestamp,
                     message: events[index].eventCategoryDetails,
+                    eventGroupId: events[index].eventGroupId,
+                    factorId: events[index].factorId,
+                    isCompleted: events[index].isCompleted,
+                    completedAt: events[index].completedAt,
+                    isSent: events[index].isSent,
+                    sentAt: events[index].sentAt,
                   );
                 },
               ),

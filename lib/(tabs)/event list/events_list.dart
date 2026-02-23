@@ -256,20 +256,20 @@ class _EventsTabState extends State<EventsTab> {
                 searchPlaceholder: "جستجوی رویداد...",
                 onExport: _handleExport,
                 exportLoading: _exportLoading,
-                // customButtons: [
-                //   SizedBox(
-                //     height: 50,
-                //     width: 50,
-                //     child: MyIconButton(
-                //       onPressed: _handleAddInvoice,
-                //       color: Theme.of(context).colorScheme.tertiary,
-                //       child: Icon(
-                //         Icons.receipt_long_rounded,
-                //         color: Colors.white,
-                //       ),
-                //     ),
-                //   ),
-                // ],
+                customButtons: [
+                  SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: MyIconButton(
+                      onPressed: _handleAddInvoice,
+                      color: Theme.of(context).colorScheme.tertiary,
+                      child: Icon(
+                        Icons.receipt_long_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 10),
 
@@ -318,6 +318,12 @@ class _EventsTabState extends State<EventsTab> {
             creator: _selectedEvent!.creator,
             timeCreated: _selectedEvent!.timestamp,
             message: _selectedEvent!.eventCategoryDetails,
+            eventGroupId: _selectedEvent!.eventGroupId,
+            factorId: _selectedEvent!.factorId,
+            isCompleted: _selectedEvent!.isCompleted,
+            completedAt: _selectedEvent!.completedAt,
+            isSent: _selectedEvent!.isSent,
+            sentAt: _selectedEvent!.sentAt,
             onClose: _closeDetailPanel,
           ),
         ),
@@ -353,17 +359,17 @@ class _EventsTabState extends State<EventsTab> {
           searchPlaceholder: "جستجوی رویداد...",
           onExport: _handleExport,
           exportLoading: _exportLoading,
-          // customButtons: [
-          //   SizedBox(
-          //     height: 50,
-          //     width: 50,
-          //     child: MyIconButton(
-          //       onPressed: _handleAddInvoice,
-          //       color: Theme.of(context).colorScheme.tertiary,
-          //       child: Icon(Icons.receipt_long_rounded, color: Colors.white),
-          //     ),
-          //   ),
-          // ],
+          customButtons: [
+            SizedBox(
+              height: 50,
+              width: 50,
+              child: MyIconButton(
+                onPressed: _handleAddInvoice,
+                color: Theme.of(context).colorScheme.tertiary,
+                child: Icon(Icons.receipt_long_rounded, color: Colors.white),
+              ),
+            ),
+          ],
         ),
 
         //
@@ -431,6 +437,12 @@ class _EventsTabState extends State<EventsTab> {
             author: event.creator,
             device: event.deviceName,
             message: event.eventCategoryDetails,
+            eventGroupId: event.eventGroupId,
+            factorId: event.factorId,
+            isCompleted: event.isCompleted,
+            completedAt: event.completedAt,
+            isSent: event.isSent,
+            sentAt: event.sentAt,
             color: Theme.of(context).colorScheme.surface,
             isSelected: isSelected,
             compactMode: compactMode,

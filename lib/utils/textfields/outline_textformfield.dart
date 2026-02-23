@@ -3,18 +3,22 @@ import 'package:flutter/material.dart';
 class OutlineTextformfield extends StatelessWidget {
   final TextEditingController controller;
   final String placeholder;
+  final TextInputType? keyboardType;
+  final int? maxLines;
   const OutlineTextformfield({
     super.key,
     required this.controller,
     required this.placeholder,
+    this.keyboardType,
+    this.maxLines,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      keyboardType: TextInputType.multiline,
+      keyboardType: keyboardType ?? TextInputType.multiline,
       controller: controller,
-      maxLines: 3,
+      maxLines: maxLines ?? 3,
       decoration: InputDecoration(
         hintText: placeholder,
         hintStyle: Theme.of(context).textTheme.labelSmall,

@@ -14,6 +14,12 @@ class EventTile extends StatefulWidget {
   final bool isSelected;
   final VoidCallback? onTap;
   final bool compactMode;
+  final int? eventGroupId;
+  final String? factorId;
+  final bool isCompleted;
+  final String? completedAt;
+  final bool isSent;
+  final String? sentAt;
 
   const EventTile({
     super.key,
@@ -27,6 +33,12 @@ class EventTile extends StatefulWidget {
     this.isSelected = false,
     this.onTap,
     this.compactMode = false,
+    this.eventGroupId,
+    this.factorId,
+    this.isCompleted = false,
+    this.completedAt,
+    this.isSent = false,
+    this.sentAt,
   });
 
   @override
@@ -55,6 +67,12 @@ class _EventTileState extends State<EventTile> {
                 title: widget.title,
                 timeCreated: widget.timeCreated,
                 message: widget.message,
+                eventGroupId: widget.eventGroupId,
+                factorId: widget.factorId,
+                isCompleted: widget.isCompleted,
+                completedAt: widget.completedAt,
+                isSent: widget.isSent,
+                sentAt: widget.sentAt,
               ),
             ),
           ),

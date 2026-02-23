@@ -16,6 +16,8 @@ class EditEventModal extends StatefulWidget {
   final String title;
   final String timestamp;
   final List<EventCategoryDetails> eventCategoryDetails;
+  final int? eventGroupId;
+  final String? factorId;
 
   const EditEventModal({
     super.key,
@@ -23,6 +25,8 @@ class EditEventModal extends StatefulWidget {
     required this.title,
     required this.timestamp,
     required this.eventCategoryDetails,
+    this.eventGroupId,
+    this.factorId,
   });
 
   @override
@@ -68,6 +72,9 @@ class _EditEventModalState extends State<EditEventModal> {
           editEventPrompts.add({
             "label": categoryName,
             "controller": TextEditingController(text: existingEvent.text),
+            "priceController": TextEditingController(
+              text: existingEvent.price?.toString() ?? '',
+            ),
             "switchValue": existingEvent.isChecked,
             "eventId": existingEvent.eventId,
           });
@@ -142,6 +149,9 @@ class _EditEventModalState extends State<EditEventModal> {
             label: editEventPrompts[index]["label"] as String,
             controller:
                 editEventPrompts[index]["controller"] as TextEditingController,
+            priceController:
+                editEventPrompts[index]["priceController"]
+                    as TextEditingController,
             switchValue: editEventPrompts[index]["switchValue"] as bool,
             onSwitchChanged: (value) {
               setState(() {
@@ -183,21 +193,16 @@ class _EditEventModalState extends State<EditEventModal> {
                     "category": event["label"],
                     "is_checked": true,
                     "text": event["controller"].text,
-                    "price": null,
-                    "factor_id": null,
+                    "price": int.tryParse(
+                      (event["priceController"] as TextEditingController).text,
+                    ),
                   });
                 }
               }
 
-              // Get user ID from storage
-              final userIdString = await storage.read(key: 'userId');
-              final userId = int.tryParse(userIdString ?? '1') ?? 1;
-
               final status = await eventProvider.editEvent(
-                deviceName: selectedDevice ?? "",
-                title: selectedEventTitle ?? "",
-                timestamp: widget.timestamp,
-                userId: userId,
+                eventGroupId: widget.eventGroupId,
+                factorId: widget.factorId,
                 events: eventsList,
               );
 
@@ -221,12 +226,14 @@ class _EditEventModalState extends State<EditEventModal> {
 class EditEventPromptTiles extends StatefulWidget {
   final String label;
   final TextEditingController controller;
+  final TextEditingController priceController;
   final bool switchValue;
   final ValueChanged<bool> onSwitchChanged;
   const EditEventPromptTiles({
     super.key,
     required this.label,
     required this.controller,
+    required this.priceController,
     required this.switchValue,
     required this.onSwitchChanged,
   });
@@ -252,10 +259,17 @@ class _EditEventPromptTilesState extends State<EditEventPromptTiles> {
         ),
         // Textformfield if switch is ON
         if (widget.switchValue)
-          OutlineTextformfield(
-            controller: widget.controller,
-            placeholder: "توضیحات...",
-          ),
+          ...([
+            OutlineTextformfield(
+              controller: widget.controller,
+              placeholder: "توضیحات...",
+            ),
+            OutlineTextformfield(
+              controller: widget.priceController,
+              placeholder: "مبلغ (ریال)...",
+              keyboardType: TextInputType.number,
+            ),
+          ]),
       ],
     );
   }

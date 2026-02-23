@@ -11,6 +11,12 @@ class EventPage extends StatelessWidget {
   final String creator;
   final String timeCreated;
   final List<EventCategoryDetails> message;
+  final int? eventGroupId;
+  final String? factorId;
+  final bool isCompleted;
+  final String? completedAt;
+  final bool isSent;
+  final String? sentAt;
 
   const EventPage({
     super.key,
@@ -19,6 +25,12 @@ class EventPage extends StatelessWidget {
     required this.creator,
     required this.timeCreated,
     required this.message,
+    this.eventGroupId,
+    this.factorId,
+    this.isCompleted = false,
+    this.completedAt,
+    this.isSent = false,
+    this.sentAt,
   });
 
   @override
@@ -30,34 +42,38 @@ class EventPage extends StatelessWidget {
       label: "جزئیات رویداد",
       backRoute: "/events",
       backLabel: "رویدادها",
-      // floatingActionButton: FloatingActionButton.extended(
-      //   onPressed: () {
-      //     if (isDesktop) {
-      //       showDialog(
-      //         context: context,
-      //         builder: (context) => EditEventModal(
-      //           deviceName: device,
-      //           title: title,
-      //           timestamp: timeCreated,
-      //           eventCategoryDetails: message,
-      //         ),
-      //       );
-      //     } else {
-      //       showMaterialModalBottomSheet(
-      //         context: context,
-      //         enableDrag: false,
-      //         builder: (context) => EditEventModal(
-      //           deviceName: device,
-      //           title: title,
-      //           timestamp: timeCreated,
-      //           eventCategoryDetails: message,
-      //         ),
-      //       );
-      //     }
-      //   },
-      //   label: Text("ویرایش"),
-      //   icon: Icon(Icons.edit),
-      // ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          if (isDesktop) {
+            showDialog(
+              context: context,
+              builder: (context) => EditEventModal(
+                deviceName: device,
+                title: title,
+                timestamp: timeCreated,
+                eventCategoryDetails: message,
+                eventGroupId: eventGroupId,
+                factorId: factorId,
+              ),
+            );
+          } else {
+            showMaterialModalBottomSheet(
+              context: context,
+              enableDrag: false,
+              builder: (context) => EditEventModal(
+                deviceName: device,
+                title: title,
+                timestamp: timeCreated,
+                eventCategoryDetails: message,
+                eventGroupId: eventGroupId,
+                factorId: factorId,
+              ),
+            );
+          }
+        },
+        label: Text("ویرایش"),
+        icon: Icon(Icons.edit),
+      ),
       body: SingleChildScrollView(
         child: EventContent(
           title: title,
@@ -65,6 +81,12 @@ class EventPage extends StatelessWidget {
           creator: creator,
           timeCreated: timeCreated,
           message: message,
+          eventGroupId: eventGroupId,
+          factorId: factorId,
+          isCompleted: isCompleted,
+          completedAt: completedAt,
+          isSent: isSent,
+          sentAt: sentAt,
         ),
       ),
     );

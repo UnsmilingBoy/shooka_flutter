@@ -9,6 +9,7 @@ class EventProvider with ChangeNotifier {
   List<Event> _events = [];
   bool _fetchLoading = false;
   bool _addLoading = false;
+  bool _sendLoading = false;
   bool _eventsNextPageLoading = false;
   int _eventsTotalPages = 1;
   int _eventsPage = 1;
@@ -28,6 +29,7 @@ class EventProvider with ChangeNotifier {
   List<Event> get events => _events;
   bool get fetchLoading => _fetchLoading;
   bool get addLoading => _addLoading;
+  bool get sendLoading => _sendLoading;
   bool get eventsNextPageLoading => _eventsNextPageLoading;
   int get eventsTotalPages => _eventsTotalPages;
   int get eventsPage => _eventsPage;
@@ -217,10 +219,8 @@ class EventProvider with ChangeNotifier {
   // Edit Event
   //
   Future<int> editEvent({
-    required String deviceName,
-    required String title,
-    required String timestamp,
-    required int userId,
+    required int? eventGroupId,
+    required String? factorId,
     required List<dynamic> events,
   }) async {
     _addLoading = true;
@@ -229,10 +229,8 @@ class EventProvider with ChangeNotifier {
 
     try {
       int status = await api.editEvent(
-        deviceName: deviceName,
-        title: title,
-        timestamp: timestamp,
-        userId: userId,
+        eventGroupId: eventGroupId,
+        factorId: factorId,
         events: events,
       );
       return status;
@@ -253,6 +251,27 @@ class EventProvider with ChangeNotifier {
         plan: lastSelectedPlan,
       );
       _addLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Send Invoice
+  //
+  Future<String?> sendInvoice(List<Map<String, dynamic>> eventGroupIds) async {
+    _sendLoading = true;
+    notifyListeners();
+    try {
+      final result = await api.sendInvoice(eventGroupIds: eventGroupIds);
+      if (result != null && result['result'] == 'ok') {
+        return result['message'] as String?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Error sending invoice: $e");
+      return null;
+    } finally {
+      _sendLoading = false;
       notifyListeners();
     }
   }

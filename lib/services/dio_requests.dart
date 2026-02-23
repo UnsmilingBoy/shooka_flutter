@@ -272,17 +272,13 @@ class ApiService {
   // Edit Event
   //
   Future<int> editEvent({
-    required String deviceName,
-    required String title,
-    required String timestamp,
-    required int userId,
+    required int? eventGroupId,
+    required String? factorId,
     required List<dynamic> events,
   }) async {
     var body = {
-      "device_name": deviceName,
-      "title": title,
-      "timestamp": timestamp,
-      "user_id": userId,
+      "event_group_id": eventGroupId,
+      "factor_id": factorId,
       "events": events,
     };
 
@@ -291,6 +287,21 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to edit event: ${e.response}");
+    }
+  }
+
+  //
+  // Send Invoice
+  //
+  Future<Map<String, dynamic>?> sendInvoice({
+    required List<Map<String, dynamic>> eventGroupIds,
+  }) async {
+    final body = {"event_group_ids": eventGroupIds};
+    try {
+      final response = await dio.post('/api/shouka/events/send/', data: body);
+      return response.data as Map<String, dynamic>?;
+    } on DioException catch (e) {
+      throw Exception("Failed to send invoice: ${e.response}");
     }
   }
 

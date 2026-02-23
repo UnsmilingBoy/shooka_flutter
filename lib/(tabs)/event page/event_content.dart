@@ -9,6 +9,12 @@ class EventContent extends StatelessWidget {
   final String creator;
   final String timeCreated;
   final List<EventCategoryDetails> message;
+  final int? eventGroupId;
+  final String? factorId;
+  final bool isCompleted;
+  final String? completedAt;
+  final bool isSent;
+  final String? sentAt;
 
   const EventContent({
     super.key,
@@ -17,10 +23,21 @@ class EventContent extends StatelessWidget {
     required this.creator,
     required this.timeCreated,
     required this.message,
+    this.eventGroupId,
+    this.factorId,
+    this.isCompleted = false,
+    this.completedAt,
+    this.isSent = false,
+    this.sentAt,
   });
 
   @override
   Widget build(BuildContext context) {
+    final int totalPrice = message.fold(
+      0,
+      (sum, item) => sum + (item.price ?? 0),
+    );
+
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -50,64 +67,57 @@ class EventContent extends StatelessWidget {
               //
               // Device
               //
-              Row(
-                spacing: 3,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.heat_pump_rounded,
-                    size: 20,
-                    color: Theme.of(context).hintColor,
-                  ),
-                  Expanded(
-                    child: Text(
-                      "دستگاه:  $device",
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                ],
+              _InfoRow(
+                icon: Icons.heat_pump_rounded,
+                label: "دستگاه:  $device",
+                context: context,
               ),
-
               //
               // Author
               //
-              Row(
-                spacing: 3,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.attribution_outlined,
-                    size: 20,
-                    color: Theme.of(context).hintColor,
-                  ),
-                  Expanded(
-                    child: Text(
-                      "ایجادکننده:  $creator",
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                ],
+              _InfoRow(
+                icon: Icons.attribution_outlined,
+                label: "ایجادکننده:  $creator",
+                context: context,
               ),
-
               //
               // Date
               //
-              Row(
-                spacing: 3,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.date_range,
-                    size: 20,
-                    color: Theme.of(context).hintColor,
-                  ),
-                  Expanded(
-                    child: Text(
-                      "زمان ایجاد:  $timeCreated",
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                ],
+              _InfoRow(
+                icon: Icons.date_range,
+                label: "زمان ایجاد:  $timeCreated",
+                context: context,
+              ),
+              //
+              // Factor ID
+              //
+              if (factorId != null)
+                _InfoRow(
+                  icon: Icons.receipt_long_rounded,
+                  label: "شماره فاکتور:  $factorId",
+                  context: context,
+                ),
+              //
+              // Completion status
+              //
+              _InfoRow(
+                icon: isCompleted ? Icons.check_circle : Icons.pending_outlined,
+                label: isCompleted
+                    ? "تکمیل شده${completedAt != null ? ':  $completedAt' : ''}"
+                    : "در انتظار تکمیل",
+                context: context,
+                color: isCompleted ? Colors.green : Theme.of(context).hintColor,
+              ),
+              //
+              // Sent status
+              //
+              _InfoRow(
+                icon: isSent ? Icons.send : Icons.schedule_send_outlined,
+                label: isSent
+                    ? "ارسال شده${sentAt != null ? ':  $sentAt' : ''}"
+                    : "ارسال نشده",
+                context: context,
+                color: isSent ? Colors.blue : Theme.of(context).hintColor,
               ),
             ],
           ),
@@ -117,25 +127,102 @@ class EventContent extends StatelessWidget {
           //
           Divider(color: Theme.of(context).hintColor),
           Column(
-            spacing: 5,
+            spacing: 8,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: message
-                .map(
-                  (message) => Row(
+            children: message.map((item) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: 3,
                     children: [
-                      Icon(Icons.check, color: Colors.green),
+                      Icon(Icons.check, color: Colors.green, size: 20),
                       Expanded(
-                        child: Text("${message.category}: ${message.text}"),
+                        child: Text(
+                          "${item.category}: ${item.text}",
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ),
                     ],
                   ),
-                )
-                .toList(),
+                  if (item.price != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 23),
+                      child: Text(
+                        "مبلغ: ${_formatPrice(item.price!)} ریال",
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }).toList(),
           ),
+
+          //
+          // Total Price
+          //
+          if (totalPrice > 0) ...[
+            Divider(color: Theme.of(context).hintColor),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "جمع کل:",
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "${_formatPrice(totalPrice)} ریال",
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  String _formatPrice(int price) {
+    final str = price.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(',');
+      buffer.write(str[i]);
+    }
+    return buffer.toString();
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final BuildContext context;
+  final Color? color;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.context,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext ctx) {
+    return Row(
+      spacing: 3,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: color ?? Theme.of(ctx).hintColor),
+        Expanded(child: Text(label, style: Theme.of(ctx).textTheme.labelSmall)),
+      ],
     );
   }
 }
