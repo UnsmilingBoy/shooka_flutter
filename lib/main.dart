@@ -24,6 +24,7 @@ import 'package:shooka_flutter/services/connection_error_interceptor.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 import 'package:shooka_flutter/services/encryption_interceptor.dart';
 import 'package:shooka_flutter/services/encryption_service.dart';
+import 'package:shooka_flutter/services/providers/accounting_provider.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
@@ -86,6 +87,9 @@ void main() async {
         ),
 
         ChangeNotifierProvider(create: (_) => EventProvider(api: apiService)),
+        ChangeNotifierProvider(
+          create: (_) => AccountingProvider(api: apiService),
+        ),
 
         // Inject GeneralProvider into DeviceProvider via Proxy
         ChangeNotifierProxyProvider<GeneralProvider, DeviceProvider>(

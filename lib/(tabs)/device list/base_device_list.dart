@@ -6,9 +6,11 @@ import 'package:shooka_flutter/(tabs)/device%20list/components/filter_device_mod
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_tile.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/device_detail_panel.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
+import 'package:shooka_flutter/models/app_panel.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/models/device_filter_state.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
@@ -66,9 +68,14 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
     // Listen to device provider changes and check if more items needed
     _deviceProvider.addListener(_onDeviceListChanged);
 
-    // Opens the add device modal if the route was "/add_device"
+    // Opens the add device modal if the route was "/add_device" and user has permission
     if (widget.openAddDevice && widget.mode == DeviceListMode.all) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        final canAdd = context.read<UserProvider>().accessControl.hasAccessTo(
+          AppPanel.addDeviceFunctionality,
+        );
+        if (!canAdd) return;
+
         final screenWidth = MediaQuery.of(context).size.width;
         final isDesktop = screenWidth > 900;
         if (isDesktop) {
@@ -210,6 +217,10 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
     TextEditingController searchController = TextEditingController();
 
     final deviceProvider = context.watch<DeviceProvider>();
+    final accessControl = context.watch<UserProvider>().accessControl;
+    final canAddDevice = accessControl.hasAccessTo(
+      AppPanel.addDeviceFunctionality,
+    );
     final devices = deviceProvider.getDevices(widget.mode);
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -226,9 +237,9 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
       backRoute: "/home",
 
       //
-      // Floating Action Button (only for normal mode)
+      // Floating Action Button (only for normal mode + access)
       //
-      floatingActionButton: widget.mode == DeviceListMode.all
+      floatingActionButton: widget.mode == DeviceListMode.all && canAddDevice
           ? AddFloatingButton(addModal: AddDeviceModal())
           : null,
 
@@ -257,6 +268,9 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
   ) {
     final isLoading = deviceProvider.getLoading(widget.mode);
     final filterState = deviceProvider.getFilterState(widget.mode);
+    final canExport = context.read<UserProvider>().accessControl.hasAccessTo(
+      AppPanel.exportFunctionality,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,7 +304,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
                 searchController: searchController,
                 filterModal: FilterDeviceModal(mode: widget.mode),
                 searchPlaceholder: "جستجوی موتورخانه...",
-                onExport: isSpecialMode ? null : _handleExport,
+                onExport: isSpecialMode || !canExport ? null : _handleExport,
                 exportLoading: _exportLoading,
               ),
               SizedBox(height: 10),
@@ -363,6 +377,9 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
   ) {
     final isLoading = deviceProvider.getLoading(widget.mode);
     final filterState = deviceProvider.getFilterState(widget.mode);
+    final canExport = context.read<UserProvider>().accessControl.hasAccessTo(
+      AppPanel.exportFunctionality,
+    );
 
     return Column(
       children: [
@@ -390,7 +407,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
           searchController: searchController,
           filterModal: FilterDeviceModal(mode: widget.mode),
           searchPlaceholder: "جستجوی موتورخانه...",
-          onExport: isSpecialMode ? null : _handleExport,
+          onExport: isSpecialMode || !canExport ? null : _handleExport,
           exportLoading: _exportLoading,
         ),
         SizedBox(height: 10),

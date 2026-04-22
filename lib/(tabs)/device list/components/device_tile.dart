@@ -2,8 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/components/device_status_modal.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/device_page.dart';
+import 'package:shooka_flutter/models/app_panel.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -83,6 +86,13 @@ class _DeviceTileState extends State<DeviceTile> {
   }
 
   void _showStatusModal() {
+    // Check access before showing the status change modal
+    final canChangeStatus = context
+        .read<UserProvider>()
+        .accessControl
+        .hasAccessTo(AppPanel.deviceStatusFunctionality);
+    if (!canChangeStatus) return;
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
     if (isDesktop) {
@@ -158,6 +168,11 @@ class _DeviceTileState extends State<DeviceTile> {
   }
 
   Widget _buildRejectedActions(BuildContext context) {
+    final canChangeStatus = context
+        .read<UserProvider>()
+        .accessControl
+        .hasAccessTo(AppPanel.deviceStatusFunctionality);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -178,25 +193,31 @@ class _DeviceTileState extends State<DeviceTile> {
           ),
           SizedBox(width: 8),
         ],
-        // Change Status Button
-        Tooltip(
-          message: 'تغییر وضعیت',
-          child: IconButton(
-            onPressed: _showStatusModal,
-            icon: Icon(Icons.swap_horiz_rounded, size: 20),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.blue.withOpacity(0.1),
-              foregroundColor: Colors.blue,
-              padding: EdgeInsets.all(8),
-              minimumSize: Size(36, 36),
+        // Change Status Button (only if user has permission)
+        if (canChangeStatus)
+          Tooltip(
+            message: 'تغییر وضعیت',
+            child: IconButton(
+              onPressed: _showStatusModal,
+              icon: Icon(Icons.swap_horiz_rounded, size: 20),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.blue.withOpacity(0.1),
+                foregroundColor: Colors.blue,
+                padding: EdgeInsets.all(8),
+                minimumSize: Size(36, 36),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
 
   Widget _buildStatusBadge(BuildContext context) {
+    final canChangeStatus = context
+        .read<UserProvider>()
+        .accessControl
+        .hasAccessTo(AppPanel.deviceStatusFunctionality);
+
     // Determine color and text based on status
     Color statusColor;
     String statusText;
@@ -213,7 +234,7 @@ class _DeviceTileState extends State<DeviceTile> {
     }
 
     return GestureDetector(
-      onTap: _showStatusModal,
+      onTap: canChangeStatus ? _showStatusModal : null,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(

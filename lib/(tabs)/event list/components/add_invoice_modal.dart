@@ -275,7 +275,7 @@ class _AddInvoiceModalState extends State<AddInvoiceModal> {
           side: BorderSide(
             color: anySelected
                 ? Theme.of(context).colorScheme.primary.withOpacity(0.6)
-                : Theme.of(context).colorScheme.outlineVariant,
+                : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
             width: anySelected ? 1.5 : 1,
           ),
         ),

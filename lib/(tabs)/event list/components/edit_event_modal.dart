@@ -92,51 +92,6 @@ class _EditEventModalState extends State<EditEventModal> {
       title: "ویرایش رویداد",
       isLongList: true,
       children: [
-        SearchableDropdownWithLabel(
-          initialValue: selectedDevice,
-          iconOnPressed: () => setState(() {
-            selectedDevice = null;
-          }),
-          items: (generalProvider.filters?["devices"] ?? [])
-              .map<DropdownItemModel>(
-                (device) => DropdownItemModel(
-                  value: device["name"].toString(),
-                  label: device["name"].toString(),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            setState(() {
-              selectedDevice = value;
-            });
-          },
-          label: "موتورخانه",
-          placeholder: "انتخاب موتورخانه...",
-        ),
-
-        //
-        // Select Title Dropdown
-        //
-        SearchableDropdownWithLabel(
-          initialValue: selectedEventTitle,
-          iconOnPressed: () => setState(() {
-            selectedEventTitle = null;
-          }),
-          onChanged: (value) {
-            setState(() {
-              selectedEventTitle = value;
-            });
-          },
-          items: (generalProvider.filters?["event_title"] ?? [])
-              .map<DropdownItemModel>(
-                (eventTitle) =>
-                    DropdownItemModel(value: eventTitle, label: eventTitle),
-              )
-              .toList(),
-          label: "عنوان",
-          placeholder: "انتخاب عنوان...",
-        ),
-
         //
         // List of Other prompts
         //

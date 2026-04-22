@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/user_data_class.dart';
+import 'package:shooka_flutter/services/access_control_service.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
 
 class UserProvider extends ChangeNotifier {
   final ApiService api;
   GeneralProvider? _generalProvider;
+
+  /// Centralised access-control — updated automatically after profile fetch.
+  final AccessControlService accessControl = AccessControlService();
 
   UserProvider({required this.api, GeneralProvider? generalProvider})
     : _generalProvider = generalProvider;
@@ -195,6 +199,10 @@ class UserProvider extends ChangeNotifier {
 
     try {
       _user = await api.fetchUserProfile();
+      // Update access control with fresh user data
+      if (_user != null) {
+        accessControl.updateFromUser(_user!);
+      }
     } catch (e) {
       _error = e.toString();
     } finally {

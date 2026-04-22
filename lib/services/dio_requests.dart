@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
+import 'package:shooka_flutter/models/factor_data_class.dart';
 import 'package:shooka_flutter/models/location_data_class.dart';
 import 'package:shooka_flutter/models/org_data_class.dart';
 import 'package:shooka_flutter/models/user_data_class.dart';
@@ -58,6 +60,8 @@ class ApiService {
   Future<User> fetchUserProfile() async {
     try {
       final response = await dio.post('/api/shouka/users/profile');
+
+      log(JsonEncoder.withIndent("  ").convert(response.data));
 
       return User.fromJson(response.data["data"]);
     } on DioException catch (e) {
@@ -213,6 +217,7 @@ class ApiService {
     String? province,
     String? city,
     String? plan,
+    bool? isSent,
   }) async {
     final queryParams = {
       "page": page,
@@ -228,6 +233,7 @@ class ApiService {
       if (province != null) "province": province,
       if (city != null) "city": city,
       if (plan != null) "plan": plan,
+      if (isSent != null) "is_sent": isSent,
     };
 
     try {
@@ -287,6 +293,92 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to edit event: ${e.response}");
+    }
+  }
+
+  //
+  // Set Factor ID
+  //
+  Future<int> setFactorId({
+    required int eventGroupId,
+    required String factorId,
+  }) async {
+    var body = {"event_group_id": eventGroupId, "factor_id": factorId};
+
+    try {
+      final response = await dio.post('/api/shouka/events/edit/', data: body);
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to set factor id: ${e.response}");
+    }
+  }
+
+  //
+  // Complete / Update Factor
+  //
+  Future<Map<String, dynamic>> completeFactor({
+    required int factorId,
+    required String factorNumber,
+    String? note,
+    bool? isPrinted,
+  }) async {
+    final body = {
+      "factor_id": factorId,
+      "factor_number": factorNumber,
+      if (note != null) "note": note,
+      if (isPrinted != null) "is_printed": isPrinted,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/events/complete-factor/',
+        data: body,
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception("Failed to complete factor: ${e.response}");
+    }
+  }
+
+  //
+  // Fetch Factor List (Accounting)
+  //
+  Future<dynamic> fetchFactorList({
+    required int page,
+    int? dataPerPage,
+    int? factorId,
+    String? factorNumber,
+    bool? isPrinted,
+    String? start,
+    String? end,
+    String? search,
+  }) async {
+    final queryParams = {
+      "page": page,
+      "data_per_page": dataPerPage ?? 10,
+      if (factorId != null) "factor_id": factorId,
+      if (factorNumber != null) "factor_number": factorNumber,
+      if (isPrinted != null) "is_printed": isPrinted,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+      if (search != null) "search": search,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/events/factor-list/',
+        data: queryParams,
+      );
+
+      final List<dynamic> data = response.data["results"];
+      final int totalPages = response.data["total_pages"];
+
+      return {
+        "pages": totalPages,
+        "results": data.map((json) => Factor.fromJson(json)).toList(),
+      };
+    } on DioException catch (e) {
+      throw Exception("Failed to get factors: ${e.response?.statusCode}");
     }
   }
 

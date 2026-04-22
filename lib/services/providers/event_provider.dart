@@ -272,6 +272,17 @@ class EventProvider with ChangeNotifier {
       return null;
     } finally {
       _sendLoading = false;
+      loadEvents(
+        creator: lastSelectedCreator,
+        device: lastSelectedDevice,
+        title: lastSelectedTitle,
+        search: lastSearchedText,
+        organization: lastSelectedOrganization,
+        administration: lastSelectedAdministration,
+        province: lastSelectedProvince,
+        city: lastSelectedCity,
+        plan: lastSelectedPlan,
+      );
       notifyListeners();
     }
   }

@@ -5,7 +5,7 @@ class Device {
   final String? latLong;
   final int? engineRoomFeature;
   final int? location;
-  final DeviceDetails details;
+  final dynamic details;
   final String? status;
   final bool? rawStatus; // true = approved, false = rejected, null = pending
   final String? rejectionNote; // Rejection reason when rawStatus is false
@@ -49,7 +49,7 @@ class Device {
       latLong: json['lat_long'],
       engineRoomFeature: json['engineroomfeature_id'],
       location: json['location_id'],
-      details: DeviceDetails.fromJson(json['details'] ?? {}),
+      details: "cat",
       rawStatus: json['status'],
       status: json['status'] == true
           ? "تایید شده"

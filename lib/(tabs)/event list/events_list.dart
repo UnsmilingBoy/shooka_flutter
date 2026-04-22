@@ -7,8 +7,10 @@ import 'package:shooka_flutter/(tabs)/event%20list/components/add_invoice_modal.
 import 'package:shooka_flutter/(tabs)/event%20list/components/filter_event_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20page/event_detail_panel.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
+import 'package:shooka_flutter/models/app_panel.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
@@ -48,9 +50,14 @@ class _EventsTabState extends State<EventsTab> {
     // Listen to event provider changes and check if more items needed
     context.read<EventProvider>().addListener(_onEventListChanged);
 
-    // Opens the add event modal if the route was "/add_event"
+    // Opens the add event modal if the route was "/add_event" and user has permission
     if (widget.openAddEvent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        final canAdd = context.read<UserProvider>().accessControl.hasAccessTo(
+          AppPanel.addEventFunctionality,
+        );
+        if (!canAdd) return;
+
         final screenWidth = MediaQuery.of(context).size.width;
         final isDesktop = screenWidth > 900;
         if (isDesktop) {
@@ -187,6 +194,11 @@ class _EventsTabState extends State<EventsTab> {
     final nextPageLoading = eventsProvider.eventsNextPageLoading;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final accessControl = context.watch<UserProvider>().accessControl;
+    final canAddEvent = accessControl.hasAccessTo(
+      AppPanel.addEventFunctionality,
+    );
+
     // Can use split view on screens wider than 1200px
     final bool canUseSplitView = screenWidth > 1200;
     // Actually show split view only when an event is selected
@@ -200,7 +212,9 @@ class _EventsTabState extends State<EventsTab> {
       //
       // Floating action button
       //
-      floatingActionButton: AddFloatingButton(addModal: AddEventModal()),
+      floatingActionButton: canAddEvent
+          ? AddFloatingButton(addModal: AddEventModal())
+          : null,
 
       //
       // Body
@@ -235,6 +249,10 @@ class _EventsTabState extends State<EventsTab> {
     bool getLoading,
     bool nextPageLoading,
   ) {
+    final canExport = context.read<UserProvider>().accessControl.hasAccessTo(
+      AppPanel.exportFunctionality,
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -254,7 +272,7 @@ class _EventsTabState extends State<EventsTab> {
                 searchController: searchController,
                 filterModal: FilterEventModal(),
                 searchPlaceholder: "جستجوی رویداد...",
-                onExport: _handleExport,
+                onExport: canExport ? _handleExport : null,
                 exportLoading: _exportLoading,
                 customButtons: [
                   SizedBox(
@@ -341,6 +359,10 @@ class _EventsTabState extends State<EventsTab> {
     bool nextPageLoading,
     bool canUseSplitView,
   ) {
+    final canExport = context.read<UserProvider>().accessControl.hasAccessTo(
+      AppPanel.exportFunctionality,
+    );
+
     return Column(
       spacing: 10,
       children: [
@@ -357,7 +379,7 @@ class _EventsTabState extends State<EventsTab> {
           searchController: searchController,
           filterModal: FilterEventModal(),
           searchPlaceholder: "جستجوی رویداد...",
-          onExport: _handleExport,
+          onExport: canExport ? _handleExport : null,
           exportLoading: _exportLoading,
           customButtons: [
             SizedBox(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shooka_flutter/models/app_panel.dart';
 
 final tabsList = [
   {
@@ -21,6 +22,7 @@ final tabsList = [
       '/suspended_devices',
     ],
     "icon": Icons.devices,
+    "panel": AppPanel.deviceList,
     "children": [
       {
         'label': 'همه موتورخانه‌ها',
@@ -43,11 +45,13 @@ final tabsList = [
     'label': 'رویداد‌ها',
     "href": ["/events", "/add_event", '/event_page'],
     "icon": Icons.event,
+    "panel": AppPanel.eventList,
   },
   {
     'label': 'لیست سازمان‌ها',
     "href": ["/organizations"],
     "icon": Icons.apartment,
+    "panel": AppPanel.orgList,
   },
   {
     'label': 'لیست نما‌ها',
@@ -58,11 +62,13 @@ final tabsList = [
     'label': 'لیست مکان ها',
     "href": ["/locations"],
     "icon": Icons.location_on,
+    "panel": AppPanel.locList,
   },
   {
     'label': 'پنل حسابداری',
     "href": ["/accounting"],
     "icon": Icons.account_balance,
+    "panel": AppPanel.accounting,
   },
   // {
   //   'label': 'لیست کاربران',

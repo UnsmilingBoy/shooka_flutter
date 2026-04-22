@@ -4,7 +4,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/tabs_list.dart';
 import 'package:shooka_flutter/core/theme/theme_provider.dart';
+import 'package:shooka_flutter/models/app_panel.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -111,148 +113,171 @@ class _MyDrawerState extends State<MyDrawer> {
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
-                children: tabsList.map<Widget>((tab) {
-                  final hrefs = (tab["href"] as List<dynamic>?)?.cast<String>();
-                  final children = tab["children"] as List<dynamic>?;
-                  final isActive = hrefs?.contains(routeName) ?? false;
+                children: tabsList
+                    .where((tab) {
+                      // Tabs without a panel key are always visible (e.g. Home, Profile)
+                      final panel = tab["panel"] as AppPanel?;
+                      if (panel == null) return true;
+                      // For tabs with a panel key, check access control
+                      final accessControl = context
+                          .watch<UserProvider>()
+                          .accessControl;
+                      return accessControl.hasAccessTo(panel);
+                    })
+                    .map<Widget>((tab) {
+                      final hrefs = (tab["href"] as List<dynamic>?)
+                          ?.cast<String>();
+                      final children = tab["children"] as List<dynamic>?;
+                      final isActive = hrefs?.contains(routeName) ?? false;
 
-                  // If tab has children, render expandable section
-                  if (children != null && children.isNotEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Theme(
-                        data: Theme.of(
-                          context,
-                        ).copyWith(dividerColor: Colors.transparent),
-                        child: ExpansionTile(
-                          initiallyExpanded: isActive,
-                          // tilePadding: MediaQuery.of(context).size.width < 600
-                          //     ? EdgeInsets.symmetric(
-                          //         horizontal: 15,
-                          //         vertical:   ,
-                          //       )
-                          //     : EdgeInsets.symmetric(
-                          //         horizontal: 20,
-                          //         vertical: 8,
-                          //       ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          collapsedShape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          backgroundColor: isActive
-                              ? Theme.of(context).primaryColor.withOpacity(0.1)
-                              : null,
-                          collapsedBackgroundColor: isActive
-                              ? Theme.of(context).primaryColor.withOpacity(0.1)
-                              : null,
-                          leading: Icon(
-                            tab["icon"] as IconData,
-                            size: 22,
-                            color: isActive
-                                ? Theme.of(context).primaryColor
-                                : null,
-                          ),
-                          title: Text(
-                            tab["label"] as String,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.apply(
-                                  color: isActive
-                                      ? Theme.of(context).primaryColor
-                                      : null,
-                                ),
-                          ),
-                          children: children.map<Widget>((child) {
-                            final childHrefs = (child["href"] as List<dynamic>?)
-                                ?.cast<String>();
-                            final isChildActive =
-                                childHrefs?.contains(routeName) ?? false;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 20),
-                              child: ContainerButton(
-                                color: isChildActive
+                      // If tab has children, render expandable section
+                      if (children != null && children.isNotEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Theme(
+                            data: Theme.of(
+                              context,
+                            ).copyWith(dividerColor: Colors.transparent),
+                            child: ExpansionTile(
+                              initiallyExpanded: isActive,
+                              // tilePadding: MediaQuery.of(context).size.width < 600
+                              //     ? EdgeInsets.symmetric(
+                              //         horizontal: 15,
+                              //         vertical:   ,
+                              //       )
+                              //     : EdgeInsets.symmetric(
+                              //         horizontal: 20,
+                              //         vertical: 8,
+                              //       ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              collapsedShape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              backgroundColor: isActive
+                                  ? Theme.of(
+                                      context,
+                                    ).primaryColor.withOpacity(0.1)
+                                  : null,
+                              collapsedBackgroundColor: isActive
+                                  ? Theme.of(
+                                      context,
+                                    ).primaryColor.withOpacity(0.1)
+                                  : null,
+                              leading: Icon(
+                                tab["icon"] as IconData,
+                                size: 22,
+                                color: isActive
                                     ? Theme.of(context).primaryColor
                                     : null,
-                                borderRadius: 10,
-                                padding: MediaQuery.of(context).size.width < 600
-                                    ? EdgeInsets.all(12)
-                                    : EdgeInsets.all(15),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  Navigator.of(
-                                    context,
-                                  ).pushNamed(childHrefs!.first);
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    spacing: 5,
-                                    children: [
-                                      Icon(
-                                        child["icon"] as IconData,
-                                        size: 18,
-                                        color: isChildActive
-                                            ? Colors.white
-                                            : null,
-                                      ),
-                                      Text(
-                                        child["label"] as String,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.apply(
-                                              color: isChildActive
-                                                  ? Colors.white
-                                                  : null,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                               ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    );
-                  }
+                              title: Text(
+                                tab["label"] as String,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.apply(
+                                      color: isActive
+                                          ? Theme.of(context).primaryColor
+                                          : null,
+                                    ),
+                              ),
+                              children: children.map<Widget>((child) {
+                                final childHrefs =
+                                    (child["href"] as List<dynamic>?)
+                                        ?.cast<String>();
+                                final isChildActive =
+                                    childHrefs?.contains(routeName) ?? false;
 
-                  // Regular tab without children
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: ContainerButton(
-                      color: isActive ? Theme.of(context).primaryColor : null,
-                      borderRadius: 10,
-                      padding: MediaQuery.of(context).size.width < 600
-                          ? EdgeInsets.all(15)
-                          : EdgeInsets.all(20),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).pushNamed(hrefs!.first);
-                      },
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        spacing: 5,
-                        children: [
-                          Icon(
-                            tab["icon"] as IconData,
-                            size: 22,
-                            color: isActive ? Colors.white : null,
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 20),
+                                  child: ContainerButton(
+                                    color: isChildActive
+                                        ? Theme.of(context).primaryColor
+                                        : null,
+                                    borderRadius: 10,
+                                    padding:
+                                        MediaQuery.of(context).size.width < 600
+                                        ? EdgeInsets.all(12)
+                                        : EdgeInsets.all(15),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      Navigator.of(
+                                        context,
+                                      ).pushNamed(childHrefs!.first);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(3.0),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        spacing: 5,
+                                        children: [
+                                          Icon(
+                                            child["icon"] as IconData,
+                                            size: 18,
+                                            color: isChildActive
+                                                ? Colors.white
+                                                : null,
+                                          ),
+                                          Text(
+                                            child["label"] as String,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelMedium
+                                                ?.apply(
+                                                  color: isChildActive
+                                                      ? Colors.white
+                                                      : null,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
                           ),
-                          Text(
-                            tab["label"] as String,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.apply(color: isActive ? Colors.white : null),
+                        );
+                      }
+
+                      // Regular tab without children
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: ContainerButton(
+                          color: isActive
+                              ? Theme.of(context).primaryColor
+                              : null,
+                          borderRadius: 10,
+                          padding: MediaQuery.of(context).size.width < 600
+                              ? EdgeInsets.all(15)
+                              : EdgeInsets.all(20),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).pushNamed(hrefs!.first);
+                          },
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            spacing: 5,
+                            children: [
+                              Icon(
+                                tab["icon"] as IconData,
+                                size: 22,
+                                color: isActive ? Colors.white : null,
+                              ),
+                              Text(
+                                tab["label"] as String,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.apply(
+                                      color: isActive ? Colors.white : null,
+                                    ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
+                        ),
+                      );
+                    })
+                    .toList(),
               ),
             ),
 
