@@ -7,12 +7,14 @@ class ProfileScaffold extends StatefulWidget {
   final String username;
   final String name;
   final String? image;
+  final Future<void> Function()? onRefresh;
   const ProfileScaffold({
     super.key,
     required this.body,
     required this.username,
     required this.name,
     this.image,
+    this.onRefresh,
   });
 
   @override
@@ -37,14 +39,19 @@ class _ProfileScaffoldState extends State<ProfileScaffold> {
         ),
       ),
       endDrawer: MyDrawer(),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(15),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 1200),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: widget.body,
+      body: RefreshIndicator(
+        onRefresh: widget.onRefresh ?? () async {},
+        notificationPredicate: (_) => widget.onRefresh != null,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(15),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 1200),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: widget.body,
+              ),
             ),
           ),
         ),

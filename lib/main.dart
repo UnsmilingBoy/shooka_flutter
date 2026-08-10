@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/accounting/accounting_tab.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/device_list.dart';
@@ -36,10 +37,11 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
 
-  // final baseUrl = 'https://romaktech2.ir';
+  final baseUrl = 'https://romaktech2.ir';
   // final baseUrl = 'https://teska-lab.romaksystem.com';
-  final baseUrl = 'https://api.test.romaksystem.com';
+  // final baseUrl = 'https://api.test.romaksystem.com';
 
   final storage = const FlutterSecureStorage();
 
@@ -59,7 +61,7 @@ void main() async {
   final authService = AuthService(dio: dio, storage: storage, baseUrl: baseUrl);
 
   // Add interceptors in order: Connection Error, Auth, then Encryption
-  dio.interceptors.add(ConnectionErrorInterceptor());
+  dio.interceptors.add(ConnectionErrorInterceptor(authService));
   dio.interceptors.add(AuthInterceptor(authService));
   dio.interceptors.add(EncryptionInterceptor(encryptionService));
 

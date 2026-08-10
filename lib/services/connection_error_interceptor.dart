@@ -1,8 +1,15 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
+import 'package:shooka_flutter/main.dart';
+import 'package:shooka_flutter/services/auth_service.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class ConnectionErrorInterceptor extends Interceptor {
+  final AuthService auth;
+  bool _isLoggingOut = false;
+
+  ConnectionErrorInterceptor(this.auth);
+
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // Check if it's a connection/network error
@@ -55,7 +62,29 @@ class ConnectionErrorInterceptor extends Interceptor {
       );
     }
 
+    if (isConnectionError) {
+      await _logoutAuthenticatedUser();
+    }
+
     // Always forward the error
     handler.next(err);
+  }
+
+  Future<void> _logoutAuthenticatedUser() async {
+    if (_isLoggingOut) return;
+
+    final token = await auth.getToken();
+    if (token == null || token.isEmpty) return;
+
+    _isLoggingOut = true;
+    try {
+      await auth.logout(callBackend: false);
+      navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        '/login',
+        (route) => false,
+      );
+    } finally {
+      _isLoggingOut = false;
+    }
   }
 }

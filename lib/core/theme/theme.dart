@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// Use local font family declared in pubspec.yaml (assets/fonts)
 
 class AppTheme {
   // Helper method to get font scale based on screen width
@@ -29,95 +29,109 @@ class AppTheme {
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.grey[100]!,
       foregroundColor: Colors.black, // controls icons & title color
-      titleTextStyle: GoogleFonts.vazirmatn(
-        textStyle: TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Vazirmatn',
+        color: Colors.black,
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
       ),
     ),
     textTheme: TextTheme(
       // Display
-      displayLarge: GoogleFonts.vazirmatn(
+      displayLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 57,
         fontWeight: FontWeight.normal,
         letterSpacing: -0.25,
       ),
-      displayMedium: GoogleFonts.vazirmatn(
+      displayMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 45,
         fontWeight: FontWeight.normal,
         letterSpacing: 0,
       ),
-      displaySmall: GoogleFonts.vazirmatn(
+      displaySmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 36,
         fontWeight: FontWeight.normal,
         letterSpacing: 0,
       ),
 
       // Headline
-      headlineLarge: GoogleFonts.vazirmatn(
+      headlineLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 30,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
-      headlineMedium: GoogleFonts.vazirmatn(
+      headlineMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 24,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
-      headlineSmall: GoogleFonts.vazirmatn(
+      headlineSmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 20,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
 
       // Title
-      titleLarge: GoogleFonts.vazirmatn(
+      titleLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 22,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
-      titleMedium: GoogleFonts.vazirmatn(
+      titleMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 18,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.15,
       ),
-      titleSmall: GoogleFonts.vazirmatn(
+      titleSmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
 
       // Body
-      bodyLarge: GoogleFonts.vazirmatn(
+      bodyLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 16,
         fontWeight: FontWeight.normal,
         letterSpacing: 0.5,
       ),
-      bodyMedium: GoogleFonts.vazirmatn(
+      bodyMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 14,
         fontWeight: FontWeight.normal,
         letterSpacing: 0.25,
       ),
-      bodySmall: GoogleFonts.vazirmatn(
+      bodySmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 12,
         fontWeight: FontWeight.normal,
         letterSpacing: 0.4,
       ),
 
       // Label
-      labelLarge: GoogleFonts.vazirmatn(
+      labelLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
-      labelMedium: GoogleFonts.vazirmatn(
+      labelMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 12,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
       ),
-      labelSmall: GoogleFonts.vazirmatn(
+      labelSmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 11,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
@@ -142,95 +156,109 @@ class AppTheme {
     appBarTheme: AppBarTheme(
       backgroundColor: Color.fromARGB(255, 24, 27, 41),
       foregroundColor: Colors.white,
-      titleTextStyle: GoogleFonts.vazirmatn(
-        textStyle: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Vazirmatn',
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
       ),
     ),
     textTheme: TextTheme(
       // Display
-      displayLarge: GoogleFonts.vazirmatn(
+      displayLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 57,
         fontWeight: FontWeight.normal,
         letterSpacing: -0.25,
       ),
-      displayMedium: GoogleFonts.vazirmatn(
+      displayMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 45,
         fontWeight: FontWeight.normal,
         letterSpacing: 0,
       ),
-      displaySmall: GoogleFonts.vazirmatn(
+      displaySmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 36,
         fontWeight: FontWeight.normal,
         letterSpacing: 0,
       ),
 
       // Headline
-      headlineLarge: GoogleFonts.vazirmatn(
+      headlineLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 30,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
-      headlineMedium: GoogleFonts.vazirmatn(
+      headlineMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 24,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
-      headlineSmall: GoogleFonts.vazirmatn(
+      headlineSmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 20,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
 
       // Title
-      titleLarge: GoogleFonts.vazirmatn(
+      titleLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 22,
         fontWeight: FontWeight.bold,
         letterSpacing: 0,
       ),
-      titleMedium: GoogleFonts.vazirmatn(
+      titleMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 18,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.15,
       ),
-      titleSmall: GoogleFonts.vazirmatn(
+      titleSmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
 
       // Body
-      bodyLarge: GoogleFonts.vazirmatn(
+      bodyLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 16,
         fontWeight: FontWeight.normal,
         letterSpacing: 0.5,
       ),
-      bodyMedium: GoogleFonts.vazirmatn(
+      bodyMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 14,
         fontWeight: FontWeight.normal,
         letterSpacing: 0.25,
       ),
-      bodySmall: GoogleFonts.vazirmatn(
+      bodySmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 12,
         fontWeight: FontWeight.normal,
         letterSpacing: 0.4,
       ),
 
       // Label
-      labelLarge: GoogleFonts.vazirmatn(
+      labelLarge: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
-      labelMedium: GoogleFonts.vazirmatn(
+      labelMedium: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 12,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
       ),
-      labelSmall: GoogleFonts.vazirmatn(
+      labelSmall: const TextStyle(
+        fontFamily: 'Vazirmatn',
         fontSize: 11,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,

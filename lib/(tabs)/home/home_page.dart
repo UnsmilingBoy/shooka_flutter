@@ -27,10 +27,39 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      context.read<EventProvider>().loadEvents();
-      context.read<DeviceProvider>().loadDevices(all: false, page: 1);
-      context.read<AccountingProvider>().loadFactors();
+      _refreshHomeData();
     });
+  }
+
+  Future<void> _refreshHomeData() async {
+    final userProvider = context.read<UserProvider>();
+    await userProvider.loadUserProfile();
+
+    if (!mounted) return;
+
+    final accessControl = userProvider.accessControl;
+    final canSeeDevices = accessControl.hasAccessTo(AppPanel.deviceList);
+    final canSeeEvents = accessControl.hasAccessTo(AppPanel.eventList);
+    final canSeeAccounting = accessControl.hasAccessTo(AppPanel.accounting);
+
+    final requests = <Future<void>>[];
+
+    if (canSeeDevices) {
+      requests.add(context.read<GeneralProvider>().fetchFilters());
+      requests.add(
+        context.read<DeviceProvider>().loadDevices(all: false, page: 1),
+      );
+    }
+
+    if (canSeeEvents) {
+      requests.add(context.read<EventProvider>().loadEvents());
+    }
+
+    if (canSeeAccounting) {
+      requests.add(context.read<AccountingProvider>().loadFactors());
+    }
+
+    await Future.wait(requests);
   }
 
   @override
@@ -70,6 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return ProfileScaffold(
       name: name,
       username: user?.username ?? "",
+      onRefresh: _refreshHomeData,
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(

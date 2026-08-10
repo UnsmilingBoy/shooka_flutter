@@ -12,7 +12,7 @@ enum AppPanel {
   deviceStatusFunctionality('device_status_functionality'),
   addDeviceFunctionality('add_device_functionality'),
   addEventFunctionality('add_event_functionality'),
-  accounting('accountant_panel'); // ← add this
+  accounting('accountant_panel');
 
   final String apiName;
   const AppPanel(this.apiName);
