@@ -28,6 +28,10 @@ class EventsTab extends StatefulWidget {
 class _EventsTabState extends State<EventsTab> {
   final ScrollController _scrollController = ScrollController();
 
+  // Scroll preservation across reloads (edit/status saves)
+  double? _savedScrollOffset;
+  bool _scrollRestorePending = false;
+
   // Split view state
   Event? _selectedEvent;
 
@@ -74,11 +78,31 @@ class _EventsTabState extends State<EventsTab> {
   }
 
   void _onEventListChanged() {
-    // Check after list updates (e.g., after add/edit/delete)
-    if (mounted && !context.read<EventProvider>().fetchLoading) {
+    final provider = context.read<EventProvider>();
+    final isLoading = provider.fetchLoading;
+
+    if (isLoading) {
+      // Capture the current viewport before a "preserve scroll" reload
+      // rebuilds the list (the old list is still attached at this point).
+      if (provider.preserveScrollAfterReload &&
+          !_scrollRestorePending &&
+          _scrollController.hasClients) {
+        _savedScrollOffset = _scrollController.offset;
+        _scrollRestorePending = true;
+      }
+      return;
+    }
+
+    // A scroll-preserving reload just finished; restore the viewport.
+    if (_scrollRestorePending) {
+      _restoreScrollPositionAfterReload();
+      return;
+    }
+
+    if (mounted) {
       // Update selected event with fresh data if it's currently shown
       if (_selectedEvent != null) {
-        final events = context.read<EventProvider>().events;
+        final events = provider.events;
         final updatedEvent = events.firstWhere(
           (event) =>
               event.timestamp == _selectedEvent!.timestamp &&
@@ -146,6 +170,56 @@ class _EventsTabState extends State<EventsTab> {
       // If no clients yet, wait a bit and try again
       Future.delayed(Duration(milliseconds: 100), _checkAndLoadMoreIfNeeded);
     }
+  }
+
+  /// Restore the scroll position to the saved offset after a reload.
+  /// Loads additional pages until the saved offset becomes reachable,
+  /// then jumps back to it.
+  Future<void> _restoreScrollPositionAfterReload() async {
+    final savedOffset = _savedScrollOffset;
+    _savedScrollOffset = null;
+    _scrollRestorePending = false;
+
+    if (!mounted || savedOffset == null) return;
+
+    final provider = context.read<EventProvider>();
+
+    // Wait for the rebuilt list to attach to the scroll controller
+    // (the widget rebuilds with the new data before this resolves).
+    int attempts = 0;
+    while (mounted && !_scrollController.hasClients && attempts < 50) {
+      attempts++;
+      await Future.delayed(Duration(milliseconds: 20));
+    }
+    if (!mounted || !_scrollController.hasClients) return;
+
+    // Load more pages until the saved offset is reachable.
+    while (mounted &&
+        _scrollController.hasClients &&
+        savedOffset > _scrollController.position.maxScrollExtent &&
+        provider.eventsPage < provider.eventsTotalPages) {
+      // Wait for any in-flight page request to finish
+      if (provider.eventsNextPageLoading) {
+        await Future.delayed(Duration(milliseconds: 50));
+        continue;
+      }
+      await provider.eventsNextPage();
+      if (!mounted) return;
+      // Give the list a chance to rebuild with the new items
+      await Future.delayed(Duration(milliseconds: 50));
+    }
+
+    if (!mounted || !_scrollController.hasClients) return;
+
+    final targetOffset = savedOffset > _scrollController.position.maxScrollExtent
+        ? _scrollController.position.maxScrollExtent
+        : savedOffset;
+
+    // Jump after the list has been rebuilt with the restored items
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.jumpTo(targetOffset);
+    });
   }
 
   void _selectEvent(Event event) {

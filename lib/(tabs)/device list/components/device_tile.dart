@@ -12,6 +12,7 @@ import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DeviceTile extends StatefulWidget {
+  final int index;
   final String name;
   final String org;
   final String? isConnected;
@@ -37,6 +38,7 @@ class DeviceTile extends StatefulWidget {
 
   const DeviceTile({
     super.key,
+    required this.index,
     required this.name,
     required this.org,
     required this.isConnected,
@@ -309,6 +311,15 @@ class _DeviceTileState extends State<DeviceTile> {
       child: isWideScreen
           ? Row(
               children: [
+                // Index
+                SizedBox(
+                  width: 50,
+                  child: Text(
+                    widget.index.toString(),
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
                 // Name
                 Expanded(
                   flex: 2,

@@ -8,6 +8,7 @@ import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/models/factor_data_class.dart';
 import 'package:shooka_flutter/models/location_data_class.dart';
 import 'package:shooka_flutter/models/org_data_class.dart';
+import 'package:shooka_flutter/models/software_support_data_class.dart';
 import 'package:shooka_flutter/models/user_data_class.dart';
 import 'auth_service.dart';
 
@@ -271,6 +272,261 @@ class ApiService {
       return response.statusCode ?? -1;
     } on DioException catch (e) {
       throw Exception("Failed to add event: ${e.response}");
+    }
+  }
+
+  //
+  // Fetch Software Support Event List
+  //
+  Future<dynamic> fetchSoftwareSupportList({
+    required int page,
+    int? dataPerPage,
+    int? creator,
+    int? user,
+    String? start,
+    String? end,
+    String? title,
+    String? search,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? plan,
+  }) async {
+    final queryParams = {
+      "page": page,
+      "data_per_page": dataPerPage ?? 10,
+      if (creator != null) "creator": creator,
+      if (user != null) "user": user,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+      if (title != null) "title": title,
+      if (search != null) "search": search,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (plan != null) "plan": plan,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/software-support/list/',
+        data: queryParams,
+      );
+
+      final List<dynamic> data = response.data is List
+          ? response.data
+          : response.data["results"] ?? response.data["data"] ?? [];
+      final int totalPages = response.data is List
+          ? 1
+          : response.data["total_pages"] ?? 1;
+
+      return {
+        "pages": totalPages,
+        "results": data
+            .map((json) => SoftwareSupportEvent.fromJson(json).toEvent())
+            .toList(),
+      };
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get software support events: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Add Software Support Event
+  //
+  Future<int> addSoftwareSupportEvent({
+    required String title,
+    String? phoneNumber,
+    int? user,
+    String? userName,
+    String? description,
+  }) async {
+    final body = {
+      "title": title,
+      if (phoneNumber != null && phoneNumber.isNotEmpty)
+        "phone_number": phoneNumber,
+      if (user != null) "user": user,
+      if (userName != null && userName.isNotEmpty) "user_name": userName,
+      if (description != null && description.isNotEmpty)
+        "description": description,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/software-support/add/',
+        data: body,
+      );
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      throw Exception("Failed to add software support event: ${e.response}");
+    }
+  }
+
+  //
+  // Fetch Support Event Users
+  //
+  Future<dynamic> fetchSupportEventUsers({
+    required int page,
+    int? dataPerPage,
+    String? search,
+  }) async {
+    final queryParams = {
+      "page": page,
+      "data_per_page": dataPerPage ?? 10,
+      if (search != null) "search": search,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/support-events/users/',
+        data: queryParams,
+      );
+
+      final List<dynamic> data = response.data["results"];
+      final int totalPages = response.data["total_pages"];
+
+      return {
+        "pages": totalPages,
+        "results": data
+            .map((json) => SupportEventUser.fromJson(json))
+            .toList(),
+      };
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get support event users: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Fetch Support Event List
+  //
+  Future<dynamic> fetchSupportEventList({
+    required int page,
+    int? dataPerPage,
+    int? creator,
+    int? device,
+    String? start,
+    String? end,
+    String? title,
+    String? search,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? plan,
+  }) async {
+    final queryParams = {
+      "page": page,
+      "data_per_page": dataPerPage ?? 10,
+      if (creator != null) "creator": creator,
+      if (device != null) "device": device,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+      if (title != null) "title": title,
+      if (search != null) "search": search,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (plan != null) "plan": plan,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/support-events/list/',
+        data: queryParams,
+      );
+
+      final List<dynamic> data = response.data["results"];
+      final int totalPages = response.data["total_pages"];
+
+      return {
+        "pages": totalPages,
+        "results": data.map((json) => Event.fromJson(json)).toList(),
+      };
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get support events: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Add Support Event
+  //
+  Future<Map<String, dynamic>?> addSupportEvent({
+    required String projectName,
+    required int device,
+    required String title,
+    required String text,
+    required String requesterPhoneType,
+    int? requesterUserId,
+    String? phoneNumber,
+    String? externalRequesterName,
+  }) async {
+    final body = {
+      "project_name": projectName,
+      "device": device,
+      "title": title,
+      "text": text,
+      "requester_phone_type": requesterPhoneType,
+      if (requesterUserId != null) "requester_user_id": requesterUserId,
+      if (phoneNumber != null && phoneNumber.isNotEmpty)
+        "phone_number": phoneNumber,
+      if (externalRequesterName != null && externalRequesterName.isNotEmpty)
+        "external_requester_name": externalRequesterName,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/support-events/add/',
+        data: body,
+      );
+      return response.data as Map<String, dynamic>?;
+    } on DioException catch (e) {
+      throw Exception("Failed to add support event: ${e.response}");
+    }
+  }
+
+  //
+  // Edit Support Event
+  //
+  Future<Map<String, dynamic>?> editSupportEvent({
+    required int? eventGroupId,
+    required int? eventId,
+    required String title,
+    required String text,
+    required String requesterPhoneType,
+    int? requesterUserId,
+    String? phoneNumber,
+    String? externalRequesterName,
+  }) async {
+    final body = {
+      "event_group_id": eventGroupId,
+      "event_id": eventId,
+      "title": title,
+      "text": text,
+      "requester_phone_type": requesterPhoneType,
+      if (requesterUserId != null) "requester_user_id": requesterUserId,
+      if (phoneNumber != null && phoneNumber.isNotEmpty)
+        "phone_number": phoneNumber,
+      if (externalRequesterName != null && externalRequesterName.isNotEmpty)
+        "external_requester_name": externalRequesterName,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/support-events/edit/',
+        data: body,
+      );
+      return response.data as Map<String, dynamic>?;
+    } on DioException catch (e) {
+      throw Exception("Failed to edit support event: ${e.response}");
     }
   }
 

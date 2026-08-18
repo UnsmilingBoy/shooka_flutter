@@ -5,12 +5,14 @@ class OutlineTextformfield extends StatelessWidget {
   final String placeholder;
   final TextInputType? keyboardType;
   final int? maxLines;
+  final String? label;
   const OutlineTextformfield({
     super.key,
     required this.controller,
     required this.placeholder,
     this.keyboardType,
     this.maxLines,
+    this.label,
   });
 
   @override
@@ -20,6 +22,7 @@ class OutlineTextformfield extends StatelessWidget {
       controller: controller,
       maxLines: maxLines ?? 3,
       decoration: InputDecoration(
+        labelText: label,
         hintText: placeholder,
         hintStyle: Theme.of(context).textTheme.labelSmall,
         contentPadding: EdgeInsets.symmetric(vertical: 13, horizontal: 5),

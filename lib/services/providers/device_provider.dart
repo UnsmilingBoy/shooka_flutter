@@ -342,6 +342,9 @@ class DeviceProvider with ChangeNotifier {
   Future<void> nextPageForMode(DeviceListMode mode) async {
     final filterState = _filterStates[mode]!;
 
+    // Guard against concurrent page requests
+    if (filterState.isNextPageLoading) return;
+
     if (filterState.page < filterState.totalPages) {
       filterState.page++;
       filterState.isNextPageLoading = true;
@@ -415,18 +418,30 @@ class DeviceProvider with ChangeNotifier {
   //
   // Reload devices for a mode while preserving current filters
   //
-  Future<void> reloadDevicesForMode(DeviceListMode mode) async {
-    await _reloadListWithCurrentFilters(mode);
+  Future<void> reloadDevicesForMode(
+    DeviceListMode mode, {
+    bool preserveScroll = false,
+  }) async {
+    await _reloadListWithCurrentFilters(mode, preserveScroll: preserveScroll);
   }
 
   //
   // Reload all device modes while preserving their current filters
   //
-  Future<void> reloadAllDeviceModes() async {
+  Future<void> reloadAllDeviceModes({bool preserveScroll = false}) async {
     await Future.wait([
-      _reloadListWithCurrentFilters(DeviceListMode.all),
-      _reloadListWithCurrentFilters(DeviceListMode.rejected),
-      _reloadListWithCurrentFilters(DeviceListMode.suspended),
+      _reloadListWithCurrentFilters(
+        DeviceListMode.all,
+        preserveScroll: preserveScroll,
+      ),
+      _reloadListWithCurrentFilters(
+        DeviceListMode.rejected,
+        preserveScroll: preserveScroll,
+      ),
+      _reloadListWithCurrentFilters(
+        DeviceListMode.suspended,
+        preserveScroll: preserveScroll,
+      ),
     ]);
   }
 
@@ -529,8 +544,8 @@ class DeviceProvider with ChangeNotifier {
       log(e.toString());
       return e.response!.statusCode!;
     } finally {
-      // Reload all device modes while preserving their filters
-      await reloadAllDeviceModes();
+      // Preserve the user's viewport while reloading after saving edits
+      await reloadAllDeviceModes(preserveScroll: true);
       loadCompleteDeviceInfo(id: id);
       _addLoading = false;
       notifyListeners();
@@ -870,21 +885,30 @@ class DeviceProvider with ChangeNotifier {
   }
 
   /// Helper method to reload a device list with its current filters
-  Future<void> _reloadListWithCurrentFilters(DeviceListMode mode) async {
+  Future<void> _reloadListWithCurrentFilters(
+    DeviceListMode mode, {
+    bool preserveScroll = false,
+  }) async {
     final filterState = _filterStates[mode]!;
-    await loadDevicesForMode(
-      mode: mode,
-      all: false,
-      page: 1,
-      search: filterState.searchedText,
-      installer: filterState.selectedInstaller,
-      organization: filterState.selectedOrg,
-      administration: filterState.selectedAdmin,
-      province: filterState.selectedProvince,
-      city: filterState.selectedCity,
-      plan: filterState.selectedPlan,
-      start: filterState.startDate,
-      end: filterState.endDate,
-    );
+    // Preserve the current viewport across this reload (e.g. after saving edits)
+    filterState.preserveScrollAfterReload = preserveScroll;
+    try {
+      await loadDevicesForMode(
+        mode: mode,
+        all: false,
+        page: 1,
+        search: filterState.searchedText,
+        installer: filterState.selectedInstaller,
+        organization: filterState.selectedOrg,
+        administration: filterState.selectedAdmin,
+        province: filterState.selectedProvince,
+        city: filterState.selectedCity,
+        plan: filterState.selectedPlan,
+        start: filterState.startDate,
+        end: filterState.endDate,
+      );
+    } finally {
+      filterState.preserveScrollAfterReload = false;
+    }
   }
 }

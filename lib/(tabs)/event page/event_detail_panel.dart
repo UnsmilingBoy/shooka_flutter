@@ -19,6 +19,8 @@ class EventDetailPanel extends StatelessWidget {
   final String? completedAt;
   final bool isSent;
   final String? sentAt;
+  final bool canEdit;
+  final VoidCallback? onEditPressed;
 
   const EventDetailPanel({
     super.key,
@@ -34,6 +36,8 @@ class EventDetailPanel extends StatelessWidget {
     this.completedAt,
     this.isSent = false,
     this.sentAt,
+    this.canEdit = true,
+    this.onEditPressed,
   });
 
   @override
@@ -46,12 +50,11 @@ class EventDetailPanel extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
         children: [
-          // Panel Header
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -72,39 +75,41 @@ class EventDetailPanel extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    if (isDesktop) {
-                      showDialog(
-                        context: context,
-                        builder: (context) => EditEventModal(
-                          deviceName: device,
-                          title: title,
-                          timestamp: timeCreated,
-                          eventCategoryDetails: message,
-                          eventGroupId: eventGroupId,
-                          factorId: factorId,
-                        ),
-                      );
-                    } else {
-                      showMaterialModalBottomSheet(
-                        context: context,
-                        enableDrag: false,
-                        builder: (context) => EditEventModal(
-                          deviceName: device,
-                          title: title,
-                          timestamp: timeCreated,
-                          eventCategoryDetails: message,
-                          eventGroupId: eventGroupId,
-                          factorId: factorId,
-                        ),
-                      );
-                    }
-                  },
-                  tooltip: 'ویرایش',
-                  iconSize: 20,
-                ),
+                if (canEdit)
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: onEditPressed ??
+                        () {
+                          if (isDesktop) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => EditEventModal(
+                                deviceName: device,
+                                title: title,
+                                timestamp: timeCreated,
+                                eventCategoryDetails: message,
+                                eventGroupId: eventGroupId,
+                                factorId: factorId,
+                              ),
+                            );
+                          } else {
+                            showMaterialModalBottomSheet(
+                              context: context,
+                              enableDrag: false,
+                              builder: (context) => EditEventModal(
+                                deviceName: device,
+                                title: title,
+                                timestamp: timeCreated,
+                                eventCategoryDetails: message,
+                                eventGroupId: eventGroupId,
+                                factorId: factorId,
+                              ),
+                            );
+                          }
+                        },
+                    tooltip: 'ویرایش',
+                    iconSize: 20,
+                  ),
                 if (onClose != null)
                   IconButton(
                     icon: Icon(Icons.close),
@@ -115,8 +120,6 @@ class EventDetailPanel extends StatelessWidget {
               ],
             ),
           ),
-
-          // Panel Content
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(16),

@@ -24,6 +24,10 @@ class DeviceFilterState {
   int totalPages;
   bool isNextPageLoading;
 
+  // When true, the next list reload should preserve the current viewport
+  // (e.g. after editing/saving a device)
+  bool preserveScrollAfterReload;
+
   DeviceFilterState({
     this.selectedInstaller,
     this.searchedText,
@@ -38,6 +42,7 @@ class DeviceFilterState {
     this.page = 1,
     this.totalPages = 1,
     this.isNextPageLoading = false,
+    this.preserveScrollAfterReload = false,
   });
 
   /// Reset all filters to default

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -31,6 +33,11 @@ class SearchableDropdownWithLabel extends StatefulWidget {
   final void Function(String?)? onChanged;
   final GestureTapCallback? iconOnPressed;
 
+  /// When provided, the dropdown performs server-side search instead of
+  /// filtering [items] locally. Called with the typed text on every change
+  /// (debounced), and must return the matching items.
+  final Future<List<DropdownItemModel>> Function(String filter)? loadItems;
+
   const SearchableDropdownWithLabel({
     super.key,
     this.initialValue,
@@ -39,6 +46,7 @@ class SearchableDropdownWithLabel extends StatefulWidget {
     required this.label,
     required this.placeholder,
     this.iconOnPressed,
+    this.loadItems,
   });
 
   @override
@@ -49,6 +57,7 @@ class SearchableDropdownWithLabel extends StatefulWidget {
 class _SearchableDropdownWithLabelState
     extends State<SearchableDropdownWithLabel> {
   DropdownItemModel? selectedItem;
+  int _searchRequestId = 0;
 
   @override
   void initState() {
@@ -74,8 +83,23 @@ class _SearchableDropdownWithLabelState
     }
   }
 
+  /// Debounced server-side fetch. Each typed change bumps [_searchRequestId];
+  /// a superseded request returns the static list as a no-op so the popup
+  /// never hangs on a stale future.
+  Future<List<DropdownItemModel>> _loadItemsDebounced(String filter) async {
+    final requestId = ++_searchRequestId;
+    await Future.delayed(const Duration(milliseconds: 350));
+    if (requestId != _searchRequestId) return widget.items;
+    try {
+      return await widget.loadItems!(filter);
+    } catch (_) {
+      return widget.items;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final usesServerSearch = widget.loadItems != null;
     return Column(
       spacing: 3,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +113,9 @@ class _SearchableDropdownWithLabelState
               child: Directionality(
                 textDirection: TextDirection.rtl,
                 child: DropdownSearch<DropdownItemModel>(
-                  items: (filter, loadProps) => widget.items,
+                  items: (filter, loadProps) => usesServerSearch
+                      ? _loadItemsDebounced(filter)
+                      : widget.items,
                   selectedItem: selectedItem,
                   compareFn: (item1, item2) => item1.value == item2.value,
                   filterFn: (item, filter) {
@@ -105,6 +131,7 @@ class _SearchableDropdownWithLabelState
                   },
                   popupProps: PopupProps.menu(
                     showSearchBox: true,
+                    disableFilter: usesServerSearch,
                     fit: FlexFit.loose,
                     constraints: BoxConstraints(maxHeight: 300),
                     menuProps: MenuProps(

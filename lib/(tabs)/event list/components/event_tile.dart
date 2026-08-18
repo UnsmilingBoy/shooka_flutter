@@ -20,6 +20,11 @@ class EventTile extends StatefulWidget {
   final String? completedAt;
   final bool isSent;
   final String? sentAt;
+  final bool canEdit;
+  final VoidCallback? onEditPressed;
+  final String detailBackRoute;
+  final String detailBackLabel;
+  final String detailRouteName;
 
   const EventTile({
     super.key,
@@ -39,6 +44,11 @@ class EventTile extends StatefulWidget {
     this.completedAt,
     this.isSent = false,
     this.sentAt,
+    this.canEdit = true,
+    this.onEditPressed,
+    this.detailBackRoute = "/events",
+    this.detailBackLabel = "رویدادها",
+    this.detailRouteName = "/event_page",
   });
 
   @override
@@ -53,14 +63,12 @@ class _EventTileState extends State<EventTile> {
       color: widget.isSelected
           ? Theme.of(context).colorScheme.primaryContainer
           : widget.color,
-
-      // If onTap is provided (split view mode), use it. Otherwise navigate normally.
       onPressed:
           widget.onTap ??
           () => Navigator.push(
             context,
             MaterialPageRoute(
-              settings: RouteSettings(name: "/event_page"),
+              settings: RouteSettings(name: widget.detailRouteName),
               builder: (_) => EventPage(
                 creator: widget.author,
                 device: widget.device,
@@ -73,13 +81,13 @@ class _EventTileState extends State<EventTile> {
                 completedAt: widget.completedAt,
                 isSent: widget.isSent,
                 sentAt: widget.sentAt,
+                canEdit: widget.canEdit,
+                onEditPressed: widget.onEditPressed,
+                backRoute: widget.detailBackRoute,
+                backLabel: widget.detailBackLabel,
               ),
             ),
           ),
-
-      //
-      // The actual tile.
-      //
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         title: Row(
@@ -102,8 +110,8 @@ class _EventTileState extends State<EventTile> {
                 children: [
                   Expanded(
                     child: Text(
-                      textAlign: TextAlign.left,
                       widget.author,
+                      textAlign: TextAlign.left,
                       style: Theme.of(context).textTheme.labelSmall,
                       overflow: TextOverflow.ellipsis,
                     ),

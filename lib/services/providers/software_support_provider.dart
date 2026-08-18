@@ -1,19 +1,19 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
+import 'package:shooka_flutter/models/software_support_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
-import 'package:shooka_flutter/services/export_service.dart';
 
-class EventProvider with ChangeNotifier {
+class SoftwareSupportProvider with ChangeNotifier {
   final ApiService api;
   List<Event> _events = [];
+  List<SupportEventUser> _users = [];
   bool _fetchLoading = false;
   bool _addLoading = false;
-  bool _sendLoading = false;
+  bool _editLoading = false;
   bool _eventsNextPageLoading = false;
+  bool _usersLoading = false;
   int _eventsTotalPages = 1;
   int _eventsPage = 1;
-  bool _preserveScrollAfterReload = false;
   int? lastSelectedCreator;
   int? lastSelectedDevice;
   String? lastSearchedText;
@@ -25,16 +25,17 @@ class EventProvider with ChangeNotifier {
   String? lastSelectedPlan;
   int filterCount = 0;
 
-  EventProvider({required this.api});
+  SoftwareSupportProvider({required this.api});
 
   List<Event> get events => _events;
+  List<SupportEventUser> get users => _users;
   bool get fetchLoading => _fetchLoading;
   bool get addLoading => _addLoading;
-  bool get sendLoading => _sendLoading;
+  bool get editLoading => _editLoading;
+  bool get usersLoading => _usersLoading;
   bool get eventsNextPageLoading => _eventsNextPageLoading;
   int get eventsTotalPages => _eventsTotalPages;
   int get eventsPage => _eventsPage;
-  bool get preserveScrollAfterReload => _preserveScrollAfterReload;
 
   //
   // Load Events
@@ -53,7 +54,6 @@ class EventProvider with ChangeNotifier {
     String? plan,
     bool preserveScroll = false,
   }) async {
-    _preserveScrollAfterReload = preserveScroll;
     _fetchLoading = true;
     _eventsPage = 1;
     filterCount = 0;
@@ -120,7 +120,7 @@ class EventProvider with ChangeNotifier {
     Future.microtask(() => notifyListeners());
 
     try {
-      final result = await api.fetchEventList(
+      final result = await api.fetchSupportEventList(
         page: 1,
         search: search,
         creator: creator,
@@ -138,10 +138,9 @@ class EventProvider with ChangeNotifier {
       _eventsTotalPages = result["pages"];
     } catch (e) {
       _events = [];
-      debugPrint("Error fetching events: $e");
+      debugPrint("Error fetching support events: $e");
     } finally {
       _fetchLoading = false;
-      _preserveScrollAfterReload = false;
       notifyListeners();
     }
   }
@@ -159,7 +158,7 @@ class EventProvider with ChangeNotifier {
       notifyListeners();
 
       try {
-        final nextPageEvents = await api.fetchEventList(
+        final nextPageEvents = await api.fetchSupportEventList(
           page: _eventsPage,
           search: lastSearchedText,
           creator: lastSelectedCreator,
@@ -171,11 +170,9 @@ class EventProvider with ChangeNotifier {
           city: lastSelectedCity,
           plan: lastSelectedPlan,
         );
-        _events.addAll(
-          nextPageEvents["results"],
-        ); // append results to existing list
+        _events.addAll(nextPageEvents["results"]);
       } catch (e) {
-        debugPrint("Error fetching events next page: $e");
+        debugPrint("Error fetching support events next page: $e");
       } finally {
         _eventsNextPageLoading = false;
         notifyListeners();
@@ -184,27 +181,56 @@ class EventProvider with ChangeNotifier {
   }
 
   //
+  // Fetch Support Event Users
+  //
+  Future<List<SupportEventUser>> fetchUsers({String? search}) async {
+    _usersLoading = true;
+    // Avoid calling notifyListeners during build
+    Future.microtask(() => notifyListeners());
+
+    try {
+      final result = await api.fetchSupportEventUsers(page: 1, search: search);
+      _users = result["results"];
+    } catch (e) {
+      _users = [];
+      debugPrint("Error fetching support event users: $e");
+    } finally {
+      _usersLoading = false;
+      notifyListeners();
+    }
+    return _users;
+  }
+
+  //
   // Add Event
   //
-  Future<int> addEvent({
-    required String device,
+  Future<Map<String, dynamic>?> addEvent({
+    required String projectName,
+    required int device,
     required String title,
-    required List<dynamic> events,
+    required String text,
+    required String requesterPhoneType,
+    int? requesterUserId,
+    String? phoneNumber,
+    String? externalRequesterName,
   }) async {
     _addLoading = true;
-
     notifyListeners();
 
     try {
-      int status = await api.addEvent(
+      return await api.addSupportEvent(
+        projectName: projectName,
         device: device,
-        events: events,
         title: title,
+        text: text,
+        requesterPhoneType: requesterPhoneType,
+        requesterUserId: requesterUserId,
+        phoneNumber: phoneNumber,
+        externalRequesterName: externalRequesterName,
       );
-      return status;
     } catch (e) {
-      print(e);
-      return -1;
+      debugPrint("Error adding support event: $e");
+      return null;
     } finally {
       // Reload events with preserved filters
       loadEvents(
@@ -226,61 +252,34 @@ class EventProvider with ChangeNotifier {
   //
   // Edit Event
   //
-  Future<int> editEvent({
+  Future<Map<String, dynamic>?> editEvent({
     required int? eventGroupId,
-    required String? factorId,
-    required List<dynamic> events,
+    required int? eventId,
+    required String title,
+    required String text,
+    required String requesterPhoneType,
+    int? requesterUserId,
+    String? phoneNumber,
+    String? externalRequesterName,
   }) async {
-    _addLoading = true;
-
+    _editLoading = true;
     notifyListeners();
 
     try {
-      int status = await api.editEvent(
+      return await api.editSupportEvent(
         eventGroupId: eventGroupId,
-        factorId: factorId,
-        events: events,
+        eventId: eventId,
+        title: title,
+        text: text,
+        requesterPhoneType: requesterPhoneType,
+        requesterUserId: requesterUserId,
+        phoneNumber: phoneNumber,
+        externalRequesterName: externalRequesterName,
       );
-      return status;
     } catch (e) {
-      print(e);
-      return -1;
-    } finally {
-      // Reload events with preserved filters, preserving the user's viewport
-      loadEvents(
-        creator: lastSelectedCreator,
-        device: lastSelectedDevice,
-        title: lastSelectedTitle,
-        search: lastSearchedText,
-        organization: lastSelectedOrganization,
-        administration: lastSelectedAdministration,
-        province: lastSelectedProvince,
-        city: lastSelectedCity,
-        plan: lastSelectedPlan,
-        preserveScroll: true,
-      );
-      _addLoading = false;
-      notifyListeners();
-    }
-  }
-
-  //
-  // Send Invoice
-  //
-  Future<String?> sendInvoice(List<Map<String, dynamic>> eventGroupIds) async {
-    _sendLoading = true;
-    notifyListeners();
-    try {
-      final result = await api.sendInvoice(eventGroupIds: eventGroupIds);
-      if (result != null && result['result'] == 'ok') {
-        return result['message'] as String?;
-      }
-      return null;
-    } catch (e) {
-      debugPrint("Error sending invoice: $e");
+      debugPrint("Error editing support event: $e");
       return null;
     } finally {
-      _sendLoading = false;
       loadEvents(
         creator: lastSelectedCreator,
         device: lastSelectedDevice,
@@ -292,35 +291,8 @@ class EventProvider with ChangeNotifier {
         city: lastSelectedCity,
         plan: lastSelectedPlan,
       );
+      _editLoading = false;
       notifyListeners();
-    }
-  }
-
-  //
-  // Export Events to Word
-  //
-  Future<void> exportEventsToWord() async {
-    try {
-      log('Starting events export with current filters...');
-      final events = await api.fetchEventsForExport(
-        creator: lastSelectedCreator,
-        device: lastSelectedDevice,
-        title: lastSelectedTitle,
-        search: lastSearchedText,
-        organization: lastSelectedOrganization,
-        administration: lastSelectedAdministration,
-        province: lastSelectedProvince,
-        city: lastSelectedCity,
-        plan: lastSelectedPlan,
-      );
-      log('Fetched ${events.length} events for export');
-
-      final exportService = ExportService();
-      await exportService.exportEvents(events);
-      log('Export completed successfully');
-    } catch (e) {
-      log('Error exporting events: $e');
-      rethrow;
     }
   }
 }

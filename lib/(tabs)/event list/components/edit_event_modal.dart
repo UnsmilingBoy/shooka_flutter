@@ -215,14 +215,24 @@ class _EditEventPromptTilesState extends State<EditEventPromptTiles> {
         // Textformfield if switch is ON
         if (widget.switchValue)
           ...([
-            OutlineTextformfield(
-              controller: widget.controller,
-              placeholder: "توضیحات...",
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: OutlineTextformfield(
+                controller: widget.controller,
+                placeholder: "توضیحات...",
+                label: "توضیحات",
+              ),
             ),
-            OutlineTextformfield(
-              controller: widget.priceController,
-              placeholder: "مبلغ (ریال)...",
-              keyboardType: TextInputType.number,
+
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: OutlineTextformfield(
+                maxLines: 1,
+                controller: widget.priceController,
+                placeholder: "مبلغ (ریال)...",
+                label: "قیمت",
+                keyboardType: TextInputType.number,
+              ),
             ),
           ]),
       ],

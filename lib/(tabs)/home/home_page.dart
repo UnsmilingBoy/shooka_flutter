@@ -357,6 +357,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             padding: EdgeInsets.all(0),
                             itemCount: devices.length > 5 ? 5 : devices.length,
                             itemBuilder: (context, index) => DeviceTile(
+                              index: index + 1,
                               plan: devices[index].plan ?? "-",
                               deviceId: devices[index].id,
                               borderRadius: 0,

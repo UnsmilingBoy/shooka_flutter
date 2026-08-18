@@ -8,6 +8,7 @@ import 'package:shooka_flutter/(tabs)/device%20list/device_list.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/rejected_device_list.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/suspended_device_list.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/events_list.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/software_support/software_support.dart';
 import 'package:shooka_flutter/(tabs)/locations/locations.dart';
 import 'package:shooka_flutter/(tabs)/login%20page/login.dart';
 import 'package:shooka_flutter/(tabs)/organizations/organiztions.dart';
@@ -29,6 +30,7 @@ import 'package:shooka_flutter/services/providers/accounting_provider.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/services/providers/software_support_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:toastification/toastification.dart';
 
@@ -39,9 +41,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  final baseUrl = 'https://romaktech2.ir';
+  // final baseUrl = 'https://romaktech2.ir';
   // final baseUrl = 'https://teska-lab.romaksystem.com';
-  // final baseUrl = 'https://api.test.romaksystem.com';
+  final baseUrl = 'https://api.test.romaksystem.com';
 
   final storage = const FlutterSecureStorage();
 
@@ -90,6 +92,9 @@ void main() async {
 
         ChangeNotifierProvider(create: (_) => EventProvider(api: apiService)),
         ChangeNotifierProvider(
+          create: (_) => SoftwareSupportProvider(api: apiService),
+        ),
+        ChangeNotifierProvider(
           create: (_) => AccountingProvider(api: apiService),
         ),
 
@@ -135,6 +140,7 @@ class MyApp extends StatelessWidget {
                 '/add_device': (context) =>
                     const DeviceList(openAddDevice: true),
                 '/events': (context) => const EventsTab(openAddEvent: false),
+                '/software_support': (context) => const SoftwareSupport(),
                 // I handle '/event_page' in EventTile Just like /device_page.
                 '/add_event': (context) => const EventsTab(openAddEvent: true),
                 '/organizations': (context) => const OrganiztionsTab(),

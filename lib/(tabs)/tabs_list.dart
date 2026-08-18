@@ -43,7 +43,19 @@ final tabsList = [
   },
   {
     'label': 'رویداد‌ها',
-    "href": ["/events", "/add_event", '/event_page'],
+    // "href": ["/events", "/add_event", '/event_page'],
+    "children": [
+      {
+        'label': 'رویداد های نصاب ها',
+        "href": ['/events', '/add_event', '/event_page'],
+        "icon": Icons.list,
+      },
+      {
+        'label': 'پشتیبانی نرم افزاری',
+        "href": ['/software_support', '/software_support_event_page'],
+        "icon": Icons.hourglass_empty,
+      },
+    ],
     "icon": Icons.event,
     "panel": AppPanel.eventList,
   },

@@ -36,6 +36,10 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
   late final DeviceProvider _deviceProvider;
   bool _exportLoading = false;
 
+  // Scroll preservation across reloads (edit/add/status saves)
+  double? _savedScrollOffset;
+  bool _scrollRestorePending = false;
+
   // Split view state
   int? _selectedDeviceId;
   String? _selectedDeviceName;
@@ -92,9 +96,28 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
   }
 
   void _onDeviceListChanged() {
-    // Check after list updates (e.g., after add/edit/delete)
     final isLoading = _deviceProvider.getLoading(widget.mode);
-    if (mounted && !isLoading) {
+    final filterState = _deviceProvider.getFilterState(widget.mode);
+
+    if (isLoading) {
+      // Capture the current viewport before a "preserve scroll" reload
+      // rebuilds the list (the old list is still attached at this point).
+      if (filterState.preserveScrollAfterReload &&
+          !_scrollRestorePending &&
+          _scrollController.hasClients) {
+        _savedScrollOffset = _scrollController.offset;
+        _scrollRestorePending = true;
+      }
+      return;
+    }
+
+    // A scroll-preserving reload just finished; restore the viewport.
+    if (_scrollRestorePending) {
+      _restoreScrollPositionAfterReload();
+      return;
+    }
+
+    if (mounted) {
       // Update selected device name if it's currently selected
       if (_selectedDeviceId != null) {
         final devices = _deviceProvider.getDevices(widget.mode);
@@ -164,6 +187,56 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
       // If no clients yet, wait a bit and try again
       Future.delayed(Duration(milliseconds: 100), _checkAndLoadMoreIfNeeded);
     }
+  }
+
+  /// Restore the scroll position to the saved offset after a reload.
+  /// Loads additional pages until the saved offset becomes reachable,
+  /// then jumps back to it.
+  Future<void> _restoreScrollPositionAfterReload() async {
+    final savedOffset = _savedScrollOffset;
+    _savedScrollOffset = null;
+    _scrollRestorePending = false;
+
+    if (!mounted || savedOffset == null) return;
+
+    final filterState = _deviceProvider.getFilterState(widget.mode);
+
+    // Wait for the rebuilt list to attach to the scroll controller
+    // (the widget rebuilds with the new data before this resolves).
+    int attempts = 0;
+    while (mounted && !_scrollController.hasClients && attempts < 50) {
+      attempts++;
+      await Future.delayed(Duration(milliseconds: 20));
+    }
+    if (!mounted || !_scrollController.hasClients) return;
+
+    // Load more pages until the saved offset is reachable.
+    while (mounted &&
+        _scrollController.hasClients &&
+        savedOffset > _scrollController.position.maxScrollExtent &&
+        filterState.page < filterState.totalPages) {
+      // Wait for any in-flight page request to finish
+      if (filterState.isNextPageLoading) {
+        await Future.delayed(Duration(milliseconds: 50));
+        continue;
+      }
+      await _deviceProvider.nextPageForMode(widget.mode);
+      if (!mounted) return;
+      // Give the list a chance to rebuild with the new items
+      await Future.delayed(Duration(milliseconds: 50));
+    }
+
+    if (!mounted || !_scrollController.hasClients) return;
+
+    final targetOffset = savedOffset > _scrollController.position.maxScrollExtent
+        ? _scrollController.position.maxScrollExtent
+        : savedOffset;
+
+    // Jump after the list has been rebuilt with the restored items
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.jumpTo(targetOffset);
+    });
   }
 
   String searchValue = "";
@@ -524,6 +597,15 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
       ),
       child: Row(
         children: [
+          SizedBox(
+            width: 50,
+            child: Text(
+              '#',
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
           Expanded(
             flex: 2,
             child: Text(
@@ -631,6 +713,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
         return Padding(
           padding: const EdgeInsets.only(top: 10.0),
           child: DeviceTile(
+            index: index + 1,
             deviceId: device.id,
             name: device.name,
             org: device.organization,

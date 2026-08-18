@@ -1,5 +1,6 @@
 class Event {
   final String creator;
+  final int? creatorId;
   final String deviceName;
   final String title;
   final String timestamp; // Example: "1404-07-08 06:35:27"
@@ -12,12 +13,19 @@ class Event {
   final String? sentAt;
   final bool isSelected;
 
+  // Support-event specific fields (from /api/shouka/support-events/list/)
+  final dynamic registeredRequester;
+  final String? externalRequester;
+  final String? requesterPhoneNumber;
+  final String? domain;
+
   Event({
     required this.creator,
     required this.deviceName,
     required this.title,
     required this.timestamp,
     required this.eventCategoryDetails,
+    this.creatorId,
     this.eventGroupId,
     this.factorId,
     this.isCompleted = false,
@@ -25,11 +33,18 @@ class Event {
     this.isSent = false,
     this.sentAt,
     this.isSelected = false,
+    this.registeredRequester,
+    this.externalRequester,
+    this.requesterPhoneNumber,
+    this.domain,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       creator: json['creator'] ?? '',
+      creatorId: json['creator_id'] != null
+          ? int.tryParse(json['creator_id'].toString())
+          : null,
       deviceName: json['device_name'] ?? '',
       title: json['title'] ?? '',
       timestamp: json['timestamp'] ?? '',
@@ -45,6 +60,10 @@ class Event {
       isSent: json['is_sent'] ?? false,
       sentAt: json['sent_at']?.toString(),
       isSelected: json['is_selected'] ?? false,
+      registeredRequester: json['registered_requester'],
+      externalRequester: json['external_requester']?.toString(),
+      requesterPhoneNumber: json['requester_phone_number']?.toString(),
+      domain: json['domain']?.toString(),
     );
   }
 }
@@ -56,6 +75,7 @@ class EventCategoryDetails {
   final String text;
   final int? price;
   final bool isSelected;
+  final String? updatedAt;
 
   EventCategoryDetails({
     required this.eventId,
@@ -64,6 +84,7 @@ class EventCategoryDetails {
     required this.text,
     this.price,
     this.isSelected = false,
+    this.updatedAt,
   });
 
   factory EventCategoryDetails.fromJson(Map<String, dynamic> json) {
@@ -76,6 +97,7 @@ class EventCategoryDetails {
           ? int.tryParse(json['price'].toString())
           : null,
       isSelected: json['is_selected'] ?? false,
+      updatedAt: json['updated_at']?.toString(),
     );
   }
 }

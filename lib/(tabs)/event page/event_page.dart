@@ -17,6 +17,10 @@ class EventPage extends StatelessWidget {
   final String? completedAt;
   final bool isSent;
   final String? sentAt;
+  final bool canEdit;
+  final VoidCallback? onEditPressed;
+  final String backRoute;
+  final String backLabel;
 
   const EventPage({
     super.key,
@@ -31,6 +35,10 @@ class EventPage extends StatelessWidget {
     this.completedAt,
     this.isSent = false,
     this.sentAt,
+    this.canEdit = true,
+    this.onEditPressed,
+    this.backRoute = "/events",
+    this.backLabel = "رویدادها",
   });
 
   @override
@@ -40,40 +48,43 @@ class EventPage extends StatelessWidget {
 
     return BackScaffold(
       label: "جزئیات رویداد",
-      backRoute: "/events",
-      backLabel: "رویدادها",
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          if (isDesktop) {
-            showDialog(
-              context: context,
-              builder: (context) => EditEventModal(
-                deviceName: device,
-                title: title,
-                timestamp: timeCreated,
-                eventCategoryDetails: message,
-                eventGroupId: eventGroupId,
-                factorId: factorId,
-              ),
-            );
-          } else {
-            showMaterialModalBottomSheet(
-              context: context,
-              enableDrag: false,
-              builder: (context) => EditEventModal(
-                deviceName: device,
-                title: title,
-                timestamp: timeCreated,
-                eventCategoryDetails: message,
-                eventGroupId: eventGroupId,
-                factorId: factorId,
-              ),
-            );
-          }
-        },
-        label: Text("ویرایش"),
-        icon: Icon(Icons.edit),
-      ),
+      backRoute: backRoute,
+      backLabel: backLabel,
+      floatingActionButton: canEdit
+          ? FloatingActionButton.extended(
+              onPressed: onEditPressed ??
+                  () {
+                    if (isDesktop) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => EditEventModal(
+                          deviceName: device,
+                          title: title,
+                          timestamp: timeCreated,
+                          eventCategoryDetails: message,
+                          eventGroupId: eventGroupId,
+                          factorId: factorId,
+                        ),
+                      );
+                    } else {
+                      showMaterialModalBottomSheet(
+                        context: context,
+                        enableDrag: false,
+                        builder: (context) => EditEventModal(
+                          deviceName: device,
+                          title: title,
+                          timestamp: timeCreated,
+                          eventCategoryDetails: message,
+                          eventGroupId: eventGroupId,
+                          factorId: factorId,
+                        ),
+                      );
+                    }
+                  },
+              label: Text("ویرایش"),
+              icon: Icon(Icons.edit),
+            )
+          : null,
       body: SingleChildScrollView(
         child: EventContent(
           title: title,
