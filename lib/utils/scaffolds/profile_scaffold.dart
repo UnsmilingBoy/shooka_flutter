@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/components/drawer.dart';
 import 'package:shooka_flutter/components/appbar_with_profile.dart';
+import 'package:shooka_flutter/models/user_data_class.dart';
+import 'package:shooka_flutter/utils/constants.dart';
 
 class ProfileScaffold extends StatefulWidget {
   final Widget body;
   final String username;
   final String name;
   final String? image;
+  final User? user;
   final Future<void> Function()? onRefresh;
   const ProfileScaffold({
     super.key,
@@ -14,6 +17,7 @@ class ProfileScaffold extends StatefulWidget {
     required this.username,
     required this.name,
     this.image,
+    this.user,
     this.onRefresh,
   });
 
@@ -29,11 +33,12 @@ class _ProfileScaffoldState extends State<ProfileScaffold> {
         preferredSize: Size.fromHeight(kToolbarHeight),
         child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 1200),
+            constraints: BoxConstraints(maxWidth: kMaxContentWidth),
             child: ProfileAppbar(
               image: widget.image,
               name: widget.name,
               username: widget.username,
+              user: widget.user,
             ),
           ),
         ),
@@ -47,7 +52,7 @@ class _ProfileScaffoldState extends State<ProfileScaffold> {
           padding: EdgeInsets.all(15),
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 1200),
+              constraints: BoxConstraints(maxWidth: kMaxContentWidth),
               child: Directionality(
                 textDirection: TextDirection.rtl,
                 child: widget.body,

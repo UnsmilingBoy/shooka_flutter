@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shooka_flutter/components/drawer.dart';
+import 'package:shooka_flutter/utils/constants.dart';
 
 class BackScaffold extends StatefulWidget {
   final Widget body;
@@ -37,7 +38,7 @@ class _BackScaffoldState extends State<BackScaffold> {
           preferredSize: Size.fromHeight(kToolbarHeight),
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 1200),
+              constraints: BoxConstraints(maxWidth: kMaxContentWidth),
               child: AppBar(
                 title: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -93,7 +94,7 @@ class _BackScaffoldState extends State<BackScaffold> {
         //
         body: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 1200),
+            constraints: BoxConstraints(maxWidth: kMaxContentWidth),
             child: Padding(
               padding: EdgeInsets.all(15),
               child: Directionality(

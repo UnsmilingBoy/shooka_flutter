@@ -9,6 +9,7 @@ import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
+import 'package:shooka_flutter/utils/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MyDrawer extends StatefulWidget {
@@ -42,6 +43,8 @@ class _MyDrawerState extends State<MyDrawer> {
     ); // FIXED
 
     String? routeName = ModalRoute.of(context)?.settings.name ?? "";
+
+    final isDesktop = MediaQuery.sizeOf(context).width >= kDesktopBreakpoint;
 
     return Drawer(
       child: Directionality(
@@ -115,6 +118,14 @@ class _MyDrawerState extends State<MyDrawer> {
                 padding: EdgeInsets.zero,
                 children: tabsList
                     .where((tab) {
+                      // On desktop the profile is shown as a dropdown in the
+                      // appbar, so the profile page entry is not needed.
+                      final hrefs = (tab["href"] as List<dynamic>?)
+                          ?.cast<String>();
+                      if (isDesktop &&
+                          (hrefs?.contains('/profile') ?? false)) {
+                        return false;
+                      }
                       // Tabs without a panel key are always visible (e.g. Home, Profile)
                       final panel = tab["panel"] as AppPanel?;
                       if (panel == null) return true;
