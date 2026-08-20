@@ -18,12 +18,14 @@ class LocationsTab extends StatefulWidget {
 
 class _LocationsTabState extends State<LocationsTab> {
   final ScrollController _scrollController = ScrollController();
+  late final GeneralProvider _generalProvider;
 
   @override
   void initState() {
     super.initState();
+    _generalProvider = context.read<GeneralProvider>();
     Future.microtask(() async {
-      await context.read<GeneralProvider>().fetchLocations(page: 1);
+      await _generalProvider.fetchLocations(page: 1);
       // Check after initial load completes
       if (mounted) {
         _checkAndLoadMoreIfNeeded();
@@ -32,7 +34,7 @@ class _LocationsTabState extends State<LocationsTab> {
     _scrollController.addListener(_onScroll);
 
     // Listen to general provider changes and check if more items needed
-    context.read<GeneralProvider>().addListener(_onLocationListChanged);
+    _generalProvider.addListener(_onLocationListChanged);
   }
 
   void _onLocationListChanged() {
@@ -49,7 +51,7 @@ class _LocationsTabState extends State<LocationsTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<GeneralProvider>().removeListener(_onLocationListChanged);
+    _generalProvider.removeListener(_onLocationListChanged);
     super.dispose();
   }
 

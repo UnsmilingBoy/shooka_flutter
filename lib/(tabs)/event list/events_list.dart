@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/add_event_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/add_invoice_modal.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/components/export_events_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/filter_event_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20page/event_detail_panel.dart';
 import 'package:shooka_flutter/components/tab_header.dart';
@@ -15,7 +16,6 @@ import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/floating%20action%20button/add_floating_button.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
-import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class EventsTab extends StatefulWidget {
   final bool openAddEvent;
@@ -27,6 +27,7 @@ class EventsTab extends StatefulWidget {
 
 class _EventsTabState extends State<EventsTab> {
   final ScrollController _scrollController = ScrollController();
+  late final EventProvider _eventProvider;
 
   // Scroll preservation across reloads (edit/status saves)
   double? _savedScrollOffset;
@@ -35,15 +36,14 @@ class _EventsTabState extends State<EventsTab> {
   // Split view state
   Event? _selectedEvent;
 
-  // Export loading state
-  bool _exportLoading = false;
-
   @override
   void initState() {
     super.initState();
 
+    _eventProvider = context.read<EventProvider>();
+
     Future.microtask(() async {
-      await context.read<EventProvider>().loadEvents();
+      await _eventProvider.loadEvents();
       // Check after initial load completes
       if (mounted) {
         _checkAndLoadMoreIfNeeded();
@@ -52,7 +52,7 @@ class _EventsTabState extends State<EventsTab> {
     _scrollController.addListener(_onScroll);
 
     // Listen to event provider changes and check if more items needed
-    context.read<EventProvider>().addListener(_onEventListChanged);
+    _eventProvider.addListener(_onEventListChanged);
 
     // Opens the add event modal if the route was "/add_event" and user has permission
     if (widget.openAddEvent) {
@@ -127,7 +127,7 @@ class _EventsTabState extends State<EventsTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<EventProvider>().removeListener(_onEventListChanged);
+    _eventProvider.removeListener(_onEventListChanged);
     super.dispose();
   }
 
@@ -234,20 +234,17 @@ class _EventsTabState extends State<EventsTab> {
     });
   }
 
-  Future<void> _handleExport() async {
-    setState(() => _exportLoading = true);
-    try {
-      await context.read<EventProvider>().exportEventsToWord();
-      filledSuccessToast(title: 'فایل ورد با موفقیت دانلود شد');
-    } catch (e) {
-      flatErrorToast(
-        title: 'خطا در دانلود فایل ورد',
-        description: e.toString(),
+  void _handleExport() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+    if (isDesktop) {
+      showDialog(context: context, builder: (context) => const ExportEventsModal());
+    } else {
+      showMaterialModalBottomSheet(
+        enableDrag: false,
+        context: context,
+        builder: (context) => const ExportEventsModal(),
       );
-    } finally {
-      if (mounted) {
-        setState(() => _exportLoading = false);
-      }
     }
   }
 
@@ -347,7 +344,6 @@ class _EventsTabState extends State<EventsTab> {
                 filterModal: FilterEventModal(),
                 searchPlaceholder: "جستجوی رویداد...",
                 onExport: canExport ? _handleExport : null,
-                exportLoading: _exportLoading,
                 customButtons: [
                   SizedBox(
                     height: 50,
@@ -454,7 +450,6 @@ class _EventsTabState extends State<EventsTab> {
           filterModal: FilterEventModal(),
           searchPlaceholder: "جستجوی رویداد...",
           onExport: canExport ? _handleExport : null,
-          exportLoading: _exportLoading,
           customButtons: [
             SizedBox(
               height: 50,

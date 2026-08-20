@@ -43,7 +43,13 @@ final tabsList = [
   },
   {
     'label': 'رویداد‌ها',
-    // "href": ["/events", "/add_event", '/event_page'],
+    "href": [
+      '/events',
+      '/add_event',
+      '/event_page',
+      '/software_support',
+      '/software_support_event_page',
+    ],
     "children": [
       {
         'label': 'رویداد های نصاب ها',

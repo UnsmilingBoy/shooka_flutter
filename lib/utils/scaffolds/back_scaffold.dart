@@ -26,6 +26,95 @@ class BackScaffold extends StatefulWidget {
 class _BackScaffoldState extends State<BackScaffold> {
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= kDesktopBreakpoint;
+
+    final appBar = PreferredSize(
+      preferredSize: Size.fromHeight(kToolbarHeight),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: kMaxContentWidth),
+          child: AppBar(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(widget.label),
+                if (widget.onRefresh != null)
+                  IconButton(
+                    icon: Icon(Icons.refresh),
+                    onPressed: widget.onRefresh,
+                    tooltip: 'بروزرسانی',
+                  ),
+              ],
+            ),
+            centerTitle: true,
+            actions: [
+              InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => Navigator.of(
+                  context,
+                ).pushReplacementNamed(widget.backRoute),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 5,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 5,
+                    children: [
+                      Text(
+                        widget.backLabel,
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: 5),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final body = Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: kMaxContentWidth),
+        child: Padding(
+          padding: EdgeInsets.all(15),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: widget.body,
+          ),
+        ),
+      ),
+    );
+
+    if (isDesktop) {
+      return Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: widget.floatingActionButton,
+          body: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const MyDrawer(sidebar: true),
+              Expanded(
+                child: Column(
+                  children: [
+                    appBar,
+                    Expanded(child: body),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -34,76 +123,17 @@ class _BackScaffoldState extends State<BackScaffold> {
         //
         // Appbar
         //
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(kToolbarHeight),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: kMaxContentWidth),
-              child: AppBar(
-                title: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(widget.label),
-                    if (widget.onRefresh != null)
-                      IconButton(
-                        icon: Icon(Icons.refresh),
-                        onPressed: widget.onRefresh,
-                        tooltip: 'بروزرسانی',
-                      ),
-                  ],
-                ),
-                centerTitle: true,
-                actions: [
-                  InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () => Navigator.of(
-                      context,
-                    ).pushReplacementNamed(widget.backRoute),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 5,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        spacing: 5,
-                        children: [
-                          Text(
-                            widget.backLabel,
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                          Icon(Icons.chevron_right_rounded),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 5),
-                ],
-              ),
-            ),
-          ),
-        ),
+        appBar: appBar,
 
         //
         // Drawer
         //
-        drawer: MyDrawer(),
+        drawer: const MyDrawer(),
 
         //
         // Body
         //
-        body: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: kMaxContentWidth),
-            child: Padding(
-              padding: EdgeInsets.all(15),
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: widget.body,
-              ),
-            ),
-          ),
-        ),
+        body: body,
       ),
     );
   }

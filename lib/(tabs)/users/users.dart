@@ -20,14 +20,16 @@ class UsersTab extends StatefulWidget {
 
 class _UsersTabState extends State<UsersTab> {
   final ScrollController _scrollController = ScrollController();
+  late final UserProvider _userProvider;
   String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _userProvider = context.read<UserProvider>();
     _loadCurrentUserId();
     Future.microtask(() async {
-      await context.read<UserProvider>().fetchUsers(page: 1);
+      await _userProvider.fetchUsers(page: 1);
       // Check after initial load completes
       if (mounted) {
         _checkAndLoadMoreIfNeeded();
@@ -37,7 +39,7 @@ class _UsersTabState extends State<UsersTab> {
     _scrollController.addListener(_onScroll);
 
     // Listen to user provider changes and check if more items needed
-    context.read<UserProvider>().addListener(_onUserListChanged);
+    _userProvider.addListener(_onUserListChanged);
   }
 
   void _onUserListChanged() {
@@ -62,7 +64,7 @@ class _UsersTabState extends State<UsersTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<UserProvider>().removeListener(_onUserListChanged);
+    _userProvider.removeListener(_onUserListChanged);
     super.dispose();
   }
 

@@ -18,12 +18,14 @@ class OrganiztionsTab extends StatefulWidget {
 
 class _OrganiztionsTabState extends State<OrganiztionsTab> {
   final ScrollController _scrollController = ScrollController();
+  late final GeneralProvider _generalProvider;
 
   @override
   void initState() {
     super.initState();
+    _generalProvider = context.read<GeneralProvider>();
     Future.microtask(() async {
-      await context.read<GeneralProvider>().fetchOrganizations(page: 1);
+      await _generalProvider.fetchOrganizations(page: 1);
       // Check after initial load completes
       if (mounted) {
         _checkAndLoadMoreIfNeeded();
@@ -32,7 +34,7 @@ class _OrganiztionsTabState extends State<OrganiztionsTab> {
     _scrollController.addListener(_onScroll);
 
     // Listen to general provider changes and check if more items needed
-    context.read<GeneralProvider>().addListener(_onOrgListChanged);
+    _generalProvider.addListener(_onOrgListChanged);
   }
 
   void _onOrgListChanged() {
@@ -49,7 +51,7 @@ class _OrganiztionsTabState extends State<OrganiztionsTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<GeneralProvider>().removeListener(_onOrgListChanged);
+    _generalProvider.removeListener(_onOrgListChanged);
     super.dispose();
   }
 

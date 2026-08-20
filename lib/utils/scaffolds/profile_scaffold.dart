@@ -28,39 +28,67 @@ class ProfileScaffold extends StatefulWidget {
 class _ProfileScaffoldState extends State<ProfileScaffold> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
+    final isDesktop = MediaQuery.sizeOf(context).width >= kDesktopBreakpoint;
+
+    final appBar = PreferredSize(
+      preferredSize: Size.fromHeight(kToolbarHeight),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: kMaxContentWidth),
+          child: ProfileAppbar(
+            image: widget.image,
+            name: widget.name,
+            username: widget.username,
+            user: widget.user,
+          ),
+        ),
+      ),
+    );
+
+    final body = RefreshIndicator(
+      onRefresh: widget.onRefresh ?? () async {},
+      notificationPredicate: (_) => widget.onRefresh != null,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(15),
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: kMaxContentWidth),
-            child: ProfileAppbar(
-              image: widget.image,
-              name: widget.name,
-              username: widget.username,
-              user: widget.user,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: widget.body,
             ),
           ),
         ),
       ),
-      endDrawer: MyDrawer(),
-      body: RefreshIndicator(
-        onRefresh: widget.onRefresh ?? () async {},
-        notificationPredicate: (_) => widget.onRefresh != null,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(15),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: kMaxContentWidth),
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: widget.body,
+    );
+
+    if (isDesktop) {
+      return Scaffold(
+        body: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const MyDrawer(sidebar: true),
+              Expanded(
+                child: Column(
+                  children: [
+                    appBar,
+                    Expanded(child: body),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
-      ),
+      );
+    }
+
+    return Scaffold(
+      appBar: appBar,
+      endDrawer: const MyDrawer(),
+      body: body,
     );
   }
 }

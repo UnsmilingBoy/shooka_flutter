@@ -58,10 +58,16 @@ class EventTile extends StatefulWidget {
 class _EventTileState extends State<EventTile> {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final selectedTextColor = (widget.isSelected && isLight)
+        ? colorScheme.onPrimaryContainer
+        : null;
+
     return ContainerButton(
       borderRadius: widget.borderRadius,
       color: widget.isSelected
-          ? Theme.of(context).colorScheme.primaryContainer
+          ? colorScheme.primaryContainer
           : widget.color,
       onPressed:
           widget.onTap ??
@@ -100,7 +106,9 @@ class _EventTileState extends State<EventTile> {
                 widget.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall,
+                style: Theme.of(context).textTheme.titleSmall?.apply(
+                  color: selectedTextColor,
+                ),
               ),
             ),
             Expanded(
@@ -112,12 +120,14 @@ class _EventTileState extends State<EventTile> {
                     child: Text(
                       widget.author,
                       textAlign: TextAlign.left,
-                      style: Theme.of(context).textTheme.labelSmall,
+                      style: Theme.of(context).textTheme.labelSmall?.apply(
+                        color: selectedTextColor,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Icon(
-                    color: Theme.of(context).colorScheme.secondary,
+                    color: selectedTextColor ?? colorScheme.secondary,
                     Icons.person,
                     size: 16,
                   ),
@@ -127,9 +137,10 @@ class _EventTileState extends State<EventTile> {
           ],
         ),
         subtitle: Text("دستگاه: ${widget.device}"),
-        subtitleTextStyle: Theme.of(
-          context,
-        ).textTheme.labelSmall?.apply(overflow: TextOverflow.ellipsis),
+        subtitleTextStyle: Theme.of(context).textTheme.labelSmall?.apply(
+          overflow: TextOverflow.ellipsis,
+          color: selectedTextColor,
+        ),
       ),
     );
   }

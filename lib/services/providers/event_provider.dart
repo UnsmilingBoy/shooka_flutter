@@ -299,19 +299,15 @@ class EventProvider with ChangeNotifier {
   //
   // Export Events to Word
   //
-  Future<void> exportEventsToWord() async {
+  Future<void> exportEventsToWord({
+    bool isDeviceEvents = false,
+    bool isSoftwareEvents = false,
+  }) async {
     try {
-      log('Starting events export with current filters...');
-      final events = await api.fetchEventsForExport(
-        creator: lastSelectedCreator,
-        device: lastSelectedDevice,
-        title: lastSelectedTitle,
-        search: lastSearchedText,
-        organization: lastSelectedOrganization,
-        administration: lastSelectedAdministration,
-        province: lastSelectedProvince,
-        city: lastSelectedCity,
-        plan: lastSelectedPlan,
+      log('Starting events export...');
+      final events = await api.fetchEventsForSupportExport(
+        isDeviceEvents: isDeviceEvents,
+        isSoftwareEvents: isSoftwareEvents,
       );
       log('Fetched ${events.length} events for export');
 

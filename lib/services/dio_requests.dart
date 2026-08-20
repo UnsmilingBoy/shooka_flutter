@@ -1259,6 +1259,38 @@ class ApiService {
   }
 
   //
+  // Fetch Events For Export (support + device events)
+  //
+  Future<List<Event>> fetchEventsForSupportExport({
+    required bool isDeviceEvents,
+    required bool isSoftwareEvents,
+  }) async {
+    final body = {
+      "is_device_events": isDeviceEvents,
+      "is_software_events": isSoftwareEvents,
+    };
+
+    log("Fetching support events for export with params: $body");
+
+    try {
+      final response = await dio.post('/api/shouka/events/export/', data: body);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List
+            ? response.data
+            : response.data["results"] ?? response.data["data"] ?? [];
+        return data.map((item) => Event.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load events for export');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get events for export: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
   // Get APK Version
   //
   Future<dynamic> fetchApkVersion() async {

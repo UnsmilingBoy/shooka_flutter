@@ -287,6 +287,12 @@ class _DeviceTileState extends State<DeviceTile> {
       backgroundColor = Theme.of(context).colorScheme.primaryContainer;
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final selectedTextColor = (widget.isSelected && isLight)
+        ? colorScheme.onPrimaryContainer
+        : null;
+
     return ContainerButton(
       // Use custom onTap if provided (split view mode), otherwise navigate
       onPressed:
@@ -317,7 +323,9 @@ class _DeviceTileState extends State<DeviceTile> {
                   child: Text(
                     widget.index.toString(),
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.apply(color: selectedTextColor),
                   ),
                 ),
                 // Name
@@ -326,7 +334,9 @@ class _DeviceTileState extends State<DeviceTile> {
                   child: Text(
                     widget.name,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.apply(color: selectedTextColor),
                   ),
                 ),
                 // Organization
@@ -335,7 +345,9 @@ class _DeviceTileState extends State<DeviceTile> {
                   child: Text(
                     widget.org,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: selectedTextColor),
                   ),
                 ),
                 // Creator
@@ -344,7 +356,9 @@ class _DeviceTileState extends State<DeviceTile> {
                   child: Text(
                     widget.creator ?? '-',
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: selectedTextColor),
                   ),
                 ),
                 // Installation Date
@@ -353,7 +367,9 @@ class _DeviceTileState extends State<DeviceTile> {
                   child: Text(
                     widget.installationDate ?? '-',
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: selectedTextColor),
                   ),
                 ),
                 // Address
@@ -362,7 +378,9 @@ class _DeviceTileState extends State<DeviceTile> {
                   child: Text(
                     widget.address ?? '-',
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: selectedTextColor),
                   ),
                 ),
                 Expanded(
@@ -370,7 +388,9 @@ class _DeviceTileState extends State<DeviceTile> {
                   child: Text(
                     widget.plan,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.apply(color: selectedTextColor),
                   ),
                 ),
                 // Status badge or Rejected Actions (clickable to open modal)

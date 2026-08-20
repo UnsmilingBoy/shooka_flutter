@@ -249,6 +249,41 @@ class ExportService {
       );
       buffer.writeln('</div>');
 
+      final registeredRequester = _requesterName(event.registeredRequester);
+      if (registeredRequester.isNotEmpty) {
+        buffer.writeln('<div class="info-row">');
+        buffer.writeln(
+          '<span class="label">درخواست‌دهنده (کاربر ثبت‌شده):</span> ${_escapeHtml(registeredRequester)}',
+        );
+        buffer.writeln('</div>');
+      }
+
+      if (event.externalRequester != null &&
+          event.externalRequester!.isNotEmpty) {
+        buffer.writeln('<div class="info-row">');
+        buffer.writeln(
+          '<span class="label">درخواست‌دهنده خارجی:</span> ${_escapeHtml(event.externalRequester!)}',
+        );
+        buffer.writeln('</div>');
+      }
+
+      if (event.requesterPhoneNumber != null &&
+          event.requesterPhoneNumber!.isNotEmpty) {
+        buffer.writeln('<div class="info-row">');
+        buffer.writeln(
+          '<span class="label">شماره درخواست‌دهنده:</span> ${_escapeHtml(event.requesterPhoneNumber!)}',
+        );
+        buffer.writeln('</div>');
+      }
+
+      if (event.domain != null && event.domain!.isNotEmpty) {
+        buffer.writeln('<div class="info-row">');
+        buffer.writeln(
+          '<span class="label">نوع رویداد:</span> ${_escapeHtml(event.domain!)}',
+        );
+        buffer.writeln('</div>');
+      }
+
       buffer.writeln('<h3>جزئیات رویداد:</h3>');
 
       for (var detail in event.eventCategoryDetails) {
@@ -282,6 +317,22 @@ class ExportService {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
+  }
+
+  /// Resolve the display name of a registered requester, which may be a
+  /// plain string or an object (e.g. `{"username": "...", "first_name": ...}`).
+  String _requesterName(dynamic requester) {
+    if (requester == null) return '';
+    if (requester is String) return requester;
+    if (requester is Map) {
+      final firstName = requester['first_name']?.toString();
+      final username = requester['username']?.toString();
+      final name = requester['name']?.toString();
+      return [firstName, name, username]
+          .where((s) => s != null && s.isNotEmpty)
+          .join(' ');
+    }
+    return requester.toString();
   }
 
   /// Get current Persian date

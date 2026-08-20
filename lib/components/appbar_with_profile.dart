@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shooka_flutter/core/theme/theme_provider.dart';
 import 'package:shooka_flutter/models/user_data_class.dart';
 import 'package:shooka_flutter/services/auth_service.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
+import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/constants.dart';
 import 'package:shooka_flutter/utils/loadings/loading.dart';
 
@@ -90,6 +92,20 @@ class _ProfileAppbarState extends State<ProfileAppbar> {
           );
         },
       ),
+      actions: [
+        MyIconButton(
+          padding: const EdgeInsets.all(5),
+          borderRadius: 1000,
+          child: const Icon(Icons.brightness_4_rounded),
+          onPressed: () {
+            final themeProvider = Provider.of<ThemeProvider>(
+              context,
+              listen: false,
+            );
+            themeProvider.toggleTheme(!themeProvider.isDarkMode);
+          },
+        ),
+      ],
     );
   }
 }

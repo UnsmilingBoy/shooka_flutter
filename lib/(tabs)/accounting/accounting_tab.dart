@@ -18,6 +18,7 @@ class AccountingTab extends StatefulWidget {
 
 class _AccountingTabState extends State<AccountingTab> {
   final ScrollController _scrollController = ScrollController();
+  late final AccountingProvider _accountingProvider;
 
   Factor? _selectedFactor;
   String searchValue = '';
@@ -26,13 +27,15 @@ class _AccountingTabState extends State<AccountingTab> {
   void initState() {
     super.initState();
 
+    _accountingProvider = context.read<AccountingProvider>();
+
     Future.microtask(() async {
-      await context.read<AccountingProvider>().loadFactors();
+      await _accountingProvider.loadFactors();
       if (mounted) _checkAndLoadMoreIfNeeded();
     });
 
     _scrollController.addListener(_onScroll);
-    context.read<AccountingProvider>().addListener(_onFactorListChanged);
+    _accountingProvider.addListener(_onFactorListChanged);
   }
 
   void _onFactorListChanged() {
@@ -55,7 +58,7 @@ class _AccountingTabState extends State<AccountingTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<AccountingProvider>().removeListener(_onFactorListChanged);
+    _accountingProvider.removeListener(_onFactorListChanged);
     super.dispose();
   }
 
@@ -318,9 +321,16 @@ class FactorTile extends StatelessWidget {
     final bool hasFactorNumber =
         factor.factorNumber.isNotEmpty && factor.factorNumber != '0';
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final selectedTextColor = (isSelected && isLight)
+        ? colorScheme.onPrimaryContainer
+        : null;
+    final selectedHintColor = selectedTextColor ?? Theme.of(context).hintColor;
+
     return ContainerButton(
       color: isSelected
-          ? Theme.of(context).colorScheme.primaryContainer
+          ? colorScheme.primaryContainer
           : Theme.of(context).colorScheme.surface,
       onPressed: onTap ?? () {},
       child: Padding(
@@ -337,7 +347,9 @@ class FactorTile extends StatelessWidget {
                     hasFactorNumber
                         ? 'فاکتور: ${factor.factorNumber}'
                         : 'فاکتور #${factor.factorId}',
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: Theme.of(context).textTheme.titleSmall?.apply(
+                      color: selectedTextColor,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -363,11 +375,13 @@ class FactorTile extends StatelessWidget {
                     Icon(
                       Icons.groups_rounded,
                       size: 14,
-                      color: Theme.of(context).hintColor,
+                      color: selectedHintColor,
                     ),
                     Text(
                       '${factor.groups.length} رویداد',
-                      style: Theme.of(context).textTheme.labelSmall,
+                      style: Theme.of(context).textTheme.labelSmall?.apply(
+                        color: selectedTextColor,
+                      ),
                     ),
                   ],
                 ),
@@ -378,12 +392,14 @@ class FactorTile extends StatelessWidget {
                     Icon(
                       Icons.attach_money_rounded,
                       size: 14,
-                      color: Theme.of(context).hintColor,
+                      color: selectedHintColor,
                     ),
                     Flexible(
                       child: Text(
                         '${_formatPrice(factor.totalPrice)} ریال',
-                        style: Theme.of(context).textTheme.labelSmall,
+                        style: Theme.of(context).textTheme.labelSmall?.apply(
+                          color: selectedTextColor,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -396,12 +412,14 @@ class FactorTile extends StatelessWidget {
                     Icon(
                       Icons.calendar_today_rounded,
                       size: 12,
-                      color: Theme.of(context).hintColor,
+                      color: selectedHintColor,
                     ),
                     Flexible(
                       child: Text(
                         factor.createdAt,
-                        style: Theme.of(context).textTheme.labelSmall,
+                        style: Theme.of(context).textTheme.labelSmall?.apply(
+                          color: selectedTextColor,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -414,7 +432,7 @@ class FactorTile extends StatelessWidget {
               Text(
                 factor.note!,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).hintColor,
+                  color: selectedHintColor,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

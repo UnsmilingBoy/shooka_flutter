@@ -167,6 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
         plan: devices[index].plan ?? "-",
         deviceId: devices[index].id,
         borderRadius: 0,
+        compactMode: true,
         name: devices[index].name,
         org: devices[index].organization,
         isConnected: devices[index].isConnected,

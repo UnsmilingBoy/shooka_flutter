@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/components/event_tile.dart';
+import 'package:shooka_flutter/(tabs)/event%20list/components/export_events_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/software_support/add_software_support_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/software_support/edit_software_support_modal.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/software_support/filter_software_support_modal.dart';
@@ -24,6 +25,7 @@ class SoftwareSupport extends StatefulWidget {
 
 class _SoftwareSupportState extends State<SoftwareSupport> {
   final ScrollController _scrollController = ScrollController();
+  late final SoftwareSupportProvider _supportProvider;
   Event? _selectedEvent;
   String searchValue = "";
 
@@ -31,22 +33,22 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
   void initState() {
     super.initState();
 
-    final provider = context.read<SoftwareSupportProvider>();
+    _supportProvider = context.read<SoftwareSupportProvider>();
     Future.microtask(() async {
-      await provider.loadEvents();
+      await _supportProvider.loadEvents();
       if (mounted) _checkAndLoadMoreIfNeeded();
     });
-    if (provider.users.isEmpty && !provider.usersLoading) {
-      provider.fetchUsers();
+    if (_supportProvider.users.isEmpty && !_supportProvider.usersLoading) {
+      _supportProvider.fetchUsers();
     }
     _scrollController.addListener(_onScroll);
-    provider.addListener(_onEventListChanged);
+    _supportProvider.addListener(_onEventListChanged);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<SoftwareSupportProvider>().removeListener(_onEventListChanged);
+    _supportProvider.removeListener(_onEventListChanged);
     super.dispose();
   }
 
@@ -126,6 +128,20 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
     return event.eventCategoryDetails.isNotEmpty
         ? event.eventCategoryDetails.first.text
         : '';
+  }
+
+  void _handleExport() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+    if (isDesktop) {
+      showDialog(context: context, builder: (context) => const ExportEventsModal());
+    } else {
+      showMaterialModalBottomSheet(
+        enableDrag: false,
+        context: context,
+        builder: (context) => const ExportEventsModal(),
+      );
+    }
   }
 
   void _openEditModal(Event event) {
@@ -287,6 +303,10 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
     SoftwareSupportProvider provider,
     TextEditingController searchController,
   ) {
+    final canExport = context.read<UserProvider>().accessControl.hasAccessTo(
+      AppPanel.exportFunctionality,
+    );
+
     return TabHeader(
       onSubmitted: (value) async {
         setState(() {
@@ -297,6 +317,7 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
       searchController: searchController,
       filterModal: FilterSoftwareSupportModal(),
       searchPlaceholder: "جستجوی رویداد...",
+      onExport: canExport ? _handleExport : null,
     );
   }
 
