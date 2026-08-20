@@ -42,6 +42,9 @@ class _MyHomePageState extends State<MyHomePage> {
     final accessControl = userProvider.accessControl;
     final canSeeDevices = accessControl.hasAccessTo(AppPanel.deviceList);
     final canSeeEvents = accessControl.hasAccessTo(AppPanel.eventList);
+    final canSeeSoftwareSupport = accessControl.hasAccessTo(
+      AppPanel.softwareSupport,
+    );
     final canSeeAccounting = accessControl.hasAccessTo(AppPanel.accounting);
 
     final requests = <Future<void>>[];
@@ -55,6 +58,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (canSeeEvents) {
       requests.add(context.read<EventProvider>().loadEvents());
+    }
+
+    if (canSeeSoftwareSupport) {
       requests.add(context.read<SoftwareSupportProvider>().loadEvents());
     }
 
@@ -74,6 +80,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final canSeeDevices = accessControl.hasAccessTo(AppPanel.deviceList);
     final canSeeEvents = accessControl.hasAccessTo(AppPanel.eventList);
+    final canSeeSoftwareSupport = accessControl.hasAccessTo(
+      AppPanel.softwareSupport,
+    );
     final canAddDevice = accessControl.hasAccessTo(
       AppPanel.addDeviceFunctionality,
     );
@@ -274,6 +283,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     accountingFactors.length,
                     canSeeDevices,
                     canSeeEvents,
+                    canSeeSoftwareSupport,
                     canSeeAccounting,
                   ),
 
@@ -287,6 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     isDesktop,
                     canSeeDevices,
                     canSeeEvents,
+                    canSeeSoftwareSupport,
                     canAddDevice,
                     canAddEvent,
                     canSeeOrgs,
@@ -304,6 +315,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     isDesktop,
                     canSeeDevices,
                     canSeeEvents,
+                    canSeeSoftwareSupport,
                     canAddDevice,
                     canAddEvent,
                     canSeeOrgs,
@@ -323,6 +335,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     accountingFactors.length,
                     canSeeDevices,
                     canSeeEvents,
+                    canSeeSoftwareSupport,
                     canSeeAccounting,
                   ),
 
@@ -333,13 +346,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   Column(
                     spacing: 15,
                     children: [
-                      if (canSeeEvents)
+                      if (canSeeEvents || canSeeSoftwareSupport)
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           spacing: 15,
                           children: [
-                            Expanded(child: eventCard),
-                            Expanded(child: supportCard),
+                            if (canSeeEvents) Expanded(child: eventCard),
+                            if (canSeeSoftwareSupport)
+                              Expanded(child: supportCard),
                           ],
                         ),
                       if (canSeeDevices || canSeeAccounting)
@@ -359,7 +373,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     spacing: 15,
                     children: [
                       if (canSeeEvents) eventCard,
-                      if (canSeeEvents) supportCard,
+                      if (canSeeSoftwareSupport) supportCard,
                       if (canSeeDevices) deviceCard,
                       if (canSeeAccounting) accountingCard,
                     ],
@@ -384,6 +398,7 @@ class _MyHomePageState extends State<MyHomePage> {
     int accountingFactorsCount,
     bool canSeeDevices,
     bool canSeeEvents,
+    bool canSeeSoftwareSupport,
     bool canSeeAccounting,
   ) {
     final scheme = Theme.of(context).colorScheme;
@@ -440,7 +455,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onTap: () => Navigator.of(context).pushNamed("/events"),
         ),
       );
-      if (isDesktop) {
+      if (isDesktop && canSeeSoftwareSupport) {
         cards.add(
           _StatCard(
             label: "پشتیبانی نرم افزاری",
@@ -490,6 +505,7 @@ class _MyHomePageState extends State<MyHomePage> {
     bool isDesktop,
     bool canSeeDevices,
     bool canSeeEvents,
+    bool canSeeSoftwareSupport,
     bool canAddDevice,
     bool canAddEvent,
     bool canSeeOrgs,
@@ -539,6 +555,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     if (isDesktop && canSeeEvents) {
       addButton("/events", "رویداد ها", Icons.event, scheme.secondary);
+    }
+    if (isDesktop && canSeeSoftwareSupport) {
       addButton(
         "/software_support",
         "پشتیبانی نرم افزاری",

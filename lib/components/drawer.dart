@@ -200,14 +200,23 @@ class _MyDrawerState extends State<MyDrawer> {
                   if (isDesktop && (hrefs?.contains('/profile') ?? false)) {
                     return false;
                   }
+                  final accessControl = context
+                      .watch<UserProvider>()
+                      .accessControl;
                   // Tabs without a panel key are always visible (e.g. Home, Profile)
                   final panel = tab["panel"] as AppPanel?;
                   if (panel == null) return true;
                   // For tabs with a panel key, check access control
-                  final accessControl = context
-                      .watch<UserProvider>()
-                      .accessControl;
-                  return accessControl.hasAccessTo(panel);
+                  if (accessControl.hasAccessTo(panel)) return true;
+                  // A tab is also visible when the user can see one of its
+                  // children (e.g. events tab when only software support is granted).
+                  final children = tab["children"] as List<dynamic>?;
+                  if (children == null) return false;
+                  return children.any((child) {
+                    final childPanel = (child as Map)["panel"] as AppPanel?;
+                    return childPanel != null &&
+                        accessControl.hasAccessTo(childPanel);
+                  });
                 })
                 .map<Widget>((tab) {
                   final hrefs = (tab["href"] as List<dynamic>?)
@@ -257,7 +266,17 @@ class _MyDrawerState extends State<MyDrawer> {
                                       : null,
                                 ),
                           ),
-                          children: children.map<Widget>((child) {
+                          children: children
+                              .where((child) {
+                                final childPanel =
+                                    (child as Map)["panel"] as AppPanel?;
+                                if (childPanel == null) return true;
+                                return context
+                                    .read<UserProvider>()
+                                    .accessControl
+                                    .hasAccessTo(childPanel);
+                              })
+                              .map<Widget>((child) {
                             final childHrefs = (child["href"] as List<dynamic>?)
                                 ?.cast<String>();
                             final isChildActive =

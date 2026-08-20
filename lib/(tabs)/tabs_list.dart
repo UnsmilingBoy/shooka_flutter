@@ -60,6 +60,7 @@ final tabsList = [
         'label': 'پشتیبانی نرم افزاری',
         "href": ['/software_support', '/software_support_event_page'],
         "icon": Icons.hourglass_empty,
+        "panel": AppPanel.softwareSupport,
       },
     ],
     "icon": Icons.event,

@@ -12,7 +12,8 @@ enum AppPanel {
   deviceStatusFunctionality('device_status_functionality'),
   addDeviceFunctionality('add_device_functionality'),
   addEventFunctionality('add_event_functionality'),
-  accounting('accountant_panel');
+  accounting('accountant_panel'),
+  softwareSupport('software_support_panel');
 
   final String apiName;
   const AppPanel(this.apiName);
