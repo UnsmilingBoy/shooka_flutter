@@ -56,22 +56,22 @@ class _FilterSoftwareSupportModalState
     return BottomModalTemplate(
       title: "فیلتر رویداد ها",
       children: [
-        SearchableDropdownWithLabel(
-          onChanged: (value) => setState(() {
-            selectedTitle = value;
-          }),
-          iconOnPressed: () => setState(() {
-            selectedTitle = null;
-          }),
-          items: (generalProvider.filters?["event_title"] ?? [])
-              .map<DropdownItemModel>(
-                (title) => DropdownItemModel(value: title, label: title),
-              )
-              .toList(),
-          label: "عناوین:",
-          placeholder: "انتخاب کنید",
-          initialValue: selectedTitle,
-        ),
+        // SearchableDropdownWithLabel(
+        //   onChanged: (value) => setState(() {
+        //     selectedTitle = value;
+        //   }),
+        //   iconOnPressed: () => setState(() {
+        //     selectedTitle = null;
+        //   }),
+        //   items: (generalProvider.filters?["event_title"] ?? [])
+        //       .map<DropdownItemModel>(
+        //         (title) => DropdownItemModel(value: title, label: title),
+        //       )
+        //       .toList(),
+        //   label: "عناوین:",
+        //   placeholder: "انتخاب کنید",
+        //   initialValue: selectedTitle,
+        // ),
         SearchableDropdownWithLabel(
           onChanged: (value) => setState(() {
             selectedCreator = value;

@@ -134,12 +134,16 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
     if (isDesktop) {
-      showDialog(context: context, builder: (context) => const ExportEventsModal());
+      showDialog(
+        context: context,
+        builder: (context) => const ExportEventsModal(isSoftwareSupport: true),
+      );
     } else {
       showMaterialModalBottomSheet(
         enableDrag: false,
         context: context,
-        builder: (context) => const ExportEventsModal(),
+        builder: (context) =>
+            const ExportEventsModal(isSoftwareSupport: true),
       );
     }
   }

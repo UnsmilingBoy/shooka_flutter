@@ -23,6 +23,8 @@ class EventProvider with ChangeNotifier {
   String? lastSelectedProvince;
   String? lastSelectedCity;
   String? lastSelectedPlan;
+  String? lastSelectedStart;
+  String? lastSelectedEnd;
   int filterCount = 0;
 
   EventProvider({required this.api});
@@ -107,6 +109,18 @@ class EventProvider with ChangeNotifier {
     } else {
       lastSelectedPlan = null;
     }
+    if (start != null) {
+      lastSelectedStart = start;
+      filterCount++;
+    } else {
+      lastSelectedStart = null;
+    }
+    if (end != null) {
+      lastSelectedEnd = end;
+      filterCount++;
+    } else {
+      lastSelectedEnd = null;
+    }
 
     if (search != null) {
       lastSearchedText = search;
@@ -170,6 +184,8 @@ class EventProvider with ChangeNotifier {
           province: lastSelectedProvince,
           city: lastSelectedCity,
           plan: lastSelectedPlan,
+          start: lastSelectedStart,
+          end: lastSelectedEnd,
         );
         _events.addAll(
           nextPageEvents["results"],
@@ -217,6 +233,8 @@ class EventProvider with ChangeNotifier {
         province: lastSelectedProvince,
         city: lastSelectedCity,
         plan: lastSelectedPlan,
+        start: lastSelectedStart,
+        end: lastSelectedEnd,
       );
       _addLoading = false;
       notifyListeners();
@@ -257,6 +275,8 @@ class EventProvider with ChangeNotifier {
         province: lastSelectedProvince,
         city: lastSelectedCity,
         plan: lastSelectedPlan,
+        start: lastSelectedStart,
+        end: lastSelectedEnd,
         preserveScroll: true,
       );
       _addLoading = false;
@@ -291,6 +311,8 @@ class EventProvider with ChangeNotifier {
         province: lastSelectedProvince,
         city: lastSelectedCity,
         plan: lastSelectedPlan,
+        start: lastSelectedStart,
+        end: lastSelectedEnd,
       );
       notifyListeners();
     }
@@ -308,6 +330,17 @@ class EventProvider with ChangeNotifier {
       final events = await api.fetchEventsForSupportExport(
         isDeviceEvents: isDeviceEvents,
         isSoftwareEvents: isSoftwareEvents,
+        search: lastSearchedText,
+        creator: lastSelectedCreator,
+        device: lastSelectedDevice,
+        title: lastSelectedTitle,
+        organization: lastSelectedOrganization,
+        administration: lastSelectedAdministration,
+        province: lastSelectedProvince,
+        city: lastSelectedCity,
+        plan: lastSelectedPlan,
+        start: lastSelectedStart,
+        end: lastSelectedEnd,
       );
       log('Fetched ${events.length} events for export');
 

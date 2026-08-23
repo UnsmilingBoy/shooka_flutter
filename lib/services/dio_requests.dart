@@ -1264,10 +1264,32 @@ class ApiService {
   Future<List<Event>> fetchEventsForSupportExport({
     required bool isDeviceEvents,
     required bool isSoftwareEvents,
+    int? creator,
+    int? device,
+    String? start,
+    String? end,
+    String? title,
+    String? search,
+    String? organization,
+    String? administration,
+    String? province,
+    String? city,
+    String? plan,
   }) async {
     final body = {
       "is_device_events": isDeviceEvents,
       "is_software_events": isSoftwareEvents,
+      if (creator != null) "creator": creator,
+      if (device != null) "device": device,
+      if (start != null) "start": start,
+      if (end != null) "end": end,
+      if (title != null) "title": title,
+      if (search != null) "search": search,
+      if (organization != null) "organization": organization,
+      if (administration != null) "administration": administration,
+      if (province != null) "province": province,
+      if (city != null) "city": city,
+      if (plan != null) "plan": plan,
     };
 
     log("Fetching support events for export with params: $body");

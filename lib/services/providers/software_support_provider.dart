@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/models/software_support_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
+import 'package:shooka_flutter/services/export_service.dart';
 
 class SoftwareSupportProvider with ChangeNotifier {
   final ApiService api;
@@ -23,6 +24,8 @@ class SoftwareSupportProvider with ChangeNotifier {
   String? lastSelectedProvince;
   String? lastSelectedCity;
   String? lastSelectedPlan;
+  String? lastSelectedStart;
+  String? lastSelectedEnd;
   int filterCount = 0;
 
   SoftwareSupportProvider({required this.api});
@@ -107,6 +110,18 @@ class SoftwareSupportProvider with ChangeNotifier {
     } else {
       lastSelectedPlan = null;
     }
+    if (start != null) {
+      lastSelectedStart = start;
+      filterCount++;
+    } else {
+      lastSelectedStart = null;
+    }
+    if (end != null) {
+      lastSelectedEnd = end;
+      filterCount++;
+    } else {
+      lastSelectedEnd = null;
+    }
 
     if (search != null) {
       lastSearchedText = search;
@@ -169,6 +184,8 @@ class SoftwareSupportProvider with ChangeNotifier {
           province: lastSelectedProvince,
           city: lastSelectedCity,
           plan: lastSelectedPlan,
+          start: lastSelectedStart,
+          end: lastSelectedEnd,
         );
         _events.addAll(nextPageEvents["results"]);
       } catch (e) {
@@ -243,6 +260,8 @@ class SoftwareSupportProvider with ChangeNotifier {
         province: lastSelectedProvince,
         city: lastSelectedCity,
         plan: lastSelectedPlan,
+        start: lastSelectedStart,
+        end: lastSelectedEnd,
       );
       _addLoading = false;
       notifyListeners();
@@ -290,9 +309,43 @@ class SoftwareSupportProvider with ChangeNotifier {
         province: lastSelectedProvince,
         city: lastSelectedCity,
         plan: lastSelectedPlan,
+        start: lastSelectedStart,
+        end: lastSelectedEnd,
       );
       _editLoading = false;
       notifyListeners();
+    }
+  }
+
+  //
+  // Export Events to Word
+  //
+  Future<void> exportEventsToWord({
+    bool isDeviceEvents = false,
+    bool isSoftwareEvents = false,
+  }) async {
+    try {
+      final events = await api.fetchEventsForSupportExport(
+        isDeviceEvents: isDeviceEvents,
+        isSoftwareEvents: isSoftwareEvents,
+        search: lastSearchedText,
+        creator: lastSelectedCreator,
+        device: lastSelectedDevice,
+        title: lastSelectedTitle,
+        organization: lastSelectedOrganization,
+        administration: lastSelectedAdministration,
+        province: lastSelectedProvince,
+        city: lastSelectedCity,
+        plan: lastSelectedPlan,
+        start: lastSelectedStart,
+        end: lastSelectedEnd,
+      );
+
+      final exportService = ExportService();
+      await exportService.exportEvents(events);
+    } catch (e) {
+      debugPrint("Error exporting support events: $e");
+      rethrow;
     }
   }
 }
