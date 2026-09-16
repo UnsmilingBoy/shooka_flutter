@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/models/device_filter_state.dart';
+import 'package:shooka_flutter/models/flowchart_item_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 import 'package:shooka_flutter/services/export_service.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
@@ -54,6 +55,11 @@ class DeviceProvider with ChangeNotifier {
   bool _updateCompleteInfoLoading = false;
   bool removeImageLoading = false;
 
+  // Flowchart (project-level steps, e.g. teska-hirkan)
+  List<FlowchartItem> _flowchartItems = [];
+  bool _flowchartLoading = false;
+  String? _flowchartError;
+
   // Getters for filter state by mode
   DeviceFilterState getFilterState(DeviceListMode mode) => _filterStates[mode]!;
 
@@ -74,6 +80,10 @@ class DeviceProvider with ChangeNotifier {
   CompleteDeviceInfo? get completeDeviceInfo => _completeDeviceInfo;
   bool get updateCompleteInfoLoading => _updateCompleteInfoLoading;
   Device? get device => _device;
+
+  List<FlowchartItem> get flowchartItems => _flowchartItems;
+  bool get flowchartLoading => _flowchartLoading;
+  String? get flowchartError => _flowchartError;
 
   // Pagination getters (for backward compatibility)
   int get devicesPage => _filterStates[DeviceListMode.all]!.page;
@@ -823,6 +833,34 @@ class DeviceProvider with ChangeNotifier {
   }
 
   //
+  // Load Flowchart Items (project-level, shared across devices)
+  //
+  Future<void> loadFlowchartItems({
+    String projectName = "teska-hirkan",
+    bool forceRefresh = false,
+  }) async {
+    if (_flowchartLoading) return;
+    if (!forceRefresh && _flowchartItems.isNotEmpty) return;
+
+    _flowchartLoading = true;
+    _flowchartError = null;
+    Future.microtask(() => notifyListeners());
+
+    try {
+      _flowchartItems = await api.fetchFlowchartItems(
+        projectName: projectName,
+      );
+    } catch (e) {
+      _flowchartItems = [];
+      _flowchartError = e.toString();
+      debugPrint("Error fetching flowchart items: $e");
+    } finally {
+      _flowchartLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
   //  Export Devices to Excel
   //
   Future<void> exportDevicesToExcel() async {
@@ -867,12 +905,22 @@ class DeviceProvider with ChangeNotifier {
       );
 
       if (result == 200) {
-        // Reload all device lists since status change can move device between lists
-        // Reload in parallel for better performance
+        // Reload all device lists since status change can move device between lists.
+        // Preserve each list's viewport so the user doesn't lose their place
+        // in the list they were working in.
         await Future.wait([
-          _reloadListWithCurrentFilters(DeviceListMode.all),
-          _reloadListWithCurrentFilters(DeviceListMode.rejected),
-          _reloadListWithCurrentFilters(DeviceListMode.suspended),
+          _reloadListWithCurrentFilters(
+            DeviceListMode.all,
+            preserveScroll: true,
+          ),
+          _reloadListWithCurrentFilters(
+            DeviceListMode.rejected,
+            preserveScroll: true,
+          ),
+          _reloadListWithCurrentFilters(
+            DeviceListMode.suspended,
+            preserveScroll: true,
+          ),
         ]);
         log('Device status updated successfully');
       }

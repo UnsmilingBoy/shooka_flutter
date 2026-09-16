@@ -7,6 +7,7 @@ class Outlinetextfieldwithlabel extends StatelessWidget {
   final String placeHolder;
   final bool? isPassword;
   final bool? isSerialNumber;
+  final TextStyle? labelStyle;
   const Outlinetextfieldwithlabel({
     super.key,
     required this.label,
@@ -14,6 +15,7 @@ class Outlinetextfieldwithlabel extends StatelessWidget {
     required this.placeHolder,
     this.isPassword,
     this.isSerialNumber,
+    this.labelStyle,
   });
 
   @override
@@ -22,7 +24,10 @@ class Outlinetextfieldwithlabel extends StatelessWidget {
       spacing: 3,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label),
+        Text(
+          label,
+          style: labelStyle ?? Theme.of(context).textTheme.labelSmall,
+        ),
         Outlinetextfield(
           isSerialNumber: isSerialNumber,
           placeholder: placeHolder,

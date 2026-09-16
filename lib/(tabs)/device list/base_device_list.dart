@@ -260,7 +260,31 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
     }
   }
 
+  // Viewport captured before swapping between normal and split layouts, so
+  // it can be restored after the swap recreates the ListView.
+  double? _viewportToRestoreAfterLayoutSwap;
+
+  /// Switching between normal view and split view replaces the list subtree
+  /// (Row vs Column), which recreates the ListView and resets its scroll
+  /// position. Capture the current offset and jump back once the new list
+  /// is attached.
+  void _preserveViewportAcrossLayoutSwap() {
+    _viewportToRestoreAfterLayoutSwap = _scrollController.hasClients
+        ? _scrollController.offset
+        : null;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _viewportToRestoreAfterLayoutSwap;
+      _viewportToRestoreAfterLayoutSwap = null;
+      if (target == null || !mounted || !_scrollController.hasClients) return;
+
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      _scrollController.jumpTo(target < maxExtent ? target : maxExtent);
+    });
+  }
+
   void _selectDevice(int deviceId, String deviceName) {
+    _preserveViewportAcrossLayoutSwap();
     setState(() {
       _selectedDeviceId = deviceId;
       _selectedDeviceName = deviceName;
@@ -268,6 +292,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
   }
 
   void _closeDetailPanel() {
+    _preserveViewportAcrossLayoutSwap();
     setState(() {
       _selectedDeviceId = null;
       _selectedDeviceName = null;

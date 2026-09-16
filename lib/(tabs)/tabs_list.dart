@@ -89,9 +89,10 @@ final tabsList = [
     "icon": Icons.account_balance,
     "panel": AppPanel.accounting,
   },
-  // {
-  //   'label': 'لیست کاربران',
-  //   "href": ["/users"],
-  //   "icon": Icons.group,
-  // },
+  {
+    'label': 'پنل آمارگیری و انبارداری',
+    "href": ["/inventory"],
+    "icon": Icons.inventory_2_outlined,
+    "panel": AppPanel.inventory,
+  },
 ];

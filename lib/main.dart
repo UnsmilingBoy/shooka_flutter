@@ -9,6 +9,7 @@ import 'package:shooka_flutter/(tabs)/device%20list/rejected_device_list.dart';
 import 'package:shooka_flutter/(tabs)/device%20list/suspended_device_list.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/events_list.dart';
 import 'package:shooka_flutter/(tabs)/event%20list/software_support/software_support.dart';
+import 'package:shooka_flutter/(tabs)/inventory_management/inventory_management_tab.dart';
 import 'package:shooka_flutter/(tabs)/locations/locations.dart';
 import 'package:shooka_flutter/(tabs)/login%20page/login.dart';
 import 'package:shooka_flutter/(tabs)/organizations/organiztions.dart';
@@ -30,6 +31,7 @@ import 'package:shooka_flutter/services/providers/accounting_provider.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/event_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
+import 'package:shooka_flutter/services/providers/inventory_provider.dart';
 import 'package:shooka_flutter/services/providers/software_support_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:toastification/toastification.dart';
@@ -41,9 +43,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  final baseUrl = 'https://romaktech2.ir';
+  // final baseUrl = 'https://romaktech2.ir';
   // final baseUrl = 'https://teska-lab.romaksystem.com';
-  // final baseUrl = 'https://api.test.romaksystem.com';
+  final baseUrl = 'https://api.test.romaksystem.com';
 
   final storage = const FlutterSecureStorage();
 
@@ -97,6 +99,9 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => AccountingProvider(api: apiService),
         ),
+        ChangeNotifierProvider(
+          create: (_) => InventoryProvider(api: apiService),
+        ),
 
         // Inject GeneralProvider into DeviceProvider via Proxy
         ChangeNotifierProxyProvider<GeneralProvider, DeviceProvider>(
@@ -148,6 +153,7 @@ class MyApp extends StatelessWidget {
                 '/locations': (context) => const LocationsTab(),
                 '/users': (context) => const UsersTab(),
                 '/accounting': (context) => const AccountingTab(),
+                '/inventory': (context) => const InventoryManagementTab(),
               },
               locale: const Locale("fa", "IR"),
               supportedLocales: const [Locale("fa", "IR"), Locale("en", "US")],

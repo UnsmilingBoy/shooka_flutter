@@ -5,6 +5,7 @@ import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
+import 'package:shooka_flutter/models/inventory_form_data_class.dart';
 
 // ignore: avoid_web_libraries_in_flutter
 import 'package:universal_html/html.dart' as html;
@@ -136,6 +137,87 @@ class ExportService {
       log('Excel file exported successfully with ${devices.length} devices');
     } catch (e) {
       log('Error exporting to Excel: $e');
+      rethrow;
+    }
+  }
+
+  /// Export inventory forms to Excel file
+  Future<void> exportInventoryForms(List<InventoryFormItem> forms) async {
+    try {
+      final excel = Excel.createExcel();
+      final sheet = excel['فرم های انبار'];
+
+      final headerStyle = CellStyle(
+        fontFamily: 'Vazirmatn',
+        fontSize: 11,
+        bold: true,
+        horizontalAlign: HorizontalAlign.Right,
+        verticalAlign: VerticalAlign.Center,
+      );
+
+      final cellStyle = CellStyle(
+        fontFamily: 'Vazirmatn',
+        fontSize: 11,
+        horizontalAlign: HorizontalAlign.Right,
+        verticalAlign: VerticalAlign.Center,
+      );
+
+      final headers = [
+        'ردیف',
+        'نوع فرم',
+        'عنوان',
+        'طرف حساب',
+        'شماره سریال',
+        'تعداد',
+        'تاریخ ثبت',
+        'ثبت کننده',
+        'وضعیت',
+        'توضیحات',
+      ];
+
+      for (var i = 0; i < headers.length; i++) {
+        final cell = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0),
+        );
+        cell.value = TextCellValue(headers[i]);
+        cell.cellStyle = headerStyle;
+      }
+
+      for (var row = 0; row < forms.length; row++) {
+        final form = forms[row];
+        final values = [
+          (row + 1).toString(),
+          form.id.toString(),
+          form.destination,
+          form.exportUnit,
+          form.postingType,
+          form.deviceCount.toString(),
+          form.createdAt,
+          form.createdBy,
+          form.amount,
+          form.note,
+        ];
+
+        for (var col = 0; col < values.length; col++) {
+          final cell = sheet.cell(
+            CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row + 1),
+          );
+          cell.value = TextCellValue(values[col]);
+          cell.cellStyle = cellStyle;
+        }
+      }
+
+      final fileBytes = excel.save();
+      if (fileBytes == null) {
+        throw Exception('Failed to generate Excel file');
+      }
+
+      await _saveFile(
+        Uint8List.fromList(fileBytes),
+        'inventory_forms_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+      );
+    } catch (e) {
+      log('Error exporting inventory forms to Excel: $e');
       rethrow;
     }
   }

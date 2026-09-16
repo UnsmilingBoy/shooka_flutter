@@ -7,6 +7,7 @@ import 'package:shooka_flutter/(tabs)/device%20page/device%20images/dp_device_im
 import 'package:shooka_flutter/(tabs)/device%20page/location%20info/dp_installation_location_info.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/safety%20parameters/dp_safety_parameters.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/components/dp_events.dart';
+import 'package:shooka_flutter/(tabs)/device%20page/flowchart/dp_flowchart.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/installation%20info/dp_installation_info.dart';
 import 'package:shooka_flutter/(tabs)/device%20page/usage%20info/dp_usage_info.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
@@ -56,6 +57,7 @@ class _DeviceDetailPanelState extends State<DeviceDetailPanel> {
         id: widget.deviceId,
       ),
       context.read<EventProvider>().loadEvents(device: widget.deviceId),
+      context.read<DeviceProvider>().loadFlowchartItems(),
     ]);
     if (mounted) {
       setState(() => _isLoading = false);
@@ -154,6 +156,12 @@ class _DeviceDetailPanelState extends State<DeviceDetailPanel> {
                                 ),
                               ),
                             ),
+                          //
+                          // Flowchart / Process Steps (permission-gated)
+                          //
+                          DpFlowchart(),
+                          SizedBox(height: 10),
+
                           //
                           // Device Information Tile
                           //

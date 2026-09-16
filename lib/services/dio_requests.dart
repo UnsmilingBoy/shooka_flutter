@@ -6,10 +6,12 @@ import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/models/factor_data_class.dart';
+import 'package:shooka_flutter/models/flowchart_item_data_class.dart';
 import 'package:shooka_flutter/models/location_data_class.dart';
 import 'package:shooka_flutter/models/org_data_class.dart';
 import 'package:shooka_flutter/models/software_support_data_class.dart';
 import 'package:shooka_flutter/models/user_data_class.dart';
+import 'package:shooka_flutter/models/inventory_form_data_class.dart';
 import 'auth_service.dart';
 
 class ApiService {
@@ -391,9 +393,7 @@ class ApiService {
 
       return {
         "pages": totalPages,
-        "results": data
-            .map((json) => SupportEventUser.fromJson(json))
-            .toList(),
+        "results": data.map((json) => SupportEventUser.fromJson(json)).toList(),
       };
     } on DioException catch (e) {
       throw Exception(
@@ -1308,6 +1308,252 @@ class ApiService {
     } on DioException catch (e) {
       throw Exception(
         "Failed to get events for export: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Fetch Device Items List (WMS Inventory)
+  //
+  Future<dynamic> fetchDeviceItemsList({
+    required int page,
+    int dataPerPage = 10,
+    String? destination,
+    String? exportUnit,
+    String? postingType,
+    String? start,
+    String? end,
+  }) async {
+    final body = {
+      "page": page,
+      "data_per_page": dataPerPage,
+      if (destination != null && destination.trim().isNotEmpty)
+        "destination": destination.trim(),
+      if (exportUnit != null && exportUnit.trim().isNotEmpty)
+        "export_unit": exportUnit.trim(),
+      if (postingType != null && postingType.trim().isNotEmpty)
+        "posting_type": postingType.trim(),
+      if (start != null && start.trim().isNotEmpty) "start": start.trim(),
+      if (end != null && end.trim().isNotEmpty) "end": end.trim(),
+    };
+    try {
+      final response = await dio.post('/api/wms/form/list/', data: body);
+      final data = Map<String, dynamic>.from(response.data as Map);
+      return {
+        "pages": int.tryParse(data["total_pages"].toString()) ?? 1,
+        "page": int.tryParse(data["page"].toString()) ?? page,
+        "has_next_page": data["has_next_page"] == true,
+        "total_count": int.tryParse(data["total_count"].toString()) ?? 0,
+        "results": (data["results"] as List? ?? [])
+            .whereType<Map>()
+            .map(
+              (item) =>
+                  InventoryFormItem.fromJson(Map<String, dynamic>.from(item)),
+            )
+            .toList(),
+      };
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get device items list: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Fetch Inventory Item by Id (WMS Inventory)
+  //
+  Future<InventoryFormItem> fetchInventoryItemById({
+    required int formID,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/wms/form/by-id/',
+        data: {"form_id": formID},
+      );
+
+      final payload = Map<String, dynamic>.from(response.data as Map);
+      final form = payload['form'];
+      if (form is! Map) throw Exception('Invalid inventory form response');
+      return InventoryFormItem.fromJson(Map<String, dynamic>.from(form));
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get inventory item by id: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  Future<List<InventoryInstallItemOption>> fetchInventoryInstallItems({
+    required String projectName,
+    required String deviceType,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/wms/form/device/items/list',
+        data: {'project_name': projectName, 'device_type': deviceType},
+      );
+      final payload = Map<String, dynamic>.from(response.data as Map);
+      final data = Map<String, dynamic>.from(payload['data'] as Map? ?? {});
+      return (data['install_items'] as List? ?? [])
+          .whereType<Map>()
+          .map(
+            (item) => InventoryInstallItemOption.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .where((item) => item.isActive && item.name.isNotEmpty)
+          .toList();
+    } on DioException catch (e) {
+      throw Exception('Failed to get install items: ${e.response?.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> addDevicePackForm({
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await dio.post('/api/wms/form/add/', data: data);
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to add device form: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> addInventoryItemsForm({
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await dio.post('/api/wms/form/add-item/', data: data);
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to add inventory items form: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> addReturnForm({
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await dio.post('/api/wms/form/add-return/', data: data);
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to add return form: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  //
+  // Edit Device Pack Form (pack forms with devices)
+  // POST /api/wms/form/edit/
+  //
+  Future<Map<String, dynamic>> editDevicePackForm({
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await dio.post('/api/wms/form/edit/', data: data);
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to edit device form: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  //
+  // Edit Inventory Items Form (item-only forms, no devices)
+  // POST /api/wms/form/edit-item/
+  //
+  Future<Map<String, dynamic>> editInventoryItemsForm({
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await dio.post('/api/wms/form/edit-item/', data: data);
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to edit inventory items form: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  //
+  // Add Settlement (WMS)
+  // POST /api/wms/form/add-settlement/
+  // settlement_type: device || representatives
+  //
+  Future<Map<String, dynamic>> addSettlement({
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/wms/form/add-settlement/',
+        data: data,
+      );
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to add settlement: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  //
+  // Fetch Flowchart Items
+  // POST /api/flowchart/items/list/ with {"project_name": "teska-hirkan"}
+  //
+  Future<List<FlowchartItem>> fetchFlowchartItems({
+    required String projectName,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/flowchart/items/list/',
+        data: {"project_name": projectName},
+      );
+
+      final payload = response.data;
+      final List<dynamic> data = payload is Map
+          ? (payload["data"] as List<dynamic>? ?? [])
+          : [];
+
+      return data
+          .whereType<Map>()
+          .map(
+            (item) =>
+                FlowchartItem.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .where((item) => item.label.isNotEmpty)
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get flowchart items: ${e.response?.statusCode}",
       );
     }
   }

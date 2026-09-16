@@ -428,7 +428,7 @@ class _MyHomePageState extends State<MyHomePage> {
           label: "موتورخانه ها",
           value: "$devicesCount",
           icon: Icons.devices,
-          color: scheme.primary,
+          color: scheme.secondary,
           onTap: () => Navigator.of(context).pushNamed("/device_list"),
         ),
       );
@@ -545,13 +545,18 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (canAddDevice) {
-      addButton("/add_device", "افزودن موتورخانه", Icons.add, scheme.primary);
+      addButton("/add_device", "افزودن موتورخانه", Icons.add, scheme.secondary);
     }
     if (canAddEvent) {
       addButton("/add_event", "افزودن رویداد", Icons.add, scheme.secondary);
     }
     if (isDesktop && canSeeDevices) {
-      addButton("/device_list", "موتورخانه ها", Icons.devices, scheme.primary);
+      addButton(
+        "/device_list",
+        "موتورخانه ها",
+        Icons.devices,
+        scheme.secondary,
+      );
     }
     if (isDesktop && canSeeEvents) {
       addButton("/events", "رویداد ها", Icons.event, scheme.secondary);
