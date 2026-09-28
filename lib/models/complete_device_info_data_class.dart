@@ -30,6 +30,7 @@ class CompleteDeviceInfo {
   final int numberOfHotWaterPumps;
   final List<EngineroomImage> engineroomImages;
   final List<ChecklistItemData> checklistItemsData;
+  final DeviceGuarantee? guarantee;
 
   CompleteDeviceInfo({
     required this.phoneNumber1,
@@ -61,6 +62,7 @@ class CompleteDeviceInfo {
     required this.numberOfHotWaterPumps,
     required this.engineroomImages,
     required this.checklistItemsData,
+    this.guarantee,
   });
 
   factory CompleteDeviceInfo.fromJson(Map<String, dynamic> json) {
@@ -100,6 +102,11 @@ class CompleteDeviceInfo {
       checklistItemsData: (json['checklist_items_data'] as List<dynamic>? ?? [])
           .map((e) => ChecklistItemData.fromJson(e))
           .toList(),
+      guarantee: json['guarantee'] is Map
+          ? DeviceGuarantee.fromJson(
+              Map<String, dynamic>.from(json['guarantee'] as Map),
+            )
+          : null,
     );
   }
 
@@ -133,6 +140,7 @@ class CompleteDeviceInfo {
     'number_of_hot_water_pumps': numberOfHotWaterPumps,
     'engineroom_images': engineroomImages.map((e) => e.toJson()).toList(),
     'checklist_items_data': checklistItemsData.map((e) => e.toJson()).toList(),
+    if (guarantee != null) 'guarantee': guarantee!.toJson(),
   };
 
   static CompleteDeviceInfo fromJsonString(String str) =>
@@ -222,5 +230,43 @@ class ChecklistItemData {
     'notes': notes,
     'edited_by': editedBy,
     'timestamp': timestamp,
+  };
+}
+
+class DeviceGuarantee {
+  final String createdAt;
+  final int guaranteePeriod;
+  final String guaranteeExpirationDate;
+  final bool isGuaranteeExpired;
+
+  DeviceGuarantee({
+    required this.createdAt,
+    required this.guaranteePeriod,
+    required this.guaranteeExpirationDate,
+    required this.isGuaranteeExpired,
+  });
+
+  factory DeviceGuarantee.fromJson(Map<String, dynamic> json) {
+    final rawPeriod = json['guarantee_period'];
+    final rawExpired = json['is_guarantee_expired'];
+    return DeviceGuarantee(
+      createdAt: json['created_at']?.toString() ?? '',
+      guaranteePeriod: rawPeriod is int
+          ? rawPeriod
+          : int.tryParse(rawPeriod?.toString() ?? '') ?? 0,
+      guaranteeExpirationDate:
+          json['guarantee_expiration_date']?.toString() ?? '',
+      isGuaranteeExpired:
+          rawExpired == true ||
+          rawExpired == 1 ||
+          rawExpired?.toString().toLowerCase() == 'true',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'created_at': createdAt,
+    'guarantee_period': guaranteePeriod,
+    'guarantee_expiration_date': guaranteeExpirationDate,
+    'is_guarantee_expired': isGuaranteeExpired,
   };
 }

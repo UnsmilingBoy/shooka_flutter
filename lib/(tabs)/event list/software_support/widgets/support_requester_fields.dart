@@ -34,8 +34,7 @@ class SupportRequesterFields extends StatefulWidget {
   });
 
   @override
-  State<SupportRequesterFields> createState() =>
-      _SupportRequesterFieldsState();
+  State<SupportRequesterFields> createState() => _SupportRequesterFieldsState();
 }
 
 class _SupportRequesterFieldsState extends State<SupportRequesterFields> {
@@ -75,9 +74,9 @@ class _SupportRequesterFieldsState extends State<SupportRequesterFields> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildTypeChip('profile_phone', 'شماره پروفایل'),
-            _buildTypeChip('custom_phone', 'شماره جدید'),
-            _buildTypeChip('external', 'کاربر خارجی'),
+            _buildTypeChip('profile_phone', 'کاربر ثبت شده'),
+            _buildTypeChip('custom_phone', 'کاربر ثبت شده با شماره جدید'),
+            _buildTypeChip('external', 'کاربر جدید'),
           ],
         ),
         SizedBox(height: 10),
@@ -152,9 +151,7 @@ class _SupportRequesterFieldsState extends State<SupportRequesterFields> {
           border: Border.all(
             color: selected
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(
-                    context,
-                  ).colorScheme.outline.withValues(alpha: 0.3),
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
         child: Text(

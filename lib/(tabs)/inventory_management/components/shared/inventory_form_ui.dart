@@ -156,6 +156,13 @@ class InventoryFormField extends StatelessWidget {
   final int maxLines;
   final TextInputType? keyboardType;
   final VoidCallback? onTap;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
+  final TextDirection? textDirection;
+  final bool hasError;
+  final String? errorText;
 
   const InventoryFormField({
     super.key,
@@ -168,6 +175,13 @@ class InventoryFormField extends StatelessWidget {
     this.maxLines = 1,
     this.keyboardType,
     this.onTap,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
+    this.onChanged,
+    this.textDirection,
+    this.hasError = false,
+    this.errorText,
   });
 
   @override
@@ -177,12 +191,20 @@ class InventoryFormField extends StatelessWidget {
     onTap: onTap,
     maxLines: maxLines,
     keyboardType: keyboardType,
+    focusNode: focusNode,
+    textInputAction: textInputAction,
+    onSubmitted: onSubmitted,
+    onChanged: onChanged,
+    textDirection: textDirection,
+    textAlign: textDirection == TextDirection.ltr ? TextAlign.left : TextAlign.right,
     style: Theme.of(context).textTheme.bodyMedium,
     decoration: inventoryInputDecoration(
       context,
       label: required ? '$label*' : label,
       hint: hint,
       icon: icon,
+      hasError: hasError,
+      errorText: errorText,
     ),
   );
 }
@@ -246,28 +268,57 @@ InputDecoration inventoryInputDecoration(
   required String label,
   required IconData icon,
   String hint = '',
+  bool hasError = false,
+  String? errorText,
 }) {
   final scheme = Theme.of(context).colorScheme;
+  final errorColor = scheme.error;
   final border = OutlineInputBorder(
     borderRadius: BorderRadius.circular(9),
-    borderSide: BorderSide(color: scheme.outline.withValues(alpha: .5)),
+    borderSide: BorderSide(
+      color: hasError ? errorColor : scheme.outline.withValues(alpha: .5),
+      width: hasError ? 1.4 : 1,
+    ),
   );
   return InputDecoration(
     labelText: label,
     hintText: hint,
-    prefixIcon: Icon(icon, size: 19),
+    prefixIcon: Icon(
+      icon,
+      size: 19,
+      color: hasError ? errorColor : null,
+    ),
     isDense: true,
     filled: true,
-    fillColor: scheme.surfaceContainerLow,
-    labelStyle: Theme.of(context).textTheme.labelSmall,
+    fillColor: hasError
+        ? errorColor.withValues(alpha: .05)
+        : scheme.surfaceContainerLow,
+    labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: hasError ? errorColor : null,
+    ),
     hintStyle: Theme.of(
       context,
     ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+    errorText: errorText,
+    errorStyle: Theme.of(
+      context,
+    ).textTheme.labelSmall?.copyWith(color: errorColor),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
     border: border,
     enabledBorder: border,
     focusedBorder: border.copyWith(
-      borderSide: BorderSide(color: scheme.primary, width: 1.3),
+      borderSide: BorderSide(
+        color: hasError ? errorColor : scheme.primary,
+        width: 1.3,
+      ),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(9),
+      borderSide: BorderSide(color: errorColor, width: 1.4),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(9),
+      borderSide: BorderSide(color: errorColor, width: 1.6),
     ),
   );
 }

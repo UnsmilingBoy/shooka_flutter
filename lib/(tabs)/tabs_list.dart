@@ -42,7 +42,7 @@ final tabsList = [
     ],
   },
   {
-    'label': 'رویداد‌ها',
+    'label': 'پشتیبانی',
     "href": [
       '/events',
       '/add_event',
@@ -52,7 +52,7 @@ final tabsList = [
     ],
     "children": [
       {
-        'label': 'رویداد های نصاب ها',
+        'label': 'پشتیبانی نصاب',
         "href": ['/events', '/add_event', '/event_page'],
         "icon": Icons.list,
       },
@@ -76,6 +76,7 @@ final tabsList = [
     'label': 'لیست نما‌ها',
     "href": ["/views"],
     "icon": Icons.view_list,
+    "panel": AppPanel.viewList,
   },
   {
     'label': 'لیست مکان ها',

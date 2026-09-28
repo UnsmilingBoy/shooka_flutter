@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/inventory_management/components/details/detail_widgets.dart';
 import 'package:shooka_flutter/(tabs)/inventory_management/components/details/settlements_section.dart';
+import 'package:shooka_flutter/(tabs)/inventory_management/components/forms/form_modal_shared.dart';
 import 'package:shooka_flutter/(tabs)/inventory_management/components/forms/pack_form_modal.dart';
 import 'package:shooka_flutter/(tabs)/inventory_management/components/forms/parts_form_modal.dart';
 import 'package:shooka_flutter/(tabs)/inventory_management/components/shared/adaptive_modal.dart';
@@ -40,7 +41,12 @@ class _FormDetailsViewState extends State<FormDetailsView> {
       .api
       .fetchInventoryItemById(formID: widget.formId);
 
-  void _refresh() => setState(() => _future = _fetch());
+  void _refresh() {
+    final future = _fetch();
+    setState(() {
+      _future = future;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +107,12 @@ class _FormDetailsViewState extends State<FormDetailsView> {
                 fillWidth: true,
                 color: scheme.primary,
                 padding: const EdgeInsets.all(14),
-                onPressed: () => setState(() => _future = _fetch()),
+                onPressed: () {
+                  final future = _fetch();
+                  setState(() {
+                    _future = future;
+                  });
+                },
                 child: Text(
                   'تلاش مجدد',
                   style: Theme.of(
@@ -394,7 +405,12 @@ class _DeviceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // Same regex as the pack form: highlight the exact row whose serial
+    // fails validation so the user can spot which device is wrong.
+    final serialInvalid = !isValidSerialNumber(device.serialNumber);
     final chips = <Widget>[
+      if (serialInvalid)
+        StatusChip(label: 'سریال نامعتبر', color: scheme.error),
       if (device.isReturned)
         StatusChip(label: 'برگشت‌خورده', color: scheme.error),
       if (device.isInstalled)
@@ -406,9 +422,16 @@ class _DeviceCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
+        color: serialInvalid
+            ? scheme.error.withValues(alpha: .05)
+            : scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: scheme.outline.withValues(alpha: .3)),
+        border: Border.all(
+          color: serialInvalid
+              ? scheme.error
+              : scheme.outline.withValues(alpha: .3),
+          width: serialInvalid ? 1.4 : 1,
+        ),
       ),
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
@@ -429,12 +452,16 @@ class _DeviceCard extends StatelessWidget {
           ],
         ),
         subtitle: Text(
-          '${device.deviceType} • ${device.serialNumber}',
+          // Wrap the serial in LTR isolates so the bidi algorithm can't
+          // reorder its dot-separated segments when it starts with digits
+          // (e.g. "1111.AAAA...") inside this RTL subtitle.
+          '${device.deviceType} • \u2066${device.serialNumber}\u2069',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: serialInvalid ? scheme.error : scheme.onSurfaceVariant,
+            fontWeight: serialInvalid ? FontWeight.w700 : null,
+          ),
         ),
         children: [
           if (device.items.isEmpty)

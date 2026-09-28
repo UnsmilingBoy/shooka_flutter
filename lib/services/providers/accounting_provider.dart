@@ -10,6 +10,7 @@ class AccountingProvider with ChangeNotifier {
   bool _actionLoading = false;
   bool _nextPageLoading = false;
   int _totalPages = 1;
+  int _totalCount = 0;
   int _page = 1;
 
   // Preserved filter state
@@ -27,6 +28,7 @@ class AccountingProvider with ChangeNotifier {
   bool get actionLoading => _actionLoading;
   bool get nextPageLoading => _nextPageLoading;
   int get totalPages => _totalPages;
+  int get totalCount => _totalCount;
   int get page => _page;
 
   //
@@ -64,6 +66,7 @@ class AccountingProvider with ChangeNotifier {
       );
       _factors = result['results'];
       _totalPages = result['pages'];
+      _totalCount = result['total_count'] ?? 0;
     } catch (e) {
       _factors = [];
       debugPrint('Error fetching factors: $e');

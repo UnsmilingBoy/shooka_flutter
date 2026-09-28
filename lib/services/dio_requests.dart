@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
+import 'package:shooka_flutter/models/device_flowchart_step_data_class.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/models/factor_data_class.dart';
 import 'package:shooka_flutter/models/flowchart_item_data_class.dart';
@@ -252,6 +253,8 @@ class ApiService {
 
       return {
         "pages": totalPages,
+        "total_count":
+            int.tryParse(response.data["total_count"].toString()) ?? 0,
         "results": data.map((json) => Event.fromJson(json)).toList(),
       };
     } on DioException catch (e) {
@@ -447,6 +450,8 @@ class ApiService {
 
       return {
         "pages": totalPages,
+        "total_count":
+            int.tryParse(response.data["total_count"].toString()) ?? 0,
         "results": data.map((json) => Event.fromJson(json)).toList(),
       };
     } on DioException catch (e) {
@@ -631,6 +636,8 @@ class ApiService {
 
       return {
         "pages": totalPages,
+        "total_count":
+            int.tryParse(response.data["total_count"].toString()) ?? 0,
         "results": data.map((json) => Factor.fromJson(json)).toList(),
       };
     } on DioException catch (e) {
@@ -702,6 +709,8 @@ class ApiService {
             : response.data;
         return {
           "pages": response.data["total_pages"],
+          "total_count":
+              int.tryParse(response.data["total_count"].toString()) ?? 0,
           "data": data.map((json) => Device.fromJson(json)).toList(),
           "percent": response.data["device_connectivity_percent"],
           "rejected_count": response.data["rejected_devices_count"],
@@ -778,6 +787,7 @@ class ApiService {
     String? latLong,
     required List<String> images,
     List<Map<String, dynamic>>? checkListItems,
+    int guaranteePeriod = 24,
   }) async {
     var body = {
       "name": name,
@@ -789,6 +799,7 @@ class ApiService {
       // Don't send status - let backend set null (pending) by default
       if (plan != null) "plan": plan,
       "lat_long": latLong,
+      "guarantee": guaranteePeriod,
       "details": {"name": name, "serial_number": serialNumber},
       "images": images,
       if (checkListItems != null && checkListItems.isNotEmpty)
@@ -1546,14 +1557,155 @@ class ApiService {
       return data
           .whereType<Map>()
           .map(
-            (item) =>
-                FlowchartItem.fromJson(Map<String, dynamic>.from(item)),
+            (item) => FlowchartItem.fromJson(Map<String, dynamic>.from(item)),
           )
           .where((item) => item.label.isNotEmpty)
           .toList();
     } on DioException catch (e) {
       throw Exception(
         "Failed to get flowchart items: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Fetch Ordered Flowchart Items
+  // POST /api/flowchart/items/list/ordered/ with {"project_name": "teska-hirkan"}
+  //
+  Future<List<FlowchartItem>> fetchFlowchartOrderedItems({
+    required String projectName,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/flowchart/items/list/ordered/',
+        data: {"project_name": projectName},
+      );
+
+      final payload = response.data;
+      final List<dynamic> data = payload is Map
+          ? (payload["data"] as List<dynamic>? ?? [])
+          : [];
+
+      final items = data
+          .whereType<Map>()
+          .map(
+            (item) => FlowchartItem.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .where((item) => item.label.isNotEmpty)
+          .toList();
+      items.sort((a, b) => a.order.compareTo(b.order));
+      return items;
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get ordered flowchart items: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Update Flowchart Items Order
+  // POST /api/flowchart/items/edit/order/ with
+  // {"project_name": ..., "items_list": [{"item_id": 1, "order": 1}, ...]}
+  //
+  Future<List<FlowchartItem>> updateFlowchartItemsOrder({
+    required String projectName,
+    required List<Map<String, dynamic>> itemsList,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/flowchart/items/edit/order/',
+        data: {"project_name": projectName, "items_list": itemsList},
+      );
+
+      final payload = response.data;
+      final List<dynamic> data = payload is Map
+          ? (payload["data"] as List<dynamic>? ?? [])
+          : [];
+
+      // Response rows carry {item_id, label, order} — merge into FlowchartItem.
+      return data.whereType<Map>().map((row) {
+        final map = Map<String, dynamic>.from(row);
+        return FlowchartItem(
+          itemId: map['item_id'] is int
+              ? map['item_id'] as int
+              : int.tryParse(map['item_id']?.toString() ?? ''),
+          order: map['order'] is int
+              ? map['order'] as int
+              : int.tryParse(map['order']?.toString() ?? '') ?? 0,
+          label: (map['label'] ?? '').toString(),
+          description: '',
+          isActive: true,
+          createdAt: '',
+          updatedAt: '',
+        );
+      }).toList();
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to update flowchart order: ${e.response?.statusCode}",
+      );
+    }
+  }
+
+  //
+  // Update Device Flowchart Step (mark a step done)
+  // POST /api/shouka/device/edit-info/ with
+  // {"object_type": "flowchart", "device_id": ..., "flowchart_item_id": ..., "note": ...}
+  //
+  Future<int> updateDeviceFlowchart({
+    required int deviceId,
+    required int flowchartItemId,
+    String note = '',
+  }) async {
+    final body = {
+      "object_type": "flowchart",
+      "device_id": deviceId,
+      "flowchart_item_id": flowchartItemId,
+      "note": note,
+    };
+
+    try {
+      final response = await dio.post(
+        '/api/shouka/device/edit-info/',
+        data: body,
+      );
+      return response.statusCode ?? -1;
+    } on DioException catch (e) {
+      log("Failed to update device flowchart: ${e.response}");
+      return e.response?.statusCode ?? -1;
+    }
+  }
+
+  //
+  // Fetch Device Flowchart Progress
+  // POST /api/shouka/objects/flowchart/retrieve/ with {"id": deviceId}
+  //
+  Future<List<DeviceFlowchartStep>> fetchDeviceFlowchart({
+    required int deviceId,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/shouka/objects/flowchart/retrieve/',
+        data: {"id": deviceId},
+      );
+
+      final payload = response.data;
+      final List<dynamic> data = payload is Map
+          ? (payload["data"] as List<dynamic>? ?? [])
+          : [];
+
+      final steps = data
+          .whereType<Map>()
+          .map(
+            (item) =>
+                DeviceFlowchartStep.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .where((step) => step.label.isNotEmpty)
+          .toList();
+      steps.sort((a, b) => a.order.compareTo(b.order));
+      return steps;
+    } on DioException catch (e) {
+      throw Exception(
+        "Failed to get device flowchart: ${e.response?.statusCode}",
       );
     }
   }

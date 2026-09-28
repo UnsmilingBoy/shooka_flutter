@@ -79,7 +79,7 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
   Future<void> _pickReceipt() async {
     final image = await pickReceiptImageAsBase64();
     if (image != null && mounted) {
-      setState(() => _receiptImage = image);
+      setState(() => _receiptImage = "data:image/jpeg;base64,$image");
     }
   }
 
@@ -89,7 +89,8 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
     if (blocked.isNotEmpty) {
       flatErrorToast(
         title: 'این دستگاه‌ها قبلاً تسویه شده‌اند',
-        description: 'دستگاه ${blocked.join('، ')} برای این نوع تسویه ثبت شده است',
+        description:
+            'دستگاه ${blocked.join('، ')} برای این نوع تسویه ثبت شده است',
       );
       return;
     }
@@ -153,9 +154,7 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: selected
-                    ? color
-                    : scheme.outline.withValues(alpha: .35),
+                color: selected ? color : scheme.outline.withValues(alpha: .35),
                 width: selected ? 1.6 : 1,
               ),
             ),
@@ -182,10 +181,11 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
                       child: Text(
                         title,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: selected ? color : scheme.onSurface,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: selected ? color : scheme.onSurface,
+                            ),
                       ),
                     ),
                   ],
@@ -215,9 +215,7 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
       );
     }
     final settled = _settledForCurrentType;
-    final selectable = devices
-        .where((d) => !settled.contains(d.code))
-        .toList();
+    final selectable = devices.where((d) => !settled.contains(d.code)).toList();
     if (selectable.isEmpty) {
       return InventoryEmptyItems(
         message: _isRepresentative
@@ -225,8 +223,9 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
             : 'همه دستگاه‌های این فرم قبلاً تسویه دستگاه شده‌اند؛ امکان ثبت تسویه تکراری وجود ندارد.',
       );
     }
-    final allSelected =
-        selectable.every((d) => _selectedCodes.contains(d.code));
+    final allSelected = selectable.every(
+      (d) => _selectedCodes.contains(d.code),
+    );
     return Column(
       children: [
         Row(
@@ -274,104 +273,22 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
             ),
           ),
         const SizedBox(height: 4),
-        Container(
-          constraints: const BoxConstraints(maxHeight: 220),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: scheme.outline.withValues(alpha: .3)),
-          ),
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: devices.length,
-            separatorBuilder: (_, __) => Divider(
-              height: 1,
-              color: scheme.outlineVariant.withValues(alpha: .6),
-            ),
-            itemBuilder: (context, index) {
-              final device = devices[index];
-              final isSettled = settled.contains(device.code);
-              final checked = _selectedCodes.contains(device.code);
-              return CheckboxListTile(
-                value: isSettled ? true : checked,
-                enabled: !isSettled,
-                dense: true,
-                controlAffinity: ListTileControlAffinity.leading,
-                activeColor: isSettled
-                    ? scheme.outline
-                    : scheme.primary,
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        device.code,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isSettled
-                              ? scheme.onSurfaceVariant
-                              : scheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    if (isSettled)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: scheme.tertiary.withValues(alpha: .14),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.check_circle_rounded,
-                              size: 12,
-                              color: scheme.tertiary,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              'تسویه شده',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: scheme.tertiary,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 10,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                subtitle: Text(
-                  '${device.deviceType} • ${device.serialNumber}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                onChanged: isSettled
-                    ? null
-                    : (value) => setState(() {
-                        if (value == true) {
-                          _selectedCodes.add(device.code);
-                        } else {
-                          _selectedCodes.remove(device.code);
-                        }
-                      }),
-              );
-            },
-          ),
+        _ScrollableDeviceList(
+          key: ValueKey('settlement_devices_$_type'),
+          devices: devices,
+          settled: settled,
+          selected: _selectedCodes,
+          onToggle: (code) => setState(() {
+            if (_selectedCodes.contains(code)) {
+              _selectedCodes.remove(code);
+            } else {
+              _selectedCodes.add(code);
+            }
+          }),
         ),
       ],
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -382,8 +299,7 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
       children: [
         InventoryFormHeader(
           title: 'ثبت تسویه حساب',
-          description:
-              'دستگاه‌های این فرم را انتخاب و نوع تسویه را مشخص کنید.',
+          description: 'دستگاه‌های این فرم را انتخاب و نوع تسویه را مشخص کنید.',
           icon: Icons.payments_outlined,
         ),
         const SizedBox(height: 16),
@@ -470,6 +386,255 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
           saveText: 'ثبت تسویه حساب',
           isLoading: loading,
           onSave: loading ? null : _submit,
+        ),
+      ],
+    );
+  }
+}
+
+/// Device list with an always-visible scrollbar plus a bottom fade and a
+/// bouncing "scroll for more" pill that hides itself once the user reaches
+/// the end — so it's obvious the list scrolls even when the scrollbar thumb
+/// is subtle.
+class _ScrollableDeviceList extends StatefulWidget {
+  final List<InventoryDevice> devices;
+  final Set<String> settled;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
+
+  const _ScrollableDeviceList({
+    super.key,
+    required this.devices,
+    required this.settled,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  @override
+  State<_ScrollableDeviceList> createState() => _ScrollableDeviceListState();
+}
+
+class _ScrollableDeviceListState extends State<_ScrollableDeviceList>
+    with SingleTickerProviderStateMixin {
+  final _controller = ScrollController();
+  late final AnimationController _bounce;
+  bool _showHint = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounce = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..repeat(reverse: true);
+    _controller.addListener(_refreshHint);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshHint());
+  }
+
+  @override
+  void didUpdateWidget(_ScrollableDeviceList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.devices, widget.devices)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _refreshHint());
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeListener(_refreshHint)
+      ..dispose();
+    _bounce.dispose();
+    super.dispose();
+  }
+
+  void _refreshHint() {
+    if (!mounted || !_controller.hasClients) return;
+    final max = _controller.position.maxScrollExtent;
+    final show = max > 0 && _controller.offset < max - 8;
+    if (show != _showHint) setState(() => _showHint = show);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      children: [
+        Container(
+          constraints: const BoxConstraints(maxHeight: 220),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: scheme.outline.withValues(alpha: .3)),
+          ),
+          child: Scrollbar(
+            controller: _controller,
+            thumbVisibility: true,
+            trackVisibility: true,
+            scrollbarOrientation: ScrollbarOrientation.right,
+            thickness: 7,
+            radius: const Radius.circular(4),
+            child: ListView.separated(
+              controller: _controller,
+              shrinkWrap: true,
+              padding: const EdgeInsets.only(bottom: 28),
+              itemCount: widget.devices.length,
+              separatorBuilder: (_, __) => Divider(
+                height: 1,
+                color: scheme.outlineVariant.withValues(alpha: .6),
+              ),
+              itemBuilder: (context, index) {
+                final device = widget.devices[index];
+                final isSettled = widget.settled.contains(device.code);
+                final checked = widget.selected.contains(device.code);
+                return CheckboxListTile(
+                  value: isSettled ? true : checked,
+                  enabled: !isSettled,
+                  dense: true,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: isSettled ? scheme.outline : scheme.primary,
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          device.code,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: isSettled
+                                    ? scheme.onSurfaceVariant
+                                    : scheme.onSurface,
+                              ),
+                        ),
+                      ),
+                      if (isSettled)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.tertiary.withValues(alpha: .14),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                size: 12,
+                                color: scheme.tertiary,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                'تسویه شده',
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: scheme.tertiary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 10,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    '${device.deviceType} • ${device.serialNumber}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  onChanged: isSettled
+                      ? null
+                      : (_) => widget.onToggle(device.code),
+                );
+              },
+            ),
+          ),
+        ),
+        // Bottom fade + hint pill, visible only while more items are below.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: IgnorePointer(
+            child: AnimatedOpacity(
+              opacity: _showHint ? 1 : 0,
+              duration: const Duration(milliseconds: 250),
+              child: Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(10),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      scheme.surfaceContainerLow.withValues(alpha: 0),
+                      scheme.surfaceContainerLow.withValues(alpha: .92),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 5,
+          child: IgnorePointer(
+            child: AnimatedOpacity(
+              opacity: _showHint ? 1 : 0,
+              duration: const Duration(milliseconds: 250),
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _bounce,
+                  builder: (context, child) => Transform.translate(
+                    offset: Offset(0, _bounce.value * 3),
+                    child: child,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: .12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: scheme.primary.withValues(alpha: .45),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'اسکرول کنید',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(
+                          Icons.keyboard_double_arrow_down_rounded,
+                          size: 15,
+                          color: scheme.primary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );

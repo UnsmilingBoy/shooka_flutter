@@ -40,6 +40,10 @@ class _DevicePageState extends State<DevicePage> {
       ),
       context.read<EventProvider>().loadEvents(device: widget.deviceId),
       context.read<DeviceProvider>().loadFlowchartItems(),
+      context.read<DeviceProvider>().loadFlowchartOrderedItems(),
+      context.read<DeviceProvider>().loadDeviceFlowchart(
+        deviceId: widget.deviceId,
+      ),
     ]);
   }
 
@@ -90,7 +94,7 @@ class _DevicePageState extends State<DevicePage> {
                     //
                     // Flowchart / Process Steps (permission-gated)
                     //
-                    DpFlowchart(),
+                    DpFlowchart(deviceId: widget.deviceId),
 
                     //
                     // Device Information Tile

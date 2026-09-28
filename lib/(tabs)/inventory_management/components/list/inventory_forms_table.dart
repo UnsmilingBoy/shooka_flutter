@@ -74,17 +74,21 @@ class _DesktopFormsTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final borderColor = scheme.outline.withValues(alpha: 0.45);
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surface,
+        // Keeps the table distinct from the page without the stark white
+        // contrast that surface can produce in light mode.
+        color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
       ),
       clipBehavior: Clip.antiAlias,
       child: Scrollbar(
         controller: controller,
         thumbVisibility: true,
+        trackVisibility: true,
+        scrollbarOrientation: ScrollbarOrientation.right,
+        thickness: 7,
+        radius: const Radius.circular(4),
         child: ListView(
           controller: controller,
           padding: const EdgeInsets.only(bottom: 12),
@@ -94,58 +98,68 @@ class _DesktopFormsTable extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                  child: DataTableTheme(
-                    data: const DataTableThemeData(dividerThickness: 0),
-                    child: DataTable(
-                      showCheckboxColumn: false,
-                      columnSpacing: 28,
-                      horizontalMargin: 20,
-                      headingRowHeight: 48,
-                      dataRowMinHeight: 62,
-                      dataRowMaxHeight: 72,
-                      headingTextStyle: textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      dataTextStyle: textTheme.labelMedium?.copyWith(
-                        color: scheme.onSurface,
-                      ),
-                      headingRowColor: WidgetStatePropertyAll(
-                        scheme.surfaceContainerHighest,
-                      ),
-                      columns: const [
-                        DataColumn(label: Text('شناسه')),
-                        DataColumn(label: Text('نوع فرم')),
-                        DataColumn(label: Text('مقصد')),
-                        DataColumn(label: Text('واحد صادرکننده')),
-                        DataColumn(label: Text('نوع ارسال')),
-                        DataColumn(label: Text('مبلغ')),
-                        DataColumn(label: Text('تاریخ')),
-                        DataColumn(label: Text('تعداد')),
-                      ],
-                      rows: [
-                        for (final form in forms)
-                          DataRow(
-                            onSelectChanged: (_) =>
-                                showFormDetails(context, form),
-                            cells: [
-                              DataCell(Text('#${form.id}')),
-                              DataCell(_FormKindPill(kind: form.kind)),
-                              DataCell(_TableText(form.destination)),
-                              DataCell(_TableText(form.exportUnit)),
-                              DataCell(_TableText(form.postingType)),
-                              DataCell(_TableText(form.amount)),
-                              DataCell(_TableText(form.dateOfReceipt)),
-                              DataCell(
-                                _CountPill(
-                                  count:
-                                      form.deviceCount +
-                                      form.installItems.length,
+                  child: DividerTheme(
+                    // DataTable uses DividerTheme under Material 3 rather
+                    // than ThemeData.dividerColor for its row borders. A
+                    // low-opacity on-surface tint stays subtle in either mode.
+                    data: DividerThemeData(
+                      color: scheme.onSurface.withValues(alpha: 0.08),
+                      thickness: 0.75,
+                    ),
+                    child: DataTableTheme(
+                      data: const DataTableThemeData(dividerThickness: 0.75),
+                      child: DataTable(
+                        dividerThickness: 0.75,
+                        showCheckboxColumn: false,
+                        columnSpacing: 28,
+                        horizontalMargin: 20,
+                        headingRowHeight: 48,
+                        dataRowMinHeight: 62,
+                        dataRowMaxHeight: 72,
+                        headingTextStyle: textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        dataTextStyle: textTheme.labelMedium?.copyWith(
+                          color: scheme.onSurface,
+                        ),
+                        headingRowColor: WidgetStatePropertyAll(
+                          scheme.surfaceContainer,
+                        ),
+                        columns: const [
+                          DataColumn(label: Text('شناسه')),
+                          DataColumn(label: Text('نوع فرم')),
+                          DataColumn(label: Text('مقصد')),
+                          DataColumn(label: Text('واحد صادرکننده')),
+                          DataColumn(label: Text('نوع ارسال')),
+                          DataColumn(label: Text('مبلغ')),
+                          DataColumn(label: Text('تاریخ')),
+                          DataColumn(label: Text('تعداد')),
+                        ],
+                        rows: [
+                          for (final form in forms)
+                            DataRow(
+                              onSelectChanged: (_) =>
+                                  showFormDetails(context, form),
+                              cells: [
+                                DataCell(Text('#${form.id}')),
+                                DataCell(_FormKindPill(kind: form.kind)),
+                                DataCell(_TableText(form.destination)),
+                                DataCell(_TableText(form.exportUnit)),
+                                DataCell(_TableText(form.postingType)),
+                                DataCell(_TableText(form.amount)),
+                                DataCell(_TableText(form.dateOfReceipt)),
+                                DataCell(
+                                  _CountPill(
+                                    count:
+                                        form.deviceCount +
+                                        form.installItems.length,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                      ],
+                              ],
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -176,20 +190,28 @@ class _MobileFormsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
+    return Scrollbar(
       controller: controller,
-      padding: const EdgeInsets.only(bottom: 12),
-      itemCount: forms.length + (provider.isLoadingMore ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        if (index == forms.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        return _MobileFormCard(form: forms[index]);
-      },
+      thumbVisibility: true,
+      trackVisibility: true,
+      scrollbarOrientation: ScrollbarOrientation.right,
+      thickness: 7,
+      radius: const Radius.circular(4),
+      child: ListView.separated(
+        controller: controller,
+        padding: const EdgeInsets.only(bottom: 12),
+        itemCount: forms.length + (provider.isLoadingMore ? 1 : 0),
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          if (index == forms.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return _MobileFormCard(form: forms[index]);
+        },
+      ),
     );
   }
 }
@@ -304,7 +326,7 @@ class _EmptyFormsState extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
+          // border: Border.all(color: borderColor),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -171,7 +171,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
           onSave: () async {
             if (_serialNumberController.text != "" &&
                 !RegExp(
-                  r'^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$',
+                  r'^[0-9A-Fa-f]{0,4}\.[0-9A-Fa-f]{0,4}\.[0-9A-Fa-f]{0,4}\.[0-9A-Fa-f]{0,4}$',
                 ).hasMatch(_serialNumberController.text)) {
               flatErrorToast(
                 title: "فرمت شماره سریال اشتباه است.",
@@ -192,11 +192,8 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
 
               // Then, update meter subscription number separately
               int meterStatus = 200;
-              if (_meterSubscriptionNumberController.text.isNotEmpty &&
-                  _meterSubscriptionNumberController.text !=
-                      deviceProvider
-                          .completeDeviceInfo
-                          ?.meterSubscriptionNumber) {
+              if (_meterSubscriptionNumberController.text !=
+                  deviceProvider.completeDeviceInfo?.meterSubscriptionNumber) {
                 meterStatus = await deviceProvider.updateLocationPublicInfo(
                   deviceId: deviceProvider.device?.id ?? -1,
                   meterSubscriptionNumber: int.tryParse(

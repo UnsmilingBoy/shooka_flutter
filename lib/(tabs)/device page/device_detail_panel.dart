@@ -58,6 +58,10 @@ class _DeviceDetailPanelState extends State<DeviceDetailPanel> {
       ),
       context.read<EventProvider>().loadEvents(device: widget.deviceId),
       context.read<DeviceProvider>().loadFlowchartItems(),
+      context.read<DeviceProvider>().loadFlowchartOrderedItems(),
+      context.read<DeviceProvider>().loadDeviceFlowchart(
+        deviceId: widget.deviceId,
+      ),
     ]);
     if (mounted) {
       setState(() => _isLoading = false);
@@ -82,7 +86,7 @@ class _DeviceDetailPanelState extends State<DeviceDetailPanel> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: .2),
         ),
       ),
       child: Column(
@@ -159,7 +163,7 @@ class _DeviceDetailPanelState extends State<DeviceDetailPanel> {
                           //
                           // Flowchart / Process Steps (permission-gated)
                           //
-                          DpFlowchart(),
+                          DpFlowchart(deviceId: widget.deviceId),
                           SizedBox(height: 10),
 
                           //

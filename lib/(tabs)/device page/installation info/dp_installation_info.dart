@@ -17,6 +17,7 @@ class _InstallationInfoState extends State<InstallationInfo> {
   @override
   Widget build(BuildContext context) {
     final completeData = context.watch<DeviceProvider>().completeDeviceInfo;
+    final guarantee = completeData?.guarantee;
 
     var installLocationInfoList = [
       {
@@ -50,6 +51,31 @@ class _InstallationInfoState extends State<InstallationInfo> {
           "title": 'شماره سیم‌کارت مودم',
           "value": completeData?.modemSimcardNumber,
         },
+      {
+        "title": 'شروع گارانتی',
+        "value": (guarantee?.createdAt.isNotEmpty ?? false)
+            ? guarantee!.createdAt
+            : '-',
+      },
+      {
+        "title": 'مدت گارانتی',
+        "value": guarantee != null ? '${guarantee.guaranteePeriod} ماه' : '-',
+      },
+      {
+        "title": 'پایان گارانتی',
+        "value": (guarantee?.guaranteeExpirationDate.isNotEmpty ?? false)
+            ? guarantee!.guaranteeExpirationDate
+            : '-',
+      },
+      {
+        "title": 'وضعیت گارانتی',
+        "value": guarantee == null
+            ? '-'
+            : guarantee.isGuaranteeExpired
+            ? 'منقضی شده'
+            : 'معتبر',
+        "isGuaranteeStatus": true,
+      },
     ];
 
     return MyExpansionTile(
@@ -74,25 +100,43 @@ class _InstallationInfoState extends State<InstallationInfo> {
           physics: NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           itemCount: installLocationInfoList.length,
-          itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(top: 10.0),
-            child: Row(
-              children: [
-                Text(
-                  "${installLocationInfoList[index]["title"]}: ",
-                  style: Theme.of(context).textTheme.labelMedium?.apply(
-                    color: Theme.of(context).hintColor,
+          itemBuilder: (context, index) {
+            final isGuaranteeStatus =
+                installLocationInfoList[index]["isGuaranteeStatus"] == true;
+            final isExpired = guarantee?.isGuaranteeExpired ?? false;
+            final statusColor = !isGuaranteeStatus
+                ? null
+                : guarantee == null
+                ? Theme.of(context).hintColor
+                : isExpired
+                ? Theme.of(context).colorScheme.error
+                : Colors.green;
+            return Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: Row(
+                children: [
+                  Text(
+                    "${installLocationInfoList[index]["title"]}: ",
+                    style: Theme.of(context).textTheme.labelMedium?.apply(
+                      color: Theme.of(context).hintColor,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Text(
-                    "${installLocationInfoList[index]["value"]}",
-                    textAlign: TextAlign.left,
+                  Expanded(
+                    child: Text(
+                      "${installLocationInfoList[index]["value"]}",
+                      textAlign: TextAlign.left,
+                      style: isGuaranteeStatus
+                          ? Theme.of(context).textTheme.labelMedium?.apply(
+                              color: statusColor,
+                              fontWeightDelta: 1,
+                            )
+                          : null,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          },
         ),
         SizedBox(
           width: double.infinity,

@@ -37,9 +37,6 @@ class _PartsFormModalState extends State<PartsFormModal> {
   final _exportUnit = TextEditingController();
   final _postingType = TextEditingController();
   int? _selectedUserId;
-  final _sourceBank = TextEditingController();
-  final _destinationBank = TextEditingController();
-  final _amount = TextEditingController();
   final _date = TextEditingController();
   final _note = TextEditingController();
   final _installRows = <_InstallRow>[];
@@ -55,9 +52,6 @@ class _PartsFormModalState extends State<PartsFormModal> {
     if (form == null) return;
     _exportUnit.text = form.exportUnit;
     _postingType.text = form.postingType;
-    _sourceBank.text = form.sourceBank;
-    _destinationBank.text = form.destinationBank;
-    _amount.text = form.amount;
     _date.text = form.dateOfReceipt;
     _note.text = form.note;
     final matchedProvince = matchIranProvince(form.destination);
@@ -137,9 +131,6 @@ class _PartsFormModalState extends State<PartsFormModal> {
     for (final controller in [
       _exportUnit,
       _postingType,
-      _sourceBank,
-      _destinationBank,
-      _amount,
       _date,
       _note,
     ]) {
@@ -158,14 +149,7 @@ class _PartsFormModalState extends State<PartsFormModal> {
   }
 
   Future<void> _submit() async {
-    final requiredFields = [
-      _exportUnit,
-      _postingType,
-      _sourceBank,
-      _destinationBank,
-      _amount,
-      _date,
-    ];
+    final requiredFields = [_exportUnit, _postingType, _date];
     final invalidItems = _installRows.any(
       (row) =>
           row.item == null ||
@@ -210,9 +194,6 @@ class _PartsFormModalState extends State<PartsFormModal> {
           'export_unit': _exportUnit.text.trim(),
           'posting_type': _postingType.text.trim(),
           'sent_to': _selectedUserId,
-          'source_bank': _sourceBank.text.trim(),
-          'destination_bank': _destinationBank.text.trim(),
-          'amount': _amount.text.trim(),
           'date_of_receipt': _date.text.trim(),
           'note': _note.text.trim(),
           'install_items': installItems,
@@ -229,9 +210,6 @@ class _PartsFormModalState extends State<PartsFormModal> {
           'export_unit': _exportUnit.text.trim(),
           'posting_type': _postingType.text.trim(),
           'sent_to': _selectedUserId,
-          'source_bank': _sourceBank.text.trim(),
-          'destination_bank': _destinationBank.text.trim(),
-          'amount': _amount.text.trim(),
           'date_of_receipt': _date.text.trim(),
           'note': _note.text.trim(),
           'install_items': installItems,
@@ -271,32 +249,14 @@ class _PartsFormModalState extends State<PartsFormModal> {
         Icons.local_shipping_outlined,
       ),
       const SizedBox(height: 12),
-      pairFormFields(
-        'بانک مبدأ',
-        _sourceBank,
-        Icons.account_balance_outlined,
-        'بانک مقصد',
-        _destinationBank,
-        Icons.account_balance_outlined,
-      ),
-      const SizedBox(height: 12),
-      InventoryFormPair(
-        first: InventoryFormField(
-          label: 'مبلغ',
-          controller: _amount,
-          icon: Icons.payments_outlined,
-          keyboardType: TextInputType.number,
-          required: true,
-        ),
-        second: InventoryFormField(
-          label: 'تاریخ دریافت',
-          controller: _date,
-          icon: Icons.calendar_today_outlined,
-          hint: '۱۴۰۵/۰۱/۰۱',
-          readOnly: true,
-          onTap: _pickDate,
-          required: true,
-        ),
+      InventoryFormField(
+        label: 'تاریخ دریافت',
+        controller: _date,
+        icon: Icons.calendar_today_outlined,
+        hint: '۱۴۰۵/۰۱/۰۱',
+        readOnly: true,
+        onTap: _pickDate,
+        required: true,
       ),
       const SizedBox(height: 12),
       InventoryFormField(
@@ -368,7 +328,7 @@ class _PartsFormModalState extends State<PartsFormModal> {
         const SizedBox(height: 16),
         InventoryFormSection(
           title: 'اطلاعات ارسال',
-          description: 'مقصد، گیرنده و اطلاعات مالی فرم',
+          description: 'مقصد، گیرنده و جزئیات ارسال',
           icon: Icons.local_shipping_outlined,
           child: _shipmentDetails(),
         ),

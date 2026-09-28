@@ -12,6 +12,7 @@ class EventProvider with ChangeNotifier {
   bool _sendLoading = false;
   bool _eventsNextPageLoading = false;
   int _eventsTotalPages = 1;
+  int _eventsTotalCount = 0;
   int _eventsPage = 1;
   bool _preserveScrollAfterReload = false;
   int? lastSelectedCreator;
@@ -35,6 +36,7 @@ class EventProvider with ChangeNotifier {
   bool get sendLoading => _sendLoading;
   bool get eventsNextPageLoading => _eventsNextPageLoading;
   int get eventsTotalPages => _eventsTotalPages;
+  int get eventsTotalCount => _eventsTotalCount;
   int get eventsPage => _eventsPage;
   bool get preserveScrollAfterReload => _preserveScrollAfterReload;
 
@@ -150,6 +152,7 @@ class EventProvider with ChangeNotifier {
       );
       _events = result["results"];
       _eventsTotalPages = result["pages"];
+      _eventsTotalCount = result["total_count"] ?? 0;
     } catch (e) {
       _events = [];
       debugPrint("Error fetching events: $e");

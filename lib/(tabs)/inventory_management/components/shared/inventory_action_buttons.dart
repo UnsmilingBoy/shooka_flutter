@@ -46,11 +46,7 @@ class InventoryActionButtons extends StatelessWidget {
           padding: const EdgeInsetsDirectional.only(start: 4, bottom: 10),
           child: Row(
             children: [
-              Icon(
-                Icons.post_add_outlined,
-                size: 17,
-                color: scheme.primary,
-              ),
+              Icon(Icons.post_add_outlined, size: 17, color: scheme.primary),
               const SizedBox(width: 6),
               Text(
                 'ثبت فرم جدید',
@@ -144,9 +140,7 @@ class _ActionCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: action.color.withValues(alpha: 0.28),
-            ),
+            border: Border.all(color: action.color.withValues(alpha: 0.28)),
           ),
           child: Row(
             children: [
@@ -187,11 +181,7 @@ class _ActionCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(
-                Icons.chevron_left_rounded,
-                size: 22,
-                color: action.color,
-              ),
+              Icon(Icons.chevron_right_rounded, size: 22, color: action.color),
             ],
           ),
         ),

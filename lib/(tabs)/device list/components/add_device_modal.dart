@@ -29,6 +29,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _serialNumberController = TextEditingController();
   TextEditingController locationController = TextEditingController();
+  final TextEditingController _guaranteePeriodController =
+      TextEditingController(text: '24');
   String? latLong;
   // Holds base64-encoded images selected by the user
   List<String> base64Images = [];
@@ -49,6 +51,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
     _nameController.dispose();
     _serialNumberController.dispose();
     locationController.dispose();
+    _guaranteePeriodController.dispose();
     // Dispose all safety parameter note controllers
     for (var controller in safetyParameterNotes.values) {
       controller.dispose();
@@ -216,6 +219,47 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
             label: dropdownList[index]["label"] as String,
             items: dropdownList[index]["items"] as List<DropdownItemModel>,
             placeholder: "انتخاب کنید",
+          ),
+        ),
+
+        //
+        // Guarantee period (months, default 24)
+        //
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Column(
+            spacing: 3,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "مدت گارانتی (ماه)*",
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              TextField(
+                controller: _guaranteePeriodController,
+                keyboardType: TextInputType.number,
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.right,
+                style: Theme.of(context).textTheme.labelMedium,
+                decoration: InputDecoration(
+                  hintText: "24",
+                  hintStyle: Theme.of(context).textTheme.labelSmall,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 13,
+                    horizontal: 5,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade700,
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -493,12 +537,16 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 title: "لطفا مختصات موتورخانه را از روی نقشه انتخاب کنید.",
               );
             } else if (!RegExp(
-              r'^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$',
+              r'^[0-9A-Fa-f]{0,4}\.[0-9A-Fa-f]{0,4}\.[0-9A-Fa-f]{0,4}\.[0-9A-Fa-f]{0,4}$',
             ).hasMatch(_serialNumberController.text)) {
               flatErrorToast(
                 title: "فرمت شماره سریال اشتباه است.",
                 description: "مثال: 1111.2222.AAAA.FFFF",
               );
+            } else if (int.tryParse(_guaranteePeriodController.text.trim()) ==
+                    null ||
+                int.parse(_guaranteePeriodController.text.trim()) <= 0) {
+              flatErrorToast(title: "مدت گارانتی باید عدد مثبت باشد.");
             } else if (_hasIncompleteChecklist(generalProvider)) {
               flatErrorToast(
                 title: "لطفا همه پارامترهای ایمنی را تایید یا رد کنید.",
@@ -574,6 +622,8 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
                 latLong: latLong,
                 images: base64Images,
                 checkListItems: checkListItems,
+                guaranteePeriod:
+                    int.tryParse(_guaranteePeriodController.text.trim()) ?? 24,
               );
 
               if (status >= 200 && status < 300) {

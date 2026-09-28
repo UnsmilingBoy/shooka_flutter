@@ -15,7 +15,8 @@ enum AppPanel {
   accounting('accountant_panel'),
   softwareSupport('software_support_panel'),
   inventory('inventory_panel'),
-  flowchart('flowchart_panel');
+  flowchart('flowchart_panel'),
+  viewList('view_list');
 
   final String apiName;
   const AppPanel(this.apiName);

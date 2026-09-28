@@ -126,7 +126,7 @@ class _InventoryTabBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: scheme.outline.withValues(alpha: 0.35)),
+        // border: Border.all(color: scheme.outline.withValues(alpha: 0.35)),
       ),
       child: TabBar(
         padding: EdgeInsets.zero,
@@ -143,9 +143,7 @@ class _InventoryTabBar extends StatelessWidget {
         ),
         labelColor: activeColor,
         unselectedLabelColor: scheme.onSurfaceVariant,
-        labelStyle: textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w800,
-        ),
+        labelStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
         unselectedLabelStyle: textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w600,
         ),
@@ -228,9 +226,7 @@ class _OperationsTab extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Expanded(
-          child: loading
-              ? const _TableLoading()
-              : const InventoryFormsTable(),
+          child: loading ? const _TableLoading() : const InventoryFormsTable(),
         ),
       ],
     );
@@ -332,7 +328,7 @@ class _TableLoading extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outline.withValues(alpha: 0.35)),
+          // border: Border.all(color: scheme.outline.withValues(alpha: 0.35)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -385,7 +381,7 @@ class _InventoryToolbar extends StatelessWidget {
         final fieldBorder = OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: scheme.outline.withValues(alpha: 0.45),
+            color: scheme.onSurface.withValues(alpha: 0.08),
           ),
         );
         final search = TextField(
@@ -434,11 +430,7 @@ class _InventoryToolbar extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  const Icon(
-                    Icons.tune_rounded,
-                    size: 18,
-                    color: Colors.white,
-                  ),
+                  const Icon(Icons.tune_rounded, size: 18, color: Colors.white),
                   if (filtersActive)
                     PositionedDirectional(
                       top: -3,
@@ -484,11 +476,7 @@ class _InventoryToolbar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.download_outlined,
-                      size: 18,
-                      color: exportFg,
-                    ),
+                    Icon(Icons.download_outlined, size: 18, color: exportFg),
                     const SizedBox(width: 6),
                     Text(
                       'خروجی اکسل',
@@ -523,7 +511,7 @@ class _InventoryToolbar extends StatelessWidget {
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: scheme.outline.withValues(alpha: 0.35)),
+            // border: Border.all(color: scheme.outline.withValues(alpha: 0.35)),
           ),
           child: compact
               ? Column(

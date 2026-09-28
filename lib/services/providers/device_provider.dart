@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shooka_flutter/models/complete_device_info_data_class.dart';
 import 'package:shooka_flutter/models/device_data_class.dart';
 import 'package:shooka_flutter/models/device_filter_state.dart';
+import 'package:shooka_flutter/models/device_flowchart_step_data_class.dart';
 import 'package:shooka_flutter/models/flowchart_item_data_class.dart';
 import 'package:shooka_flutter/services/dio_requests.dart';
 import 'package:shooka_flutter/services/export_service.dart';
@@ -49,6 +50,7 @@ class DeviceProvider with ChangeNotifier {
   CompleteDeviceInfo? _completeDeviceInfo;
   Device? _device;
   int activeDevicesPercentage = 0;
+  int _devicesTotalCount = 0;
   int _rejectedDevicesCount = 0;
   bool _addLoading = false;
   bool _completeInfoLoading = false;
@@ -56,9 +58,24 @@ class DeviceProvider with ChangeNotifier {
   bool removeImageLoading = false;
 
   // Flowchart (project-level steps, e.g. teska-hirkan)
+  static const flowchartProjectName = 'teska-hirkan';
   List<FlowchartItem> _flowchartItems = [];
   bool _flowchartLoading = false;
   String? _flowchartError;
+
+  // Ordered template: POST /api/flowchart/items/list/ordered/
+  List<FlowchartItem> _flowchartOrderedItems = [];
+  bool _flowchartOrderedLoading = false;
+  String? _flowchartOrderedError;
+  bool _flowchartReorderLoading = false;
+
+  // Per-device progress: POST /api/shouka/objects/flowchart/retrieve/
+  final Map<int, List<DeviceFlowchartStep>> _deviceFlowcharts = {};
+  final Set<int> _deviceFlowchartLoadingIds = {};
+  final Map<int, String> _deviceFlowchartErrors = {};
+
+  // In-flight step completions, keyed "$deviceId:$flowchartItemId".
+  final Set<String> _flowchartCompletingKeys = {};
 
   // Getters for filter state by mode
   DeviceFilterState getFilterState(DeviceListMode mode) => _filterStates[mode]!;
@@ -85,6 +102,20 @@ class DeviceProvider with ChangeNotifier {
   bool get flowchartLoading => _flowchartLoading;
   String? get flowchartError => _flowchartError;
 
+  List<FlowchartItem> get flowchartOrderedItems => _flowchartOrderedItems;
+  bool get flowchartOrderedLoading => _flowchartOrderedLoading;
+  String? get flowchartOrderedError => _flowchartOrderedError;
+  bool get flowchartReorderLoading => _flowchartReorderLoading;
+
+  List<DeviceFlowchartStep>? deviceFlowchart(int deviceId) =>
+      _deviceFlowcharts[deviceId];
+  bool deviceFlowchartLoading(int deviceId) =>
+      _deviceFlowchartLoadingIds.contains(deviceId);
+  String? deviceFlowchartError(int deviceId) =>
+      _deviceFlowchartErrors[deviceId];
+  bool isFlowchartStepSubmitting(int deviceId, int flowchartItemId) =>
+      _flowchartCompletingKeys.contains('$deviceId:$flowchartItemId');
+
   // Pagination getters (for backward compatibility)
   int get devicesPage => _filterStates[DeviceListMode.all]!.page;
   int get devicesTotalPages => _filterStates[DeviceListMode.all]!.totalPages;
@@ -102,6 +133,7 @@ class DeviceProvider with ChangeNotifier {
       _filterStates[DeviceListMode.suspended]!.isNextPageLoading;
 
   int get rejectedDevicesCount => _rejectedDevicesCount;
+  int get devicesTotalCount => _devicesTotalCount;
 
   // Filter count getters (for backward compatibility)
   int get filterCount => _filterStates[DeviceListMode.all]!.filterCount;
@@ -218,6 +250,10 @@ class DeviceProvider with ChangeNotifier {
 
       _deviceLists[mode] = response["data"];
       filterState.totalPages = response["pages"];
+
+      if (mode == DeviceListMode.all) {
+        _devicesTotalCount = response["total_count"] ?? 0;
+      }
 
       // Get rejected devices count from response (only for normal mode)
       if (mode == DeviceListMode.all) {
@@ -483,6 +519,7 @@ class DeviceProvider with ChangeNotifier {
     String? latLong,
     required List<String> images,
     List<Map<String, dynamic>>? checkListItems,
+    int guaranteePeriod = 24,
   }) async {
     _addLoading = true;
 
@@ -505,6 +542,7 @@ class DeviceProvider with ChangeNotifier {
         plan: plan,
         images: formattedImages, // Use the new list here
         checkListItems: checkListItems,
+        guaranteePeriod: guaranteePeriod,
       );
       return status;
     } on DioException catch (e) {
@@ -847,15 +885,191 @@ class DeviceProvider with ChangeNotifier {
     Future.microtask(() => notifyListeners());
 
     try {
-      _flowchartItems = await api.fetchFlowchartItems(
-        projectName: projectName,
-      );
+      _flowchartItems = await api.fetchFlowchartItems(projectName: projectName);
     } catch (e) {
       _flowchartItems = [];
       _flowchartError = e.toString();
       debugPrint("Error fetching flowchart items: $e");
     } finally {
       _flowchartLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Load Ordered Flowchart Items (project-level template with order)
+  //
+  Future<void> loadFlowchartOrderedItems({
+    String projectName = flowchartProjectName,
+    bool forceRefresh = false,
+  }) async {
+    if (_flowchartOrderedLoading) return;
+    if (!forceRefresh && _flowchartOrderedItems.isNotEmpty) return;
+
+    _flowchartOrderedLoading = true;
+    _flowchartOrderedError = null;
+    Future.microtask(() => notifyListeners());
+
+    try {
+      _flowchartOrderedItems = await api.fetchFlowchartOrderedItems(
+        projectName: projectName,
+      );
+    } catch (e) {
+      _flowchartOrderedItems = [];
+      _flowchartOrderedError = e.toString();
+      debugPrint("Error fetching ordered flowchart items: $e");
+    } finally {
+      _flowchartOrderedLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Reorder Flowchart Template (optimistic + rollback)
+  //
+  Future<void> reorderFlowchartItems(List<FlowchartItem> ordered) async {
+    final previous = List<FlowchartItem>.from(_flowchartOrderedItems);
+    _flowchartOrderedItems = List<FlowchartItem>.from(ordered);
+    _flowchartReorderLoading = true;
+    notifyListeners();
+
+    try {
+      final itemsList = <Map<String, dynamic>>[];
+      for (var i = 0; i < ordered.length; i++) {
+        final itemId = ordered[i].itemId;
+        if (itemId == null) continue;
+        itemsList.add({'item_id': itemId, 'order': i + 1});
+      }
+      final updated = await api.updateFlowchartItemsOrder(
+        projectName: flowchartProjectName,
+        itemsList: itemsList,
+      );
+      if (updated.isNotEmpty) {
+        // Merge fresh order/labels back onto the full template rows so
+        // descriptions and active flags are preserved.
+        final byId = {for (final u in updated) u.itemId: u};
+        for (var i = 0; i < _flowchartOrderedItems.length; i++) {
+          final current = _flowchartOrderedItems[i];
+          final fresh = byId[current.itemId];
+          if (fresh != null) {
+            _flowchartOrderedItems[i] = FlowchartItem(
+              itemId: current.itemId,
+              order: fresh.order == 0 ? i + 1 : fresh.order,
+              label: fresh.label.isEmpty ? current.label : fresh.label,
+              description: current.description,
+              isActive: current.isActive,
+              createdAt: current.createdAt,
+              updatedAt: current.updatedAt,
+            );
+          } else {
+            _flowchartOrderedItems[i] = FlowchartItem(
+              itemId: current.itemId,
+              order: i + 1,
+              label: current.label,
+              description: current.description,
+              isActive: current.isActive,
+              createdAt: current.createdAt,
+              updatedAt: current.updatedAt,
+            );
+          }
+        }
+        _flowchartOrderedItems.sort((a, b) => a.order.compareTo(b.order));
+      }
+    } catch (e) {
+      _flowchartOrderedItems = previous;
+      debugPrint("Error reordering flowchart items: $e");
+      rethrow;
+    } finally {
+      _flowchartReorderLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //
+  // Load Device Flowchart Progress (per-device, cached by device id)
+  //
+  Future<void> loadDeviceFlowchart({
+    required int deviceId,
+    bool forceRefresh = false,
+  }) async {
+    if (_deviceFlowchartLoadingIds.contains(deviceId)) return;
+    if (!forceRefresh && _deviceFlowcharts.containsKey(deviceId)) return;
+
+    _deviceFlowchartLoadingIds.add(deviceId);
+    _deviceFlowchartErrors.remove(deviceId);
+    Future.microtask(() => notifyListeners());
+
+    try {
+      _deviceFlowcharts[deviceId] = await api.fetchDeviceFlowchart(
+        deviceId: deviceId,
+      );
+    } catch (e) {
+      _deviceFlowcharts.remove(deviceId);
+      _deviceFlowchartErrors[deviceId] = e.toString();
+      debugPrint("Error fetching device flowchart $deviceId: $e");
+    } finally {
+      _deviceFlowchartLoadingIds.remove(deviceId);
+      notifyListeners();
+    }
+  }
+
+  //
+  // Complete a Device Flowchart Step (marks it done with an optional note).
+  // Optimistic: flips the cached step to done immediately, reloads from the
+  // server on success, rolls back on failure. Returns the HTTP status code.
+  //
+  Future<int> completeFlowchartStep({
+    required int deviceId,
+    required int flowchartItemId,
+    String note = '',
+  }) async {
+    final key = '$deviceId:$flowchartItemId';
+    if (_flowchartCompletingKeys.contains(key)) return -1;
+
+    final previous = _deviceFlowcharts[deviceId] == null
+        ? null
+        : List<DeviceFlowchartStep>.from(_deviceFlowcharts[deviceId]!);
+    if (previous != null) {
+      _deviceFlowcharts[deviceId] = previous
+          .map(
+            (step) => step.flowchartItemId == flowchartItemId
+                ? DeviceFlowchartStep(
+                    id: step.id,
+                    flowchartItemId: step.flowchartItemId,
+                    label: step.label,
+                    order: step.order,
+                    isDone: true,
+                    doneAt: step.doneAt,
+                    doneBy: step.doneBy,
+                    note: note.isEmpty ? step.note : note,
+                    createdAt: step.createdAt,
+                    updatedAt: step.updatedAt,
+                  )
+                : step,
+          )
+          .toList();
+    }
+    _flowchartCompletingKeys.add(key);
+    notifyListeners();
+
+    try {
+      final status = await api.updateDeviceFlowchart(
+        deviceId: deviceId,
+        flowchartItemId: flowchartItemId,
+        note: note,
+      );
+      if (status == 200) {
+        await loadDeviceFlowchart(deviceId: deviceId, forceRefresh: true);
+      } else if (previous != null) {
+        _deviceFlowcharts[deviceId] = previous;
+      }
+      return status;
+    } catch (e) {
+      if (previous != null) _deviceFlowcharts[deviceId] = previous;
+      debugPrint("Error completing flowchart step $key: $e");
+      rethrow;
+    } finally {
+      _flowchartCompletingKeys.remove(key);
       notifyListeners();
     }
   }

@@ -93,14 +93,16 @@ class _MyHomePageState extends State<MyHomePage> {
     final canSeeOrgs = accessControl.hasAccessTo(AppPanel.orgList);
     final canSeeLocs = accessControl.hasAccessTo(AppPanel.locList);
 
-    final events = context.watch<EventProvider>().events;
-    bool eventLoading = context.watch<EventProvider>().fetchLoading;
+    final eventProvider = context.watch<EventProvider>();
+    final events = eventProvider.events;
+    bool eventLoading = eventProvider.fetchLoading;
 
     final supportProvider = context.watch<SoftwareSupportProvider>();
     final supportEvents = supportProvider.events;
     final supportLoading = supportProvider.fetchLoading;
 
     final devices = context.watch<DeviceProvider>().devices;
+    final devicesTotalCount = context.watch<DeviceProvider>().devicesTotalCount;
     final generalProvider = context.watch<GeneralProvider>();
     final activeDevicesPercentage = context
         .watch<DeviceProvider>()
@@ -113,12 +115,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final accountingFactors = context.watch<AccountingProvider>().factors;
     bool accountingLoading = context.watch<AccountingProvider>().fetchLoading;
+    final accountingFactorsTotalCount = context
+        .watch<AccountingProvider>()
+        .totalCount;
 
     //
     // Brief list cards
     //
     final eventCard = _buildListCard(
-      title: "رویداد ها",
+      title: "پشتیبانی نصاب",
       route: "/events",
       loading: eventLoading,
       emptyText: "رویدادی وجود ندارد.",
@@ -277,10 +282,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     isDesktop,
                     activeDevicesPercentage,
                     rejectedDevicesCount,
-                    devices.length,
-                    events.length,
-                    supportEvents.length,
-                    accountingFactors.length,
+                    devicesTotalCount,
+                    eventProvider.eventsTotalCount,
+                    supportProvider.eventsTotalCount,
+                    accountingFactorsTotalCount,
                     canSeeDevices,
                     canSeeEvents,
                     canSeeSoftwareSupport,
@@ -329,10 +334,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     isDesktop,
                     activeDevicesPercentage,
                     rejectedDevicesCount,
-                    devices.length,
-                    events.length,
-                    supportEvents.length,
-                    accountingFactors.length,
+                    devicesTotalCount,
+                    eventProvider.eventsTotalCount,
+                    supportProvider.eventsTotalCount,
+                    accountingFactorsTotalCount,
                     canSeeDevices,
                     canSeeEvents,
                     canSeeSoftwareSupport,
@@ -448,7 +453,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (canSeeEvents) {
       cards.add(
         _StatCard(
-          label: "رویداد ها",
+          label: "پشتیبانی نصاب",
           value: "$eventsCount",
           icon: Icons.event,
           color: scheme.primary,
@@ -548,7 +553,12 @@ class _MyHomePageState extends State<MyHomePage> {
       addButton("/add_device", "افزودن موتورخانه", Icons.add, scheme.secondary);
     }
     if (canAddEvent) {
-      addButton("/add_event", "افزودن رویداد", Icons.add, scheme.secondary);
+      addButton(
+        "/add_event",
+        "افزودن پشتیبانی نصاب",
+        Icons.add,
+        scheme.secondary,
+      );
     }
     if (isDesktop && canSeeDevices) {
       addButton(
@@ -559,7 +569,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
     if (isDesktop && canSeeEvents) {
-      addButton("/events", "رویداد ها", Icons.event, scheme.secondary);
+      addButton("/events", "پشتیبانی نصاب", Icons.event, scheme.secondary);
     }
     if (isDesktop && canSeeSoftwareSupport) {
       addButton(

@@ -1,4 +1,6 @@
 class FlowchartItem {
+  final int? itemId;
+  final int order;
   final String label;
   final String description;
   final bool isActive;
@@ -6,6 +8,8 @@ class FlowchartItem {
   final String updatedAt;
 
   FlowchartItem({
+    this.itemId,
+    this.order = 0,
     required this.label,
     required this.description,
     required this.isActive,
@@ -13,8 +17,17 @@ class FlowchartItem {
     required this.updatedAt,
   });
 
+  static int _asInt(dynamic value, [int fallback = 0]) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? fallback;
+  }
+
   factory FlowchartItem.fromJson(Map<String, dynamic> json) {
     return FlowchartItem(
+      itemId:
+          json['item_id'] == null ? null : _asInt(json['item_id']),
+      order: _asInt(json['order']),
       label: json['label'] ?? '',
       description: json['description'] ?? '',
       isActive: json['is_active'] ?? false,
@@ -24,6 +37,8 @@ class FlowchartItem {
   }
 
   Map<String, dynamic> toJson() => {
+    if (itemId != null) 'item_id': itemId,
+    'order': order,
     'label': label,
     'description': description,
     'is_active': isActive,

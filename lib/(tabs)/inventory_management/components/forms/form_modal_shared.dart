@@ -26,6 +26,16 @@ String matchIranProvince(String destination) {
 String jalaliDateText(Jalali date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
+/// Serial-number format shared by pack / device flows.
+/// Expected shape: `XXXX.XXXX.XXXX.XXXX` where each block is hex (0-9, A-F).
+final RegExp serialNumberRegExp = RegExp(
+  r'^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$',
+);
+
+/// Returns true when [input] matches [serialNumberRegExp] after trimming.
+bool isValidSerialNumber(String input) =>
+    serialNumberRegExp.hasMatch(input.trim());
+
 /// Two required text fields side by side (stacked on narrow screens).
 Widget pairFormFields(
   String firstLabel,
@@ -105,9 +115,9 @@ class RecipientDropdownField extends StatelessWidget {
           )
           .toList(),
       loadItems: (filter) async {
-        final users = await context
-            .read<SoftwareSupportProvider>()
-            .fetchUsers(search: filter);
+        final users = await context.read<SoftwareSupportProvider>().fetchUsers(
+          search: filter,
+        );
         return users
             .map<DropdownItemModel>(
               (user) => DropdownItemModel(

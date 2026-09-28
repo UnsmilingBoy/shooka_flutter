@@ -14,6 +14,7 @@ class SoftwareSupportProvider with ChangeNotifier {
   bool _eventsNextPageLoading = false;
   bool _usersLoading = false;
   int _eventsTotalPages = 1;
+  int _eventsTotalCount = 0;
   int _eventsPage = 1;
   int? lastSelectedCreator;
   int? lastSelectedDevice;
@@ -38,6 +39,7 @@ class SoftwareSupportProvider with ChangeNotifier {
   bool get usersLoading => _usersLoading;
   bool get eventsNextPageLoading => _eventsNextPageLoading;
   int get eventsTotalPages => _eventsTotalPages;
+  int get eventsTotalCount => _eventsTotalCount;
   int get eventsPage => _eventsPage;
 
   //
@@ -151,6 +153,7 @@ class SoftwareSupportProvider with ChangeNotifier {
       );
       _events = result["results"];
       _eventsTotalPages = result["pages"];
+      _eventsTotalCount = result["total_count"] ?? 0;
     } catch (e) {
       _events = [];
       debugPrint("Error fetching support events: $e");

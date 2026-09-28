@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ImageWithCaption extends StatelessWidget {
@@ -17,25 +18,53 @@ class ImageWithCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget errorFallback(BoxFit? fit) {
+      if (localImagepath != null) {
+        return Image.asset(localImagepath!, fit: fit ?? BoxFit.contain);
+      }
+      return Container(
+        color: Colors.grey.shade200,
+        child: const Center(
+          child: Icon(Icons.broken_image, size: 32, color: Colors.grey),
+        ),
+      );
+    }
+
+    Widget loadingFallback() => Container(
+      color: Colors.grey.shade800,
+      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+    );
+
     Widget networkPreview(String url, {BoxFit? fit}) {
+      // On web, CachedNetworkImage defaults to HtmlImage: the image is
+      // decoded from a browser <img> element whose pixels are uploaded to
+      // the WebGL texture lazily. After a tab switch / refresh remount,
+      // CanvasKit can paint before the upload finishes -> blank boxes with
+      // "Uploading zeros" warnings. Image.network instead fetches bytes and
+      // decodes them directly (same as HttpGet), and the browser's native
+      // HTTP cache still caches the bytes. Mobile keeps CachedNetworkImage
+      // for its file cache.
+      //
+      // NOTE: byte fetching requires CORS on the image server, unlike <img>.
+      if (kIsWeb) {
+        return Image.network(
+          url,
+          fit: fit,
+          gaplessPlayback: true,
+          filterQuality: FilterQuality.high,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return loadingFallback();
+          },
+          errorBuilder: (context, error, stackTrace) =>
+              errorFallback(fit),
+        );
+      }
       return CachedNetworkImage(
         imageUrl: url,
         fit: fit,
-        placeholder: (context, url) => Container(
-          color: Colors.grey.shade800,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
-        errorWidget: (context, url, error) {
-          if (localImagepath != null) {
-            return Image.asset(localImagepath!, fit: fit ?? BoxFit.contain);
-          }
-          return Container(
-            color: Colors.grey.shade200,
-            child: const Center(
-              child: Icon(Icons.broken_image, size: 32, color: Colors.grey),
-            ),
-          );
-        },
+        placeholder: (context, url) => loadingFallback(),
+        errorWidget: (context, url, error) => errorFallback(fit),
       );
     }
 

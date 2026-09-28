@@ -23,10 +23,14 @@ class _DeviceRow {
   int? id;
   final code = TextEditingController();
   final serial = TextEditingController();
+  final codeFocus = FocusNode();
+  final serialFocus = FocusNode();
   _DeviceRow({this.id});
   void dispose() {
     code.dispose();
     serial.dispose();
+    codeFocus.dispose();
+    serialFocus.dispose();
   }
 }
 
@@ -48,16 +52,17 @@ class _PackFormModalState extends State<PackFormModal> {
   final _exportUnit = TextEditingController();
   final _postingType = TextEditingController();
   int? _selectedUserId;
-  final _sourceBank = TextEditingController();
-  final _destinationBank = TextEditingController();
-  final _amount = TextEditingController();
   final _date = TextEditingController();
   final _note = TextEditingController();
   final _devices = <_DeviceRow>[_DeviceRow()];
   final _installRows = <_InstallRow>[];
   List<InventoryInstallItemOption> _options = [];
   bool _itemsLoading = true;
-  String? _receiptImage;
+
+  /// When true, serial fields that fail [isValidSerialNumber] (including
+  /// empty ones on submit) are outlined in red so the user can spot exactly
+  /// which device row is wrong.
+  bool _showSerialErrors = false;
 
   bool get _isEdit => widget.form != null;
 
@@ -76,9 +81,6 @@ class _PackFormModalState extends State<PackFormModal> {
     if (form == null) return;
     _exportUnit.text = form.exportUnit;
     _postingType.text = form.postingType;
-    _sourceBank.text = form.sourceBank;
-    _destinationBank.text = form.destinationBank;
-    _amount.text = form.amount;
     _date.text = form.dateOfReceipt;
     _note.text = form.note;
     final matchedProvince = matchIranProvince(form.destination);
@@ -103,8 +105,7 @@ class _PackFormModalState extends State<PackFormModal> {
     }
     _installRows.clear();
     for (final item in form.installItems) {
-      final row = _InstallRow()
-        ..pendingLabel = item.itemType;
+      final row = _InstallRow()..pendingLabel = item.itemType;
       row.quantity.text = item.quantity > 0 ? item.quantity.toString() : '1';
       _installRows.add(row);
     }
@@ -170,15 +171,7 @@ class _PackFormModalState extends State<PackFormModal> {
 
   @override
   void dispose() {
-    for (final controller in [
-      _exportUnit,
-      _postingType,
-      _sourceBank,
-      _destinationBank,
-      _amount,
-      _date,
-      _note,
-    ]) {
+    for (final controller in [_exportUnit, _postingType, _date, _note]) {
       controller.dispose();
     }
     for (final row in _devices) {
@@ -196,22 +189,38 @@ class _PackFormModalState extends State<PackFormModal> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _pickReceipt() async {
-    final image = await pickReceiptImageAsBase64();
-    if (image != null && mounted) {
-      setState(() => _receiptImage = image);
-    }
+  /// Appends a new empty device row and moves keyboard focus to its code
+  /// field so the user can keep entering devices without tapping "add".
+  void _addDeviceRow() {
+    setState(() => _devices.add(_DeviceRow()));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _devices.last.codeFocus.requestFocus();
+    });
+  }
+
+  /// Called when Enter is pressed in a row's serial field. When the row is
+  /// the last one and both fields are filled, a fresh row is appended and
+  /// focused; otherwise focus just moves on.
+  void _onSerialSubmitted(int index) {
+    final row = _devices[index];
+    final filled =
+        row.code.text.trim().isNotEmpty && row.serial.text.trim().isNotEmpty;
+    if (filled && index == _devices.length - 1) _addDeviceRow();
+  }
+
+  /// Red-outline rule for a serial input:
+  /// - empty text stays neutral while typing, but turns red after a submit
+  ///   attempt ([_showSerialErrors]) so missing values are also highlighted;
+  /// - any non-empty text that fails the serial regex is red immediately.
+  bool _isSerialFieldInvalid(_DeviceRow row) {
+    final text = row.serial.text.trim();
+    if (text.isEmpty) return _showSerialErrors;
+    return !isValidSerialNumber(text);
   }
 
   Future<void> _submit() async {
-    final requiredFields = [
-      _exportUnit,
-      _postingType,
-      _sourceBank,
-      _destinationBank,
-      _amount,
-      _date,
-    ];
+    final requiredFields = [_exportUnit, _postingType, _date];
     final invalidDevices = _devices.any(
       (row) => row.code.text.trim().isEmpty || row.serial.text.trim().isEmpty,
     );
@@ -229,11 +238,10 @@ class _PackFormModalState extends State<PackFormModal> {
     }
     // Same serial format rule as AddDeviceModal.
     final invalidSerial = _devices.any(
-      (row) => !RegExp(
-        r'^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$',
-      ).hasMatch(row.serial.text.trim()),
+      (row) => !isValidSerialNumber(row.serial.text),
     );
     if (invalidSerial) {
+      setState(() => _showSerialErrors = true);
       flatErrorToast(
         title: 'فرمت شماره سریال اشتباه است.',
         description: 'مثال: 1111.2222.AAAA.FFFF',
@@ -268,9 +276,6 @@ class _PackFormModalState extends State<PackFormModal> {
           'export_unit': _exportUnit.text.trim(),
           'posting_type': _postingType.text.trim(),
           'sent_to': _selectedUserId,
-          'source_bank': _sourceBank.text.trim(),
-          'destination_bank': _destinationBank.text.trim(),
-          'amount': _amount.text.trim(),
           'date_of_receipt': _date.text.trim(),
           'note': _note.text.trim(),
           'devices': _devices
@@ -296,12 +301,8 @@ class _PackFormModalState extends State<PackFormModal> {
           'export_unit': _exportUnit.text.trim(),
           'posting_type': _postingType.text.trim(),
           'sent_to': _selectedUserId,
-          'source_bank': _sourceBank.text.trim(),
-          'destination_bank': _destinationBank.text.trim(),
-          'amount': _amount.text.trim(),
           'date_of_receipt': _date.text.trim(),
           'note': _note.text.trim(),
-          'receipt_image': _receiptImage,
           'devices': _devices
               .map(
                 (row) => {
@@ -347,32 +348,14 @@ class _PackFormModalState extends State<PackFormModal> {
         Icons.local_shipping_outlined,
       ),
       const SizedBox(height: 12),
-      pairFormFields(
-        'بانک مبدأ',
-        _sourceBank,
-        Icons.account_balance_outlined,
-        'بانک مقصد',
-        _destinationBank,
-        Icons.account_balance_outlined,
-      ),
-      const SizedBox(height: 12),
-      InventoryFormPair(
-        first: InventoryFormField(
-          label: 'مبلغ',
-          controller: _amount,
-          icon: Icons.payments_outlined,
-          keyboardType: TextInputType.number,
-          required: true,
-        ),
-        second: InventoryFormField(
-          label: 'تاریخ دریافت',
-          controller: _date,
-          icon: Icons.calendar_today_outlined,
-          hint: '۱۴۰۵/۰۱/۰۱',
-          readOnly: true,
-          onTap: _pickDate,
-          required: true,
-        ),
+      InventoryFormField(
+        label: 'تاریخ دریافت',
+        controller: _date,
+        icon: Icons.calendar_today_outlined,
+        hint: '۱۴۰۵/۰۱/۰۱',
+        readOnly: true,
+        onTap: _pickDate,
+        required: true,
       ),
       const SizedBox(height: 12),
       InventoryFormField(
@@ -382,8 +365,6 @@ class _PackFormModalState extends State<PackFormModal> {
         hint: 'توضیحات تکمیلی ارسال، در صورت نیاز',
         maxLines: 3,
       ),
-      const SizedBox(height: 12),
-      ReceiptPickerButton(picked: _receiptImage != null, onPick: _pickReceipt),
     ],
   );
 
@@ -401,13 +382,29 @@ class _PackFormModalState extends State<PackFormModal> {
         controller: row.code,
         icon: Icons.qr_code_rounded,
         required: true,
+        focusNode: row.codeFocus,
+        textInputAction: TextInputAction.next,
+        onSubmitted: (_) => row.serialFocus.requestFocus(),
       ),
       second: InventoryFormField(
         label: 'شماره سریال',
         controller: row.serial,
         icon: Icons.tag_outlined,
-        hint: '1111.2222.AAAA.FFFF',
+        hint: '1111.aaaa.aaaa.1111',
         required: true,
+        textDirection: TextDirection.ltr,
+        focusNode: row.serialFocus,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _onSerialSubmitted(index),
+        hasError: _isSerialFieldInvalid(row),
+        errorText: _isSerialFieldInvalid(row)
+            ? 'فرمت نامعتبر (مثال: 1111.2222.AAAA.FFFF)'
+            : null,
+        onChanged: (_) {
+          // Live-update the red outline as the user types, so the exact
+          // wrong row is obvious without waiting for submit.
+          if (mounted) setState(() {});
+        },
       ),
     ),
   );
@@ -453,7 +450,9 @@ class _PackFormModalState extends State<PackFormModal> {
   Widget build(BuildContext context) {
     final loading = context.watch<InventoryProvider>().submitLoading;
     return BottomModalTemplate(
-      title: _isEdit ? 'ویرایش ارسال پک #${widget.form!.id}' : 'ارسال پک دستگاه',
+      title: _isEdit
+          ? 'ویرایش ارسال پک #${widget.form!.id}'
+          : 'ارسال پک دستگاه',
       children: [
         InventoryFormHeader(
           title: _isEdit
@@ -465,7 +464,7 @@ class _PackFormModalState extends State<PackFormModal> {
         const SizedBox(height: 16),
         InventoryFormSection(
           title: 'اطلاعات ارسال',
-          description: 'مقصد، گیرنده و اطلاعات مالی فرم',
+          description: 'مقصد، گیرنده و جزئیات ارسال',
           icon: Icons.local_shipping_outlined,
           child: _shipmentDetails(),
         ),
@@ -481,7 +480,7 @@ class _PackFormModalState extends State<PackFormModal> {
               ),
               InventoryAddRowButton(
                 label: 'افزودن دستگاه',
-                onPressed: () => setState(() => _devices.add(_DeviceRow())),
+                onPressed: _addDeviceRow,
               ),
             ],
           ),
