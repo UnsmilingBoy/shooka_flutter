@@ -118,6 +118,12 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
     });
   }
 
+  /// Filters/search replace the whole result set, so a stale open detail
+  /// panel is closed instead of showing an event from the previous query.
+  void _closeSplitViewForNewQuery() {
+    if (_selectedEvent != null) _closeDetailPanel();
+  }
+
   int? _eventIdOf(Event event) {
     return event.eventCategoryDetails.isNotEmpty
         ? event.eventCategoryDetails.first.eventId
@@ -313,6 +319,7 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
 
     return TabHeader(
       onSubmitted: (value) async {
+        _closeSplitViewForNewQuery();
         setState(() {
           searchValue = value;
         });
@@ -321,6 +328,9 @@ class _SoftwareSupportState extends State<SoftwareSupport> {
       searchController: searchController,
       filterModal: FilterSoftwareSupportModal(),
       searchPlaceholder: "جستجوی رویداد...",
+      onFilterClosed: (result) {
+        if (result == true) _closeSplitViewForNewQuery();
+      },
       onExport: canExport ? _handleExport : null,
     );
   }

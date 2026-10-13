@@ -7,6 +7,7 @@ import 'package:shooka_flutter/services/providers/general_provider.dart';
 import 'package:shooka_flutter/services/providers/software_support_provider.dart';
 import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
+import 'package:shooka_flutter/utils/dropdowns/multi_searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 
 class FilterSoftwareSupportModal extends StatefulWidget {
@@ -20,16 +21,31 @@ class FilterSoftwareSupportModal extends StatefulWidget {
 class _FilterSoftwareSupportModalState
     extends State<FilterSoftwareSupportModal> {
   String? date;
-  String? selectedTitle;
-  String? selectedCreator;
-  String? selectedDevice;
-  String? selectedOrganization;
-  String? selectedAdministration;
-  String? selectedProvince;
-  String? selectedCity;
+  List<String> selectedTitles = [];
+  List<String> selectedCreators = [];
+  List<String> selectedDevices = [];
+  List<String> selectedOrganizations = [];
+  List<String> selectedAdministrations = [];
+  List<String> selectedProvinces = [];
+  List<String> selectedCities = [];
+  // Plan stays single-select.
   String? selectedPlan;
   String? startDate;
   String? endDate;
+
+  List<String> _split(String? value) {
+    if (value == null || value.trim().isEmpty) return [];
+    return value
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  String? _join(List<String> values) {
+    if (values.isEmpty) return null;
+    return values.join(',');
+  }
 
   @override
   void initState() {
@@ -38,13 +54,13 @@ class _FilterSoftwareSupportModalState
       context,
       listen: false,
     );
-    selectedCreator = provider.lastSelectedCreator?.toString();
-    selectedDevice = provider.lastSelectedDevice?.toString();
-    selectedTitle = provider.lastSelectedTitle;
-    selectedOrganization = provider.lastSelectedOrganization;
-    selectedAdministration = provider.lastSelectedAdministration;
-    selectedProvince = provider.lastSelectedProvince;
-    selectedCity = provider.lastSelectedCity;
+    selectedCreators = _split(provider.lastSelectedCreator);
+    selectedDevices = _split(provider.lastSelectedDevice);
+    selectedTitles = _split(provider.lastSelectedTitle);
+    selectedOrganizations = _split(provider.lastSelectedOrganization);
+    selectedAdministrations = _split(provider.lastSelectedAdministration);
+    selectedProvinces = _split(provider.lastSelectedProvince);
+    selectedCities = _split(provider.lastSelectedCity);
     selectedPlan = provider.lastSelectedPlan;
   }
 
@@ -53,142 +69,172 @@ class _FilterSoftwareSupportModalState
     final generalProvider = context.watch<GeneralProvider>();
     final supportProvider = context.watch<SoftwareSupportProvider>();
 
+    final titleItems = (generalProvider.filters?["event_title"] ?? [])
+        .map<DropdownItemModel>(
+          (title) => DropdownItemModel(
+            value: title.toString(),
+            label: title.toString(),
+          ),
+        )
+        .toList();
+
+    final creatorItems = (generalProvider.filters?["installers"] ?? [])
+        .map<DropdownItemModel>(
+          (creator) => DropdownItemModel(
+            value: creator["id"].toString(),
+            label: creator["installer"].toString(),
+          ),
+        )
+        .toList();
+
+    final deviceItems = (generalProvider.filters?["devices"] ?? [])
+        .map<DropdownItemModel>(
+          (device) => DropdownItemModel(
+            value: device["id"].toString(),
+            label: device["name"].toString(),
+          ),
+        )
+        .toList();
+
+    final orgItems = (generalProvider.filters?["organizations"] ?? [])
+        .map<DropdownItemModel>(
+          (organization) => DropdownItemModel(
+            value: organization["organization"].toString(),
+            label: organization["organization"].toString(),
+          ),
+        )
+        .toList();
+
+    final adminItems = (generalProvider.filters?["administration"] ?? [])
+        .map<DropdownItemModel>(
+          (administration) => DropdownItemModel(
+            value: administration["administration"].toString(),
+            label: administration["administration"].toString(),
+          ),
+        )
+        .toList();
+
+    final provinceItems = (generalProvider.filters?["locations"] ?? [])
+        .map((location) => location["location"][0].toString())
+        .toSet()
+        .map<DropdownItemModel>(
+          (province) =>
+              DropdownItemModel(value: province, label: province),
+        )
+        .toList();
+
+    final cityItems = (generalProvider.filters?["locations"] ?? [])
+        .where(
+          (location) =>
+              selectedProvinces.isEmpty ||
+              selectedProvinces.contains(
+                location["location"][0].toString(),
+              ),
+        )
+        .map((location) => location["location"][1].toString())
+        .toSet()
+        .map<DropdownItemModel>(
+          (city) => DropdownItemModel(value: city, label: city),
+        )
+        .toList();
+
     return BottomModalTemplate(
       title: "فیلتر رویداد ها",
       children: [
-        // SearchableDropdownWithLabel(
-        //   onChanged: (value) => setState(() {
-        //     selectedTitle = value;
-        //   }),
-        //   iconOnPressed: () => setState(() {
-        //     selectedTitle = null;
-        //   }),
-        //   items: (generalProvider.filters?["event_title"] ?? [])
-        //       .map<DropdownItemModel>(
-        //         (title) => DropdownItemModel(value: title, label: title),
-        //       )
-        //       .toList(),
-        //   label: "عناوین:",
-        //   placeholder: "انتخاب کنید",
-        //   initialValue: selectedTitle,
-        // ),
-        SearchableDropdownWithLabel(
-          onChanged: (value) => setState(() {
-            selectedCreator = value;
+        MultiSelectSearchableDropdownWithLabel(
+          onChanged: (values) => setState(() {
+            selectedTitles = values;
           }),
-          items: (generalProvider.filters?["installers"] ?? [])
-              .map<DropdownItemModel>(
-                (creator) => DropdownItemModel(
-                  value: creator["id"].toString(),
-                  label: creator["installer"].toString(),
-                ),
-              )
-              .toList(),
+          iconOnPressed: () => setState(() {
+            selectedTitles.clear();
+          }),
+          items: titleItems,
+          label: "عناوین:",
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedTitles,
+        ),
+        MultiSelectSearchableDropdownWithLabel(
+          onChanged: (values) => setState(() {
+            selectedCreators = values;
+          }),
+          items: creatorItems,
           label: "ایجاد کننده:",
-          placeholder: "انتخاب کنید",
+          placeholder: "انتخاب کنید (چندتایی)",
           iconOnPressed: () => setState(() {
-            selectedCreator = null;
+            selectedCreators.clear();
           }),
-          initialValue: selectedCreator,
+          initialValues: selectedCreators,
         ),
-        SearchableDropdownWithLabel(
-          onChanged: (value) => setState(() {
-            selectedDevice = value;
+        MultiSelectSearchableDropdownWithLabel(
+          onChanged: (values) => setState(() {
+            selectedDevices = values;
           }),
           iconOnPressed: () => setState(() {
-            selectedDevice = null;
+            selectedDevices.clear();
           }),
-          items: (generalProvider.filters?["devices"] ?? [])
-              .map<DropdownItemModel>(
-                (device) => DropdownItemModel(
-                  value: device["id"].toString(),
-                  label: device["name"].toString(),
-                ),
-              )
-              .toList(),
+          items: deviceItems,
           label: "دستگاه:",
-          placeholder: "انتخاب کنید",
-          initialValue: selectedDevice,
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedDevices,
         ),
-        SearchableDropdownWithLabel(
-          onChanged: (value) => setState(() {
-            selectedOrganization = value;
+        MultiSelectSearchableDropdownWithLabel(
+          onChanged: (values) => setState(() {
+            selectedOrganizations = values;
           }),
           iconOnPressed: () => setState(() {
-            selectedOrganization = null;
+            selectedOrganizations.clear();
           }),
-          items: (generalProvider.filters?["organizations"] ?? [])
-              .map<DropdownItemModel>(
-                (organization) => DropdownItemModel(
-                  value: organization["organization"].toString(),
-                  label: organization["organization"].toString(),
-                ),
-              )
-              .toList(),
+          items: orgItems,
           label: "سازمان:",
-          placeholder: "انتخاب کنید",
-          initialValue: selectedOrganization,
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedOrganizations,
         ),
-        SearchableDropdownWithLabel(
-          onChanged: (value) => setState(() {
-            selectedAdministration = value;
+        MultiSelectSearchableDropdownWithLabel(
+          onChanged: (values) => setState(() {
+            selectedAdministrations = values;
           }),
           iconOnPressed: () => setState(() {
-            selectedAdministration = null;
+            selectedAdministrations.clear();
           }),
-          items: (generalProvider.filters?["administration"] ?? [])
-              .map<DropdownItemModel>(
-                (administration) => DropdownItemModel(
-                  value: administration["administration"].toString(),
-                  label: administration["administration"].toString(),
-                ),
-              )
-              .toList(),
+          items: adminItems,
           label: "وزارت‌خانه:",
-          placeholder: "انتخاب کنید",
-          initialValue: selectedAdministration,
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedAdministrations,
         ),
-        SearchableDropdownWithLabel(
-          onChanged: (value) => setState(() {
-            selectedProvince = value;
+        MultiSelectSearchableDropdownWithLabel(
+          onChanged: (values) => setState(() {
+            selectedProvinces = values;
+            // Drop cities that are no longer visible
+            selectedCities = selectedCities
+                .where(
+                  (city) => cityItems.any((item) => item.value == city),
+                )
+                .toList();
           }),
           iconOnPressed: () => setState(() {
-            selectedProvince = null;
+            selectedProvinces.clear();
+            selectedCities = selectedCities
+                .where(
+                  (city) => cityItems.any((item) => item.value == city),
+                )
+                .toList();
           }),
-          items: (generalProvider.filters?["locations"] ?? [])
-              .map((location) => location["location"][0].toString())
-              .toSet()
-              .map<DropdownItemModel>(
-                (province) =>
-                    DropdownItemModel(value: province, label: province),
-              )
-              .toList(),
+          items: provinceItems,
           label: "استان:",
-          placeholder: "انتخاب کنید",
-          initialValue: selectedProvince,
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedProvinces,
         ),
-        SearchableDropdownWithLabel(
-          onChanged: (value) => setState(() {
-            selectedCity = value;
+        MultiSelectSearchableDropdownWithLabel(
+          onChanged: (values) => setState(() {
+            selectedCities = values;
           }),
           iconOnPressed: () => setState(() {
-            selectedCity = null;
+            selectedCities.clear();
           }),
-          items: (generalProvider.filters?["locations"] ?? [])
-              .where(
-                (location) =>
-                    selectedProvince == null ||
-                    location["location"][0].toString() == selectedProvince,
-              )
-              .map((location) => location["location"][1].toString())
-              .toSet()
-              .map<DropdownItemModel>(
-                (city) => DropdownItemModel(value: city, label: city),
-              )
-              .toList(),
+          items: cityItems,
           label: "شهر:",
-          placeholder: "انتخاب کنید",
-          initialValue: selectedCity,
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedCities,
         ),
         SearchableDropdownWithLabel(
           onChanged: (value) => setState(() {
@@ -262,21 +308,17 @@ class _FilterSoftwareSupportModalState
               search: supportProvider.lastSearchedText,
               start: startDate,
               end: endDate,
-              title: selectedTitle,
-              creator: selectedCreator != null
-                  ? int.tryParse(selectedCreator ?? "-1")
-                  : null,
-              device: selectedDevice != null
-                  ? int.tryParse(selectedDevice ?? "-1")
-                  : null,
-              organization: selectedOrganization,
-              administration: selectedAdministration,
-              province: selectedProvince,
-              city: selectedCity,
+              title: _join(selectedTitles),
+              creator: _join(selectedCreators),
+              device: _join(selectedDevices),
+              organization: _join(selectedOrganizations),
+              administration: _join(selectedAdministrations),
+              province: _join(selectedProvinces),
+              city: _join(selectedCities),
               plan: selectedPlan,
             );
 
-            Navigator.pop(context);
+            Navigator.pop(context, true);
           },
         ),
       ],

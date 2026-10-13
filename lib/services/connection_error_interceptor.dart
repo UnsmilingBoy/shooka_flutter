@@ -62,9 +62,9 @@ class ConnectionErrorInterceptor extends Interceptor {
       );
     }
 
-    if (isConnectionError) {
-      await _logoutAuthenticatedUser();
-    }
+    // if (isConnectionError) {
+    //   await _logoutAuthenticatedUser();
+    // }
 
     // Always forward the error
     handler.next(err);

@@ -17,8 +17,9 @@ import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 /// Shows **per-device progress** from
 /// `POST /api/shouka/objects/flowchart/retrieve/` (`is_done`, `done_at`,
 /// `done_by`, `note`) with a progress header + vertical timeline. The current
-/// (first pending) step can be marked done — with an optional note — via
-/// `POST /api/shouka/device/edit-info/` (`object_type: flowchart`).
+/// (first pending) step can be marked done — with an optional note — and the
+/// last completed step can be reverted back to incomplete, both via
+/// `POST /api/shouka/device/edit-info/` (`object_type: flowchart`, `is_done`).
 /// Plus an in-place **template reorder** sheet backed by
 /// `list/ordered/` + `edit/order/`.
 ///
@@ -110,9 +111,34 @@ class _DpFlowchartState extends State<DpFlowchart> {
     final loading = provider.deviceFlowchartLoading(widget.deviceId);
     final error = provider.deviceFlowchartError(widget.deviceId);
 
+    // Current flowchart status shown beside the (collapsed) title:
+    // the first pending step's label, or "تکمیل شده" when all are done.
+    String? statusText;
+    Color statusColor = Theme.of(context).colorScheme.primary;
+    if (loading && steps == null) {
+      statusText = "در حال بارگذاری...";
+      statusColor = Theme.of(context).hintColor;
+    } else if (error != null && steps == null) {
+      statusText = "خطا در دریافت وضعیت";
+      statusColor = Theme.of(context).colorScheme.error;
+    } else if (steps != null && steps.isNotEmpty) {
+      final sorted = List<DeviceFlowchartStep>.from(steps)
+        ..sort((a, b) => a.order.compareTo(b.order));
+      final firstPending = sorted.indexWhere((s) => !s.isDone);
+      if (firstPending == -1) {
+        statusText = "تکمیل شده";
+        statusColor = Colors.green;
+      } else {
+        statusText = sorted[firstPending].label;
+      }
+    }
+
     return MyExpansionTile(
-      initiallyExpanded: true,
+      initiallyExpanded: false,
       title: "مراحل انجام کار",
+      titleTrailing: statusText == null
+          ? null
+          : _TitleStatusPill(text: statusText, color: statusColor),
       children: [
         if (loading && steps == null)
           const Padding(
@@ -315,6 +341,11 @@ class _DeviceTimeline extends StatelessWidget {
     final sorted = List<DeviceFlowchartStep>.from(steps)
       ..sort((a, b) => a.order.compareTo(b.order));
     final firstPending = sorted.indexWhere((s) => !s.isDone);
+    // Only the most recent done step can be reverted — keeps the flowchart
+    // sequential (no holes in the middle).
+    final lastDone = firstPending == -1
+        ? sorted.length - 1
+        : firstPending - 1;
 
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
@@ -329,6 +360,7 @@ class _DeviceTimeline extends StatelessWidget {
           step: step,
           isLast: isLast,
           isCurrent: isCurrent,
+          canRevert: step.isDone && index == lastDone,
         );
       },
     );
@@ -340,17 +372,20 @@ class _StepRow extends StatelessWidget {
   final DeviceFlowchartStep step;
   final bool isLast;
   final bool isCurrent;
+  final bool canRevert;
 
   const _StepRow({
     required this.deviceId,
     required this.step,
     required this.isLast,
     required this.isCurrent,
+    this.canRevert = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final showRevert = canRevert && !isCurrent && !_isSettlementStep(step);
     final Color ring;
     final Color fill;
     if (step.isDone) {
@@ -434,6 +469,7 @@ class _StepRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
@@ -442,9 +478,24 @@ class _StepRow extends StatelessWidget {
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
-                        _StatusChip(
-                          done: step.isDone,
-                          current: isCurrent,
+                        IntrinsicWidth(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _StatusChip(
+                                done: step.isDone,
+                                current: isCurrent,
+                              ),
+                              if (showRevert) ...[
+                                const SizedBox(height: 6),
+                                _RevertStepButton(
+                                  deviceId: deviceId,
+                                  step: step,
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -509,8 +560,10 @@ class _StepRow extends StatelessWidget {
                       ),
                     ],
                     // Only the current step can be completed — keeps the
-                    // flowchart sequential.
-                    if (isCurrent) ...[
+                    // flowchart sequential. Settlement steps are settled via
+                    // the inventory forms, so they never show actions.
+                    // (Revert lives beside the status chip above.)
+                    if (isCurrent && !_isSettlementStep(step)) ...[
                       const SizedBox(height: 8),
                       _CompleteStepButton(
                         deviceId: deviceId,
@@ -570,27 +623,125 @@ class _CompleteStepButton extends StatelessWidget {
     final submitting = context
         .watch<DeviceProvider>()
         .isFlowchartStepSubmitting(deviceId, step.flowchartItemId);
-    final scheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: double.infinity,
-      child: FilledButton.tonalIcon(
+      child: FilledButton.icon(
         onPressed: submitting ? null : () => _openSheet(context),
         icon: submitting
             ? const SizedBox.square(
                 dimension: 15,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               )
             : const Icon(Icons.check_circle_outline_rounded, size: 17),
         label: Text(submitting ? "در حال ثبت..." : "تکمیل این مرحله"),
-        style: FilledButton.styleFrom(
+        style:
+            FilledButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              textStyle: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.green.withValues(alpha: .35),
+              disabledForegroundColor: Colors.white.withValues(alpha: .9),
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) return null;
+                if (states.contains(WidgetState.pressed)) {
+                  return Colors.white.withValues(alpha: .24);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return Colors.white.withValues(alpha: .14);
+                }
+                if (states.contains(WidgetState.focused)) {
+                  return Colors.white.withValues(alpha: .12);
+                }
+                return null;
+              }),
+            ),
+      ),
+    );
+  }
+}
+
+/// Revert button on the last done step. Opens a confirm dialog, then flips
+/// the step back to incomplete (`is_done: false`) via the provider.
+class _RevertStepButton extends StatelessWidget {
+  final int deviceId;
+  final DeviceFlowchartStep step;
+
+  const _RevertStepButton({required this.deviceId, required this.step});
+
+  Future<void> _openSheet(BuildContext context) async {
+    final content = _CompleteStepSheet(
+      deviceId: deviceId,
+      step: step,
+      isDone: false,
+    );
+    if (MediaQuery.sizeOf(context).width >= 900) {
+      await showDialog<void>(context: context, builder: (_) => content);
+    } else {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        builder: (_) => content,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final submitting = context
+        .watch<DeviceProvider>()
+        .isFlowchartStepSubmitting(deviceId, step.flowchartItemId);
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: "بازگردانی به ناتمام",
+      child: OutlinedButton.icon(
+        onPressed: submitting ? null : () => _openSheet(context),
+        icon: submitting
+            ? const SizedBox.square(
+                dimension: 13,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.undo_rounded, size: 15),
+        label: Text(submitting ? "..." : "بازگردانی"),
+        style: OutlinedButton.styleFrom(
           visualDensity: VisualDensity.compact,
-          textStyle: Theme.of(
-            context,
-          ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
-          backgroundColor: Colors.green.withValues(alpha: .14),
-          foregroundColor: scheme.brightness == Brightness.dark
-              ? Colors.green.shade200
-              : Colors.green.shade800,
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            fontSize: 11.5,
+          ),
+          foregroundColor: scheme.error,
+          backgroundColor: scheme.error.withValues(alpha: .12),
+          side: BorderSide(
+            color: scheme.error.withValues(alpha: .8),
+            width: 1.2,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) return null;
+            if (states.contains(WidgetState.pressed)) {
+              return scheme.error.withValues(alpha: .25);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return scheme.error.withValues(alpha: .18);
+            }
+            return null;
+          }),
         ),
       ),
     );
@@ -604,8 +755,13 @@ class _CompleteStepButton extends StatelessWidget {
 class _CompleteStepSheet extends StatefulWidget {
   final int deviceId;
   final DeviceFlowchartStep step;
+  final bool isDone;
 
-  const _CompleteStepSheet({required this.deviceId, required this.step});
+  const _CompleteStepSheet({
+    required this.deviceId,
+    required this.step,
+    this.isDone = true,
+  });
 
   @override
   State<_CompleteStepSheet> createState() => _CompleteStepSheetState();
@@ -629,21 +785,29 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
         deviceId: widget.deviceId,
         flowchartItemId: widget.step.flowchartItemId,
         note: _note.text.trim(),
+        isDone: widget.isDone,
       );
       if (!mounted) return;
       if (status == 200) {
         filledSuccessToast(
-          title: "مرحله «${widget.step.label}» انجام شد",
+          title: widget.isDone
+              ? "مرحله «${widget.step.label}» انجام شد"
+              : "مرحله «${widget.step.label}» به ناتمام برگشت",
         );
         Navigator.pop(context);
       } else {
         flatErrorToast(
-          title: "ثبت مرحله ناموفق بود",
+          title: widget.isDone
+              ? "ثبت مرحله ناموفق بود"
+              : "بازگردانی مرحله ناموفق بود",
           description: "کد وضعیت: $status",
         );
       }
     } catch (e) {
-      flatErrorToast(title: "خطا در ثبت مرحله", description: e.toString());
+      flatErrorToast(
+        title: widget.isDone ? "خطا در ثبت مرحله" : "خطا در بازگردانی مرحله",
+        description: e.toString(),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -684,6 +848,8 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
   Widget _form(BuildContext context, {required bool autofocusNote}) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isDone = widget.isDone;
+    final accent = isDone ? Colors.green : scheme.error;
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide(color: scheme.outline.withValues(alpha: .45)),
@@ -698,12 +864,12 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: .14),
+                color: accent.withValues(alpha: .14),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.task_alt_rounded,
-                color: Colors.green,
+              child: Icon(
+                isDone ? Icons.task_alt_rounded : Icons.undo_rounded,
+                color: accent,
                 size: 22,
               ),
             ),
@@ -713,14 +879,16 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "تکمیل مرحله",
+                    isDone ? "تکمیل مرحله" : "بازگردانی مرحله",
                     style: textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "«${widget.step.label}» به‌عنوان انجام‌شده ثبت می‌شود",
+                    isDone
+                        ? "«${widget.step.label}» به‌عنوان انجام‌شده ثبت می‌شود"
+                        : "«${widget.step.label}» به حالت ناتمام برمی‌گردد",
                     style: textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -762,7 +930,9 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
           style: textTheme.bodyMedium,
           decoration: InputDecoration(
             labelText: "یادداشت",
-            hintText: "توضیح کوتاه درباره انجام این مرحله (اختیاری)...",
+            hintText: isDone
+                ? "توضیح کوتاه درباره انجام این مرحله (اختیاری)..."
+                : "دلیل بازگردانی این مرحله (اختیاری)...",
             prefixIcon: const Icon(Icons.edit_note_rounded, size: 20),
             isDense: true,
             filled: true,
@@ -788,10 +958,17 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.check_rounded, size: 18),
-                label: Text(_saving ? "در حال ثبت..." : "ثبت انجام مرحله"),
+                    : Icon(
+                        isDone ? Icons.check_rounded : Icons.undo_rounded,
+                        size: 18,
+                      ),
+                label: Text(
+                  _saving
+                      ? "در حال ثبت..."
+                      : (isDone ? "ثبت انجام مرحله" : "ثبت بازگردانی"),
+                ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: isDone ? Colors.green : scheme.error,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
@@ -812,8 +989,17 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
   }
 }
 
-IconData _iconFor(String label) {
-  if (label.contains("اشتراک")) return Icons.card_membership_outlined;
+/// Settlement steps ("تسویه حساب" / "تسویه حساب با نماینده") are settled
+/// through the inventory settlement forms, not from the flowchart — so they
+/// never show complete / revert actions here.
+bool _isSettlementStep(DeviceFlowchartStep step) {
+  final label = step.label;
+  return label.contains('تسویه') ||
+      label.contains('توسعه') ||
+      label.contains('توسه');
+}
+
+IconData _iconFor(String label) {  if (label.contains("اشتراک")) return Icons.card_membership_outlined;
   if (label.contains("نصب")) return Icons.build_outlined;
   if (label.contains("مستند")) return Icons.upload_file_outlined;
   if (label.contains("ناظر")) return Icons.verified_outlined;
@@ -821,6 +1007,37 @@ IconData _iconFor(String label) {
   if (label.contains("نماینده")) return Icons.badge_outlined;
   if (label.contains("تسویه")) return Icons.payments_outlined;
   return Icons.circle_outlined;
+}
+
+/// Small pill shown beside the collapsed tile title with the current
+/// flowchart status (first pending step label, or "تکمیل شده").
+class _TitleStatusPill extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _TitleStatusPill({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .13),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
 }
 
 class _StatusChip extends StatelessWidget {
@@ -852,6 +1069,7 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         text,
+        textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,

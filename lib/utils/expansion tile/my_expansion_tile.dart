@@ -3,6 +3,7 @@ import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
 
 class MyExpansionTile extends StatelessWidget {
   final String title;
+  final Widget? titleTrailing;
   final VoidCallback? completeOnPressed;
   final List<Widget> children;
   final bool? initiallyExpanded;
@@ -10,6 +11,7 @@ class MyExpansionTile extends StatelessWidget {
   const MyExpansionTile({
     super.key,
     required this.title,
+    this.titleTrailing,
     required this.children,
     this.initiallyExpanded,
     this.padding,
@@ -43,6 +45,7 @@ class MyExpansionTile extends StatelessWidget {
             spacing: 5,
             children: [
               Text(title, style: Theme.of(context).textTheme.titleSmall),
+              if (titleTrailing != null) Flexible(child: titleTrailing!),
               if (completeOnPressed != null)
                 MyIconButton(
                   padding: EdgeInsets.all(7),

@@ -277,7 +277,7 @@ class _ProfileMenuState extends State<_ProfileMenu> {
                 spacing: 5,
                 children: [
                   _logOutLoading
-                      ? const Loading()
+                      ? const Loading(color: Colors.white)
                       : const Icon(Icons.logout, size: 18, color: Colors.white),
                   Text(
                     "خروج از حساب",

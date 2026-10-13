@@ -31,25 +31,15 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
   String _type = 'device';
   final _selectedCodes = <String>{};
   final _amount = TextEditingController();
-  final _sourceBank = TextEditingController(text: 'بانک ملی ایران');
-  final _destinationBank = TextEditingController(text: 'بانک ملی ایران');
+  final _sourceBank = TextEditingController();
+  final _destinationBank = TextEditingController();
   final _note = TextEditingController();
   String? _receiptImage;
 
   @override
   void initState() {
     super.initState();
-    // Pre-select every still-unsettled device for the default type so a
-    // one-tap submit settles the whole remainder of the form.
-    _selectedCodes.addAll(_unsettledCodes(representative: false));
-  }
-
-  Set<String> _unsettledCodes({required bool representative}) {
-    final settled = widget.form.settledCodes(representative: representative);
-    return widget.form.devices
-        .map((d) => d.code)
-        .where((code) => !settled.contains(code))
-        .toSet();
+    // Devices start deselected; the user picks which ones to settle.
   }
 
   Set<String> get _settledForCurrentType =>
@@ -58,10 +48,8 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
   void _onTypeChanged(String value) {
     setState(() {
       _type = value;
-      // Auto-select the remaining unsettled devices of the new type.
-      _selectedCodes
-        ..clear()
-        ..addAll(_unsettledCodes(representative: _isRepresentative));
+      // Keep devices deselected when switching type; user picks explicitly.
+      _selectedCodes.clear();
     });
   }
 
@@ -487,6 +475,17 @@ class _ScrollableDeviceListState extends State<_ScrollableDeviceList>
                 final device = widget.devices[index];
                 final isSettled = widget.settled.contains(device.code);
                 final checked = widget.selected.contains(device.code);
+                final name = device.deviceName?.trim();
+                final titleText = (name != null && name.isNotEmpty)
+                    ? name
+                    : device.code;
+                final doneSteps = device.deviceFlowchart
+                    .where((s) => s.isDone)
+                    .toList()
+                  ..sort((a, b) => a.order.compareTo(b.order));
+                final lastDoneLabel = doneSteps.isEmpty
+                    ? null
+                    : doneSteps.last.label;
                 return CheckboxListTile(
                   value: isSettled ? true : checked,
                   enabled: !isSettled,
@@ -497,7 +496,9 @@ class _ScrollableDeviceListState extends State<_ScrollableDeviceList>
                     children: [
                       Expanded(
                         child: Text(
-                          device.code,
+                          titleText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w700,
@@ -507,8 +508,53 @@ class _ScrollableDeviceListState extends State<_ScrollableDeviceList>
                               ),
                         ),
                       ),
+                      if (device.isReturned)
+                        Container(
+                          margin: const EdgeInsetsDirectional.only(start: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.error.withValues(alpha: .12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'برگشت‌خورده',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: scheme.error,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 10,
+                                ),
+                          ),
+                        ),
+                      if (lastDoneLabel != null)
+                        Container(
+                          margin: const EdgeInsetsDirectional.only(start: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: .12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            lastDoneLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 10,
+                                ),
+                          ),
+                        ),
                       if (isSettled)
                         Container(
+                          margin: const EdgeInsetsDirectional.only(start: 6),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 7,
                             vertical: 3,
@@ -541,7 +587,7 @@ class _ScrollableDeviceListState extends State<_ScrollableDeviceList>
                     ],
                   ),
                   subtitle: Text(
-                    '${device.deviceType} • ${device.serialNumber}',
+                    '${device.code} • ${device.deviceType} • \u2066${device.serialNumber}\u2069',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(

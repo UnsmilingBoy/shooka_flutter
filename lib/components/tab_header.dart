@@ -13,6 +13,7 @@ class TabHeader extends StatelessWidget {
   final VoidCallback? onExport;
   final bool exportLoading;
   final List<Widget>? customButtons;
+  final ValueChanged<dynamic>? onFilterClosed;
   const TabHeader({
     super.key,
     required this.searchController,
@@ -23,6 +24,7 @@ class TabHeader extends StatelessWidget {
     this.onExport,
     this.exportLoading = false,
     this.customButtons,
+    this.onFilterClosed,
   });
 
   @override
@@ -55,7 +57,7 @@ class TabHeader extends StatelessWidget {
               onPressed: exportLoading ? null : onExport,
               color: Theme.of(context).colorScheme.primary,
               child: exportLoading
-                  ? Loading()
+                  ? Loading(color: Colors.white)
                   : Icon(Icons.download_rounded, color: Colors.white),
             ),
           ),
@@ -64,19 +66,21 @@ class TabHeader extends StatelessWidget {
             height: 50,
             width: 50,
             child: MyIconButton(
-              onPressed: () {
+              onPressed: () async {
+                dynamic result;
                 if (isDesktop) {
-                  showDialog(
+                  result = await showDialog(
                     context: context,
                     builder: (context) => filterModal ?? SizedBox(),
                   );
                 } else {
-                  showMaterialModalBottomSheet(
+                  result = await showMaterialModalBottomSheet(
                     enableDrag: false,
                     context: context,
                     builder: (context) => filterModal ?? SizedBox(),
                   );
                 }
+                onFilterClosed?.call(result);
               },
               color: Theme.of(context).colorScheme.secondary,
               child: Icon(Icons.filter_alt_rounded, color: Colors.white),

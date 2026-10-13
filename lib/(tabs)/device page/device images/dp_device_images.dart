@@ -156,6 +156,22 @@ class _DeviceImagesState extends State<DeviceImages> {
     }
   }
 
+  void _toggleSelectAll(List<dynamic> images) {
+    setState(() {
+      if (_selected.length == images.length) {
+        _selected.clear();
+        selectedForRemove.clear();
+      } else {
+        _selected.clear();
+        selectedForRemove.clear();
+        for (int i = 0; i < images.length; i++) {
+          _selected.add(i);
+          selectedForRemove.add(images[i].imageId);
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final deviceProvider = context.watch<DeviceProvider>();
@@ -173,53 +189,89 @@ class _DeviceImagesState extends State<DeviceImages> {
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
               )
-            : ListView.builder(
-                physics: NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: images.length,
-                itemBuilder: (context, index) {
-                  final imageItem = images[index];
-                  final isSelected = _selected.contains(index);
-                  return ListTile(
-                    contentPadding: EdgeInsets.all(0),
-                    leading: SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: ImageWithCaption(
-                          networkImagePath: imageItem.image,
-                          disableCaption: true,
+            : Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "${_selected.length} از ${images.length} انتخاب شده",
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      TextButton(
+                        onPressed: () => _toggleSelectAll(images),
+                        child: Text(
+                          _selected.length == images.length
+                              ? "لغو انتخاب همه"
+                              : "انتخاب همه",
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: Theme.of(context).primaryColor,
+                              ),
                         ),
                       ),
-                    ),
-                    title: Text(
-                      "تصویر شماره ${index + 1}",
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    subtitle: Text(
-                      imageItem.createdAt,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                    trailing: Checkbox(
-                      value: isSelected,
-                      onChanged: (value) {
-                        setState(() {
-                          if (value == true) {
-                            _selected.add(index);
-                            selectedForRemove.add(imageItem.imageId);
-                            if (kDebugMode) {
-                              print(selectedForRemove);
+                    ],
+                  ),
+                  ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      final imageItem = images[index];
+                      final isSelected = _selected.contains(index);
+                      return ListTile(
+                        contentPadding: EdgeInsets.all(0),
+                        leading: SizedBox(
+                          width: 60,
+                          height: 60,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: ImageWithCaption(
+                              networkImagePath: imageItem.image,
+                              disableCaption: true,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          "تصویر شماره ${index + 1}",
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        subtitle: Text(
+                          imageItem.createdAt,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        trailing: Checkbox(
+                          value: isSelected,
+                          onChanged: (value) {
+                            setState(() {
+                              if (value == true) {
+                                _selected.add(index);
+                                selectedForRemove.add(imageItem.imageId);
+                                if (kDebugMode) {
+                                  print(selectedForRemove);
+                                }
+                              } else {
+                                _selected.remove(index);
+                                selectedForRemove.remove(imageItem.imageId);
+                              }
+                            });
+                          },
+                        ),
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selected.remove(index);
+                              selectedForRemove.remove(imageItem.imageId);
+                            } else {
+                              _selected.add(index);
+                              selectedForRemove.add(imageItem.imageId);
                             }
-                          } else {
-                            _selected.remove(index);
-                            selectedForRemove.remove(imageItem.imageId);
-                          }
-                        });
-                      },
-                    ),
-                  );
-                },
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ],
               ),
         if (base64Images.isNotEmpty)
           Row(

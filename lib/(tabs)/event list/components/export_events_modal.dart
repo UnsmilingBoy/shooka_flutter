@@ -25,6 +25,7 @@ class _ExportEventsModalState extends State<ExportEventsModal> {
 
   Future<void> _export() async {
     if (!_hasSelection) return;
+    if (_exportLoading) return; // Guard against double-tap → double download
     setState(() => _exportLoading = true);
     try {
       if (widget.isSoftwareSupport) {
@@ -51,23 +52,51 @@ class _ExportEventsModalState extends State<ExportEventsModal> {
     }
   }
 
-  String _resolveOptionName(dynamic list, int? id, String key) {
-    if (id == null) return '';
-    if (list != null) {
-      for (final item in list) {
-        if (item["id"].toString() == id.toString()) {
-          return item[key].toString();
+  String _resolveInstallerNames(dynamic list, String? ids) {
+    if (ids == null || ids.isEmpty) return '';
+    final parts = ids
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final names = parts.map((id) {
+      if (list != null) {
+        for (final item in list) {
+          if (item["id"].toString() == id) {
+            return item["installer"].toString();
+          }
         }
       }
-    }
-    return id.toString();
+      return id;
+    }).toList();
+    return names.join('، ');
+  }
+
+  String _resolveDeviceNames(dynamic list, String? deviceIds) {
+    if (deviceIds == null || deviceIds.isEmpty) return '';
+    final ids = deviceIds
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final names = ids.map((id) {
+      if (list != null) {
+        for (final item in list) {
+          if (item["id"].toString() == id) {
+            return item["name"].toString();
+          }
+        }
+      }
+      return id;
+    }).toList();
+    return names.join('، ');
   }
 
   List<String> _activeFilterLabels({
     required dynamic filters,
     required String? search,
-    required int? creatorId,
-    required int? deviceId,
+    required String? creatorId,
+    required String? deviceId,
     required String? title,
     required String? organization,
     required String? administration,
@@ -79,10 +108,10 @@ class _ExportEventsModalState extends State<ExportEventsModal> {
   }) {
     return [
       if (search != null && search.isNotEmpty) "جستجو: $search",
-      if (creatorId != null)
-        "ایجاد کننده: ${_resolveOptionName(filters?["installers"], creatorId, "installer")}",
-      if (deviceId != null)
-        "دستگاه: ${_resolveOptionName(filters?["devices"], deviceId, "name")}",
+      if (creatorId != null && creatorId.isNotEmpty)
+        "ایجاد کننده: ${_resolveInstallerNames(filters?["installers"], creatorId)}",
+      if (deviceId != null && deviceId.isNotEmpty)
+        "دستگاه: ${_resolveDeviceNames(filters?["devices"], deviceId)}",
       if (title != null) "عنوان: $title",
       if (organization != null) "سازمان: $organization",
       if (administration != null) "وزارت‌خانه: $administration",
@@ -204,8 +233,8 @@ class _ExportEventsModalState extends State<ExportEventsModal> {
     final generalFilters = context.watch<GeneralProvider>().filters;
 
     String? search;
-    int? creatorId;
-    int? deviceId;
+    String? creatorId;
+    String? deviceId;
     String? title;
     String? organization;
     String? administration;
@@ -218,8 +247,8 @@ class _ExportEventsModalState extends State<ExportEventsModal> {
     if (widget.isSoftwareSupport) {
       final provider = context.watch<SoftwareSupportProvider>();
       search = provider.lastSearchedText;
-      creatorId = provider.lastSelectedCreator;
-      deviceId = provider.lastSelectedDevice;
+      creatorId = provider.lastSelectedCreator?.toString();
+      deviceId = provider.lastSelectedDevice?.toString();
       title = provider.lastSelectedTitle;
       organization = provider.lastSelectedOrganization;
       administration = provider.lastSelectedAdministration;

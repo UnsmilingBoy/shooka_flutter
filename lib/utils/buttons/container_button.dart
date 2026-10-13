@@ -26,6 +26,8 @@ class ContainerButton extends StatefulWidget {
 class _ContainerButtonState extends State<ContainerButton> {
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(0),
       margin: widget.margin,
@@ -39,6 +41,12 @@ class _ContainerButtonState extends State<ContainerButton> {
         child: MaterialButton(
           disabledColor: Theme.of(context).primaryColor,
           disabledTextColor: Colors.white,
+          // Default hover is black/white at 4% — invisible on light
+          // surfaces. A primary tint stays subtle but visible in both
+          // modes and matches the selection/tab accents.
+          hoverColor: isDark
+              ? scheme.primary.withValues(alpha: 0.16)
+              : scheme.primary.withValues(alpha: 0.08),
           padding: widget.padding,
           onPressed: widget.onPressed,
           child: widget.child,

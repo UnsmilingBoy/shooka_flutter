@@ -408,15 +408,17 @@ class _DeviceCard extends StatelessWidget {
     // Same regex as the pack form: highlight the exact row whose serial
     // fails validation so the user can spot which device is wrong.
     final serialInvalid = !isValidSerialNumber(device.serialNumber);
+    final name = device.deviceName?.trim();
+    final doneSteps = device.deviceFlowchart.where((s) => s.isDone).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final lastDoneLabel = doneSteps.isEmpty ? null : doneSteps.last.label;
     final chips = <Widget>[
       if (serialInvalid)
         StatusChip(label: 'سریال نامعتبر', color: scheme.error),
       if (device.isReturned)
         StatusChip(label: 'برگشت‌خورده', color: scheme.error),
-      if (device.isInstalled)
-        StatusChip(label: 'نصب‌شده', color: scheme.secondary),
-      if (device.isSent && !device.isReturned)
-        StatusChip(label: 'ارسال‌شده', color: scheme.primary),
+      if (lastDoneLabel != null)
+        StatusChip(label: lastDoneLabel, color: Colors.green),
     ];
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -442,7 +444,7 @@ class _DeviceCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                device.code,
+                (name != null && name.isNotEmpty) ? name : device.code,
                 style: Theme.of(
                   context,
                 ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -455,7 +457,7 @@ class _DeviceCard extends StatelessWidget {
           // Wrap the serial in LTR isolates so the bidi algorithm can't
           // reorder its dot-separated segments when it starts with digits
           // (e.g. "1111.AAAA...") inside this RTL subtitle.
-          '${device.deviceType} • \u2066${device.serialNumber}\u2069',
+          '${device.code} • ${device.deviceType} • \u2066${device.serialNumber}\u2069',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -464,6 +466,10 @@ class _DeviceCard extends StatelessWidget {
           ),
         ),
         children: [
+          if (device.flowchartDoneCount > 0) ...[
+            _FlowchartSteps(device: device),
+            const SizedBox(height: 6),
+          ],
           if (device.items.isEmpty)
             Align(
               alignment: AlignmentDirectional.centerStart,
@@ -480,6 +486,74 @@ class _DeviceCard extends StatelessWidget {
                 title: item.itemType,
                 trailing: '${item.quantity} عدد',
               ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Done flowchart steps for the device, shown inside the expanded card.
+class _FlowchartSteps extends StatelessWidget {
+  final InventoryDevice device;
+
+  const _FlowchartSteps({required this.device});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final steps = device.deviceFlowchart.where((s) => s.isDone).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    if (steps.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: scheme.outline.withValues(alpha: .25)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < steps.length; i++) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 15,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      steps[i].label,
+                      style: text.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (steps[i].doneAt != null &&
+                      steps[i].doneAt!.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      steps[i].doneAt!,
+                      style: text.labelSmall?.copyWith(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (i < steps.length - 1)
+              Divider(
+                height: 1,
+                color: scheme.outlineVariant.withValues(alpha: .5),
+              ),
+          ],
         ],
       ),
     );

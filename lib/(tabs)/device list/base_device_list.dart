@@ -243,6 +243,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
 
   Future<void> _handleExport() async {
     if (isSpecialMode) return; // No export for rejected/suspended devices
+    if (_exportLoading) return; // Guard against double-tap → double download
 
     setState(() => _exportLoading = true);
     try {
@@ -297,6 +298,12 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
       _selectedDeviceId = null;
       _selectedDeviceName = null;
     });
+  }
+
+  /// Filters/search replace the whole result set, so a stale open detail
+  /// panel is closed instead of showing a device from the previous query.
+  void _closeSplitViewForNewQuery() {
+    if (_selectedDeviceId != null) _closeDetailPanel();
   }
 
   String _getTitle() {
@@ -381,6 +388,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
               // Header
               TabHeader(
                 onSubmitted: (value) async {
+                  _closeSplitViewForNewQuery();
                   setState(() {
                     searchValue = value;
                   });
@@ -395,6 +403,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
                     province: filterState.selectedProvince,
                     city: filterState.selectedCity,
                     plan: filterState.selectedPlan,
+                    flowchart: filterState.selectedFlowchart,
                     start: filterState.startDate,
                     end: filterState.endDate,
                   );
@@ -402,6 +411,9 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
                 searchController: searchController,
                 filterModal: FilterDeviceModal(mode: widget.mode),
                 searchPlaceholder: "جستجوی موتورخانه...",
+                onFilterClosed: (result) {
+                  if (result == true) _closeSplitViewForNewQuery();
+                },
                 onExport: isSpecialMode || !canExport ? null : _handleExport,
                 exportLoading: _exportLoading,
               ),
@@ -484,6 +496,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
         // Header
         TabHeader(
           onSubmitted: (value) async {
+            _closeSplitViewForNewQuery();
             setState(() {
               searchValue = value;
             });
@@ -498,6 +511,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
               province: filterState.selectedProvince,
               city: filterState.selectedCity,
               plan: filterState.selectedPlan,
+              flowchart: filterState.selectedFlowchart,
               start: filterState.startDate,
               end: filterState.endDate,
             );
@@ -505,6 +519,9 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
           searchController: searchController,
           filterModal: FilterDeviceModal(mode: widget.mode),
           searchPlaceholder: "جستجوی موتورخانه...",
+          onFilterClosed: (result) {
+            if (result == true) _closeSplitViewForNewQuery();
+          },
           onExport: isSpecialMode || !canExport ? null : _handleExport,
           exportLoading: _exportLoading,
         ),
@@ -587,6 +604,7 @@ class _BaseDeviceListState extends State<BaseDeviceList> {
           ),
           TextButton(
             onPressed: () async {
+              _closeSplitViewForNewQuery();
               deviceProvider.clearFiltersForMode(widget.mode);
               await deviceProvider.loadDevicesForMode(
                 mode: widget.mode,

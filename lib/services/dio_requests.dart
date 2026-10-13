@@ -210,8 +210,8 @@ class ApiService {
   Future<dynamic> fetchEventList({
     required int page,
     int? dataPerPage,
-    int? creator,
-    int? device,
+    dynamic creator,
+    String? device,
     String? start,
     String? end,
     String? title,
@@ -227,7 +227,7 @@ class ApiService {
       "page": page,
       "data_per_page": dataPerPage ?? 10,
       if (creator != null) "creator": creator,
-      if (device != null) "device": device,
+      if (device != null && device.isNotEmpty) "device": device,
       if (start != null) "start": start,
       if (end != null) "end": end,
       if (title != null) "title": title,
@@ -411,8 +411,8 @@ class ApiService {
   Future<dynamic> fetchSupportEventList({
     required int page,
     int? dataPerPage,
-    int? creator,
-    int? device,
+    dynamic creator,
+    dynamic device,
     String? start,
     String? end,
     String? title,
@@ -666,13 +666,14 @@ class ApiService {
   Future<dynamic> fetchDevices({
     required bool all,
     int? page,
-    int? installer,
+    dynamic installer,
     String? organization,
     String? administration,
     String? province,
     String? city,
     String? search,
     String? plan,
+    String? flowchart,
     String? start,
     String? end,
     bool? isRejected,
@@ -689,6 +690,7 @@ class ApiService {
       if (city != null) "city": city,
       if (search != null) "search": search,
       if (plan != null) "plan": plan,
+      if (flowchart != null) "flowchart": flowchart,
       if (start != null) "start": start,
       if (end != null) "end": end,
       if (isRejected != null) "is_rejected": isRejected,
@@ -727,13 +729,14 @@ class ApiService {
   // Fetch Devices For Export
   //
   Future<List<Map<String, dynamic>>> fetchDevicesForExport({
-    int? installer,
+    dynamic installer,
     String? organization,
     String? administration,
     String? province,
     String? city,
     String? search,
     String? plan,
+    String? flowchart,
     String? start,
     String? end,
   }) async {
@@ -746,6 +749,7 @@ class ApiService {
       if (city != null) "city": city,
       if (search != null) "search": search,
       if (plan != null) "plan": plan,
+      if (flowchart != null) "flowchart": flowchart,
       if (start != null) "start": start,
       if (end != null) "end": end,
     };
@@ -779,6 +783,7 @@ class ApiService {
   Future<int> addDevice({
     required String name,
     required String serialNumber,
+    required String code,
     required String installationAddress,
     required String engineRoomFeature,
     required int location,
@@ -792,6 +797,7 @@ class ApiService {
     var body = {
       "name": name,
       "serial_number": serialNumber,
+      "code": code,
       "installation_address": installationAddress,
       "engine_room_feature": engineRoomFeature,
       "location": location,
@@ -825,6 +831,7 @@ class ApiService {
     required int id,
     String? name,
     String? serialNumber,
+    String? code,
     String? installationAddress,
     String? engineRoomFeature,
     int? location,
@@ -838,6 +845,7 @@ class ApiService {
       if (name != null) "name": name,
       if (serialNumber != null && serialNumber != "")
         "serial_number": serialNumber,
+      if (code != null) "code": code,
       if (installationAddress != null)
         "installation_address": installationAddress,
       if (engineRoomFeature != null) "engine_room_feature": engineRoomFeature,
@@ -1221,8 +1229,8 @@ class ApiService {
   // Fetch Events For Export
   //
   Future<List<Event>> fetchEventsForExport({
-    int? creator,
-    int? device,
+    dynamic creator,
+    String? device,
     String? start,
     String? end,
     String? title,
@@ -1237,7 +1245,7 @@ class ApiService {
       "page": 1,
       "data_per_page": 2000,
       if (creator != null) "creator": creator,
-      if (device != null) "device": device,
+      if (device != null && device.isNotEmpty) "device": device,
       if (start != null) "start": start,
       if (end != null) "end": end,
       if (title != null) "title": title,
@@ -1275,8 +1283,8 @@ class ApiService {
   Future<List<Event>> fetchEventsForSupportExport({
     required bool isDeviceEvents,
     required bool isSoftwareEvents,
-    int? creator,
-    int? device,
+    dynamic creator,
+    String? device,
     String? start,
     String? end,
     String? title,
@@ -1291,7 +1299,7 @@ class ApiService {
       "is_device_events": isDeviceEvents,
       "is_software_events": isSoftwareEvents,
       if (creator != null) "creator": creator,
-      if (device != null) "device": device,
+      if (device != null && device.isNotEmpty) "device": device,
       if (start != null) "start": start,
       if (end != null) "end": end,
       if (title != null) "title": title,
@@ -1537,6 +1545,61 @@ class ApiService {
   }
 
   //
+  // Fetch WMS Inventory Stats Summary
+  // POST /api/wms/stats/summary/ with {"project_name": "teska-hirkan"}
+  //
+  Future<Map<String, dynamic>> fetchInventoryStatsSummary({
+    required String projectName,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/wms/stats/summary/',
+        data: {'project_name': projectName},
+      );
+      final payload = response.data is Map
+          ? Map<String, dynamic>.from(response.data as Map)
+          : <String, dynamic>{};
+      return payload;
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to get inventory stats: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  //
+  // Fetch WMS Inventory Stats Chart
+  // POST /api/wms/stats/chart/ with {"project_name": ..., "mode": "month"|"destination"}
+  //
+  Future<Map<String, dynamic>> fetchInventoryStatsChart({
+    required String projectName,
+    required String mode,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/wms/stats/chart/',
+        data: {'project_name': projectName, 'mode': mode},
+      );
+      final payload = response.data is Map
+          ? Map<String, dynamic>.from(response.data as Map)
+          : <String, dynamic>{};
+      return payload;
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['detail'])
+          : null;
+      throw Exception(
+        message?.toString() ??
+            'Failed to get inventory chart: ${e.response?.statusCode}',
+      );
+    }
+  }
+
+  //
   // Fetch Flowchart Items
   // POST /api/flowchart/items/list/ with {"project_name": "teska-hirkan"}
   //
@@ -1647,20 +1710,22 @@ class ApiService {
   }
 
   //
-  // Update Device Flowchart Step (mark a step done)
+  // Update Device Flowchart Step (mark a step done / revert to pending)
   // POST /api/shouka/device/edit-info/ with
-  // {"object_type": "flowchart", "device_id": ..., "flowchart_item_id": ..., "note": ...}
+  // {"object_type": "flowchart", "device_id": ..., "flowchart_item_id": ..., "note": ..., "is_done": true/false}
   //
   Future<int> updateDeviceFlowchart({
     required int deviceId,
     required int flowchartItemId,
     String note = '',
+    bool isDone = true,
   }) async {
     final body = {
       "object_type": "flowchart",
       "device_id": deviceId,
       "flowchart_item_id": flowchartItemId,
       "note": note,
+      "is_done": isDone,
     };
 
     try {

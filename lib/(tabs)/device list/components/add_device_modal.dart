@@ -28,6 +28,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
   // TextFields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _serialNumberController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
   TextEditingController locationController = TextEditingController();
   final TextEditingController _guaranteePeriodController =
       TextEditingController(text: '24');
@@ -50,6 +51,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
   void dispose() {
     _nameController.dispose();
     _serialNumberController.dispose();
+    _codeController.dispose();
     locationController.dispose();
     _guaranteePeriodController.dispose();
     // Dispose all safety parameter note controllers
@@ -98,6 +100,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
         "label": "شماره سریال موتورخانه*",
         "controller": _serialNumberController,
       },
+      {"label": "کد داخلی دستگاه*", "controller": _codeController},
       {"label": "آدرس*", "controller": locationController},
     ];
 
@@ -526,6 +529,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
           onSave: () async {
             if (_nameController.text == "" ||
                 _serialNumberController.text == "" ||
+                _codeController.text.trim() == "" ||
                 locationController.text == "" ||
                 orgInitialValue == null ||
                 featureInitialValue == null ||
@@ -614,6 +618,7 @@ class _AddDeviceModalState extends State<AddDeviceModal> {
               final status = await deviceProvider.addDevice(
                 name: _nameController.text,
                 serialNumber: _serialNumberController.text,
+                code: _codeController.text.trim(),
                 installationAddress: locationController.text,
                 engineRoomFeature: featureInitialValue!,
                 location: int.tryParse(provinceInitialValue!)!,

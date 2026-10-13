@@ -12,6 +12,10 @@ class InventoryFormsTable extends StatefulWidget {
   State<InventoryFormsTable> createState() => _InventoryFormsTableState();
 }
 
+/// API returns Jalali datetimes like `1405/06/12 00:00:00`; the table only
+/// shows the date part.
+String _dateOnly(String value) => value.split(' ').first;
+
 class _InventoryFormsTableState extends State<InventoryFormsTable> {
   final _scrollController = ScrollController();
 
@@ -127,14 +131,34 @@ class _DesktopFormsTable extends StatelessWidget {
                           scheme.surfaceContainer,
                         ),
                         columns: const [
-                          DataColumn(label: Text('شناسه')),
-                          DataColumn(label: Text('نوع فرم')),
-                          DataColumn(label: Text('مقصد')),
-                          DataColumn(label: Text('واحد صادرکننده')),
-                          DataColumn(label: Text('نوع ارسال')),
-                          DataColumn(label: Text('مبلغ')),
-                          DataColumn(label: Text('تاریخ')),
-                          DataColumn(label: Text('تعداد')),
+                          DataColumn(
+                            label: Text('شناسه'),
+                            headingRowAlignment: MainAxisAlignment.center,
+                          ),
+                          DataColumn(
+                            label: Text('نوع فرم'),
+                            headingRowAlignment: MainAxisAlignment.center,
+                          ),
+                          DataColumn(
+                            label: Text('مقصد'),
+                            headingRowAlignment: MainAxisAlignment.center,
+                          ),
+                          DataColumn(
+                            label: Text('واحد صادرکننده'),
+                            headingRowAlignment: MainAxisAlignment.center,
+                          ),
+                          DataColumn(
+                            label: Text('نوع ارسال'),
+                            headingRowAlignment: MainAxisAlignment.center,
+                          ),
+                          DataColumn(
+                            label: Text('تاریخ'),
+                            headingRowAlignment: MainAxisAlignment.center,
+                          ),
+                          DataColumn(
+                            label: Text('تعداد'),
+                            headingRowAlignment: MainAxisAlignment.center,
+                          ),
                         ],
                         rows: [
                           for (final form in forms)
@@ -142,18 +166,35 @@ class _DesktopFormsTable extends StatelessWidget {
                               onSelectChanged: (_) =>
                                   showFormDetails(context, form),
                               cells: [
-                                DataCell(Text('#${form.id}')),
-                                DataCell(_FormKindPill(kind: form.kind)),
-                                DataCell(_TableText(form.destination)),
-                                DataCell(_TableText(form.exportUnit)),
-                                DataCell(_TableText(form.postingType)),
-                                DataCell(_TableText(form.amount)),
-                                DataCell(_TableText(form.dateOfReceipt)),
+                                DataCell(Center(child: Text('#${form.id}'))),
                                 DataCell(
-                                  _CountPill(
-                                    count:
-                                        form.deviceCount +
-                                        form.installItems.length,
+                                  Center(
+                                    child: _FormKindPill(kind: form.kind),
+                                  ),
+                                ),
+                                DataCell(
+                                  Center(child: _TableText(form.destination)),
+                                ),
+                                DataCell(
+                                  Center(child: _TableText(form.exportUnit)),
+                                ),
+                                DataCell(
+                                  Center(child: _TableText(form.postingType)),
+                                ),
+                                DataCell(
+                                  Center(
+                                    child: _TableText(
+                                      _dateOnly(form.dateOfReceipt),
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Center(
+                                    child: _CountPill(
+                                      count:
+                                          form.deviceCount +
+                                          form.installItems.length,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -301,7 +342,7 @@ class _MobileFormCard extends StatelessWidget {
                   InfoItem(
                     icon: Icons.calendar_today_outlined,
                     label: 'تاریخ',
-                    value: form.dateOfReceipt,
+                    value: _dateOnly(form.dateOfReceipt),
                   ),
                 ],
               ),
@@ -319,14 +360,12 @@ class _EmptyFormsState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final borderColor = scheme.outline.withValues(alpha: 0.45);
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(12),
-          // border: Border.all(color: borderColor),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -450,6 +489,7 @@ class _TableText extends StatelessWidget {
         value.isEmpty ? '—' : value,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
       ),
     );
   }

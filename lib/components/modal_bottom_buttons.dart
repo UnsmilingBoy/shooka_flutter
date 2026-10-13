@@ -54,7 +54,7 @@ class _ModalBottomButtonsState extends State<ModalBottomButtons> {
               color: buttonColor,
               onPressed: widget.onSave,
               child: isLoadingState
-                  ? Loading()
+                  ? Loading(color: Colors.white)
                   : Text(
                       widget.saveText,
                       style: Theme.of(

@@ -140,14 +140,51 @@ List<InventorySettlement> _settlementsOf(Map<String, dynamic> json) =>
         )
         .toList();
 
+class InventoryDeviceFlowchartStep {
+  final String label;
+  final int order;
+  final bool isDone;
+  final String? doneAt;
+  final dynamic doneBy;
+  final String note;
+  final String createdAt;
+  final String updatedAt;
+
+  const InventoryDeviceFlowchartStep({
+    required this.label,
+    required this.order,
+    required this.isDone,
+    this.doneAt,
+    this.doneBy,
+    required this.note,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory InventoryDeviceFlowchartStep.fromJson(Map<String, dynamic> json) {
+    final done = json['is_done'];
+    return InventoryDeviceFlowchartStep(
+      label: (json['label'] ?? '').toString(),
+      order: int.tryParse(json['order']?.toString() ?? '') ?? 0,
+      isDone: done == true || done?.toString() == '1',
+      doneAt: json['done_at']?.toString(),
+      doneBy: json['done_by'],
+      note: (json['note'] ?? '').toString(),
+      createdAt: (json['created_at'] ?? '').toString(),
+      updatedAt: (json['updated_at'] ?? '').toString(),
+    );
+  }
+}
+
 class InventoryDevice {
   final int id;
   final String code;
   final String serialNumber;
   final String deviceType;
+  final String? deviceName;
+  final List<InventoryDeviceFlowchartStep> deviceFlowchart;
   final bool isInstalled;
   final bool isReturned;
-  final bool isSent;
   final List<InventoryLineItem> items;
   final List<InventorySettlement> settlements;
   const InventoryDevice({
@@ -155,21 +192,53 @@ class InventoryDevice {
     required this.code,
     required this.serialNumber,
     required this.deviceType,
+    this.deviceName,
+    this.deviceFlowchart = const [],
     this.isInstalled = false,
     this.isReturned = false,
-    this.isSent = false,
     this.items = const [],
     this.settlements = const [],
   });
-  factory InventoryDevice.fromJson(Map<String, dynamic> json) =>
-      InventoryDevice(
-        id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
-        code: json['code']?.toString() ?? '',
-        serialNumber: json['serial_number']?.toString() ?? '',
-        deviceType: json['device_type']?.toString() ?? '',
-        isInstalled: _flagOf(json, const ['is_installed']),
-        isReturned: _flagOf(json, const ['is_returned']),
-        isSent: _flagOf(json, const ['is_sent']),
+
+  bool get hasFlowchart => deviceFlowchart.isNotEmpty;
+  int get flowchartDoneCount => deviceFlowchart.where((s) => s.isDone).length;
+
+  /// First pending step by order, or null when there are no steps or all
+  /// are done.
+  InventoryDeviceFlowchartStep? get currentFlowchartStep {
+    if (deviceFlowchart.isEmpty) return null;
+    final sorted = List<InventoryDeviceFlowchartStep>.from(deviceFlowchart)
+      ..sort((a, b) => a.order.compareTo(b.order));
+    for (final step in sorted) {
+      if (!step.isDone) return step;
+    }
+    return null;
+  }
+
+  bool get isFlowchartComplete =>
+      deviceFlowchart.isNotEmpty &&
+      deviceFlowchart.every((s) => s.isDone);
+
+  factory InventoryDevice.fromJson(Map<String, dynamic> json) {
+    final flowchartRaw = json['device_flowchart'];
+    return InventoryDevice(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      code: json['code']?.toString() ?? '',
+      serialNumber: json['serial_number']?.toString() ?? '',
+      deviceType: json['device_type']?.toString() ?? '',
+      deviceName: json['device_name']?.toString(),
+      deviceFlowchart: flowchartRaw is List
+          ? flowchartRaw
+                .whereType<Map>()
+                .map(
+                  (item) => InventoryDeviceFlowchartStep.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList()
+          : const [],
+      isInstalled: _flagOf(json, const ['is_installed']),
+      isReturned: _flagOf(json, const ['is_returned']),
         items: (json['items'] as List? ?? [])
             .whereType<Map>()
             .map(
@@ -179,6 +248,7 @@ class InventoryDevice {
             .toList(),
         settlements: _settlementsOf(json),
       );
+  }
 }
 
 class InventoryReturnEntry {

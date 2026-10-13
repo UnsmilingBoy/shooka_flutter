@@ -234,6 +234,12 @@ class _EventsTabState extends State<EventsTab> {
     });
   }
 
+  /// Filters/search replace the whole result set, so a stale open detail
+  /// panel is closed instead of showing an event from the previous query.
+  void _closeSplitViewForNewQuery() {
+    if (_selectedEvent != null) _closeDetailPanel();
+  }
+
   void _handleExport() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
@@ -335,6 +341,7 @@ class _EventsTabState extends State<EventsTab> {
               // Header
               TabHeader(
                 onSubmitted: (value) async {
+                  _closeSplitViewForNewQuery();
                   setState(() {
                     searchValue = value;
                   });
@@ -343,6 +350,9 @@ class _EventsTabState extends State<EventsTab> {
                 searchController: searchController,
                 filterModal: FilterEventModal(),
                 searchPlaceholder: "جستجوی رویداد...",
+                onFilterClosed: (result) {
+                  if (result == true) _closeSplitViewForNewQuery();
+                },
                 onExport: canExport ? _handleExport : null,
                 customButtons: [
                   SizedBox(
@@ -441,6 +451,7 @@ class _EventsTabState extends State<EventsTab> {
         //
         TabHeader(
           onSubmitted: (value) async {
+            _closeSplitViewForNewQuery();
             setState(() {
               searchValue = value;
             });
@@ -449,6 +460,9 @@ class _EventsTabState extends State<EventsTab> {
           searchController: searchController,
           filterModal: FilterEventModal(),
           searchPlaceholder: "جستجوی رویداد...",
+          onFilterClosed: (result) {
+            if (result == true) _closeSplitViewForNewQuery();
+          },
           onExport: canExport ? _handleExport : null,
           customButtons: [
             SizedBox(

@@ -85,13 +85,13 @@ final tabsList = [
     "panel": AppPanel.locList,
   },
   {
-    'label': 'پنل حسابداری',
+    'label': 'فاکتور پشتیبانی',
     "href": ["/accounting"],
     "icon": Icons.account_balance,
     "panel": AppPanel.accounting,
   },
   {
-    'label': 'پنل آمارگیری و انبارداری',
+    'label': 'آمار و تسویه حساب فروش',
     "href": ["/inventory"],
     "icon": Icons.inventory_2_outlined,
     "panel": AppPanel.inventory,

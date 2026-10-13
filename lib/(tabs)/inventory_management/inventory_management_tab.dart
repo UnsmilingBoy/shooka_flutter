@@ -8,7 +8,6 @@ import 'package:shooka_flutter/(tabs)/inventory_management/components/insights/i
 import 'package:shooka_flutter/services/providers/inventory_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
-import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class InventoryManagementTab extends StatefulWidget {
   const InventoryManagementTab({super.key});
@@ -19,7 +18,6 @@ class InventoryManagementTab extends StatefulWidget {
 
 class _InventoryManagementTabState extends State<InventoryManagementTab> {
   final TextEditingController searchController = TextEditingController();
-  bool _exportLoading = false;
 
   @override
   void initState() {
@@ -27,21 +25,6 @@ class _InventoryManagementTabState extends State<InventoryManagementTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<InventoryProvider>().loadForms();
     });
-  }
-
-  Future<void> _handleExport() async {
-    setState(() => _exportLoading = true);
-    try {
-      await context.read<InventoryProvider>().exportFormsToExcel();
-      filledSuccessToast(title: 'فایل اکسل با موفقیت دانلود شد');
-    } catch (e) {
-      flatErrorToast(
-        title: 'خطا در دانلود فایل اکسل',
-        description: e.toString(),
-      );
-    } finally {
-      if (mounted) setState(() => _exportLoading = false);
-    }
   }
 
   Future<void> _handleRefresh() =>
@@ -90,14 +73,12 @@ class _InventoryManagementTabState extends State<InventoryManagementTab> {
                 children: [
                   _OperationsTab(
                     searchController: searchController,
-                    exportLoading: _exportLoading,
                     onSearch: provider.setSearch,
                     onClear: () {
                       searchController.clear();
                       provider.setSearch('');
                     },
                     onFilter: _openFilters,
-                    onExport: _handleExport,
                     loading: provider.fetchLoading,
                   ),
                   const InventoryInsights(),
@@ -180,20 +161,16 @@ class _InventoryTabBar extends StatelessWidget {
 
 class _OperationsTab extends StatelessWidget {
   final TextEditingController searchController;
-  final bool exportLoading;
   final ValueChanged<String> onSearch;
   final VoidCallback onClear;
   final VoidCallback onFilter;
-  final VoidCallback onExport;
   final bool loading;
 
   const _OperationsTab({
     required this.searchController,
-    required this.exportLoading,
     required this.onSearch,
     required this.onClear,
     required this.onFilter,
-    required this.onExport,
     required this.loading,
   });
 
@@ -211,12 +188,10 @@ class _OperationsTab extends StatelessWidget {
         const SizedBox(height: 16),
         _InventoryToolbar(
           controller: searchController,
-          exportLoading: exportLoading,
           filtersActive: hasFilters,
           onSearch: onSearch,
           onClear: onClear,
           onFilter: onFilter,
-          onExport: onExport,
         ),
         const SizedBox(height: 10),
         _StatusRow(
@@ -354,21 +329,17 @@ class _TableLoading extends StatelessWidget {
 
 class _InventoryToolbar extends StatelessWidget {
   final TextEditingController controller;
-  final bool exportLoading;
   final bool filtersActive;
   final ValueChanged<String> onSearch;
   final VoidCallback onClear;
   final VoidCallback onFilter;
-  final VoidCallback onExport;
 
   const _InventoryToolbar({
     required this.controller,
-    required this.exportLoading,
     required this.filtersActive,
     required this.onSearch,
     required this.onClear,
     required this.onFilter,
-    required this.onExport,
   });
 
   @override
@@ -456,55 +427,11 @@ class _InventoryToolbar extends StatelessWidget {
           ),
         );
 
-        // Tonal secondary button: quiet next to the filled filter action,
-        // and readable on both light and dark themes.
-        final exportFg = scheme.secondary;
-        final exportButton = ContainerButton(
-          borderRadius: 12,
-          color: exportFg.withValues(alpha: 0.14),
-          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
-          onPressed: exportLoading ? null : onExport,
-          child: exportLoading
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.download_outlined, size: 18, color: exportFg),
-                    const SizedBox(width: 6),
-                    Text(
-                      'خروجی اکسل',
-                      style: textTheme.labelLarge?.copyWith(
-                        color: exportFg,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-        );
-
+        // Single filter action: full-width on compact screens, inline
+        // next to search on wider layouts.
         final actions = compact
-            ? Row(
-                children: [
-                  Expanded(child: filterButton),
-                  const SizedBox(width: 10),
-                  Expanded(child: exportButton),
-                ],
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  filterButton,
-                  const SizedBox(width: 10),
-                  exportButton,
-                ],
-              );
+            ? SizedBox(width: double.infinity, child: filterButton)
+            : Row(mainAxisSize: MainAxisSize.min, children: [filterButton]);
 
         return Container(
           padding: const EdgeInsets.all(12),

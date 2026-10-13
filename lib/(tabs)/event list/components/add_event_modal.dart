@@ -20,6 +20,10 @@ class _AddEventModalState extends State<AddEventModal> {
   // List of prompts with controller and switch state
   final List<Map<String, dynamic>> addEventPrompts = [];
 
+  /// Substrings matching categories hidden only in the add flow
+  /// (still visible in edit flow).
+  static const _hiddenKeywords = {'ایاب', 'نرم'};
+
   String? selectedDevice;
   String? selectedEventTitle;
 
@@ -34,10 +38,13 @@ class _AddEventModalState extends State<AddEventModal> {
       setState(() {
         addEventPrompts.clear();
         for (var category in eventCategories) {
+          final name = category["name"].toString();
+          if (_hiddenKeywords.any(name.contains)) continue;
           addEventPrompts.add({
-            "label": category["name"].toString(),
+            "label": name,
             "controller": TextEditingController(),
-            "switchValue": false,
+            // "بازدید کلی" is on by default.
+            "switchValue": name.trim() == 'بازدید کلی',
           });
         }
       });

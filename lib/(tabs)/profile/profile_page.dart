@@ -177,7 +177,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         spacing: 5,
                         children: [
                           logOutLoading
-                              ? Loading()
+                              ? Loading(color: Colors.white)
                               : Icon(
                                   Icons.logout,
                                   size: 18,

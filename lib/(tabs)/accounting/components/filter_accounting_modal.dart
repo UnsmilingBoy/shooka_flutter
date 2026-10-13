@@ -4,8 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/services/providers/accounting_provider.dart';
-import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
-import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
+import 'package:shooka_flutter/utils/datepickers/date_range_filter_field.dart';
 import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/textfields/outline_textformfield.dart';
 
@@ -17,9 +16,7 @@ class FilterAccountingModal extends StatefulWidget {
 }
 
 class _FilterAccountingModalState extends State<FilterAccountingModal> {
-  String? date;
-  String? startDate;
-  String? endDate;
+  JalaliRange? dateRange;
 
   final TextEditingController _factorNumberController = TextEditingController();
   bool? selectedIsPrinted;
@@ -79,59 +76,14 @@ class _FilterAccountingModalState extends State<FilterAccountingModal> {
         ),
 
         //
-        // Date range picker
+        // Date range picker (shared, Jalali)
         //
-        Padding(
-          padding: const EdgeInsets.only(top: 5.0, bottom: 10),
-          child: Row(
-            spacing: 10,
-            children: [
-              const Text('بازه زمانی:'),
-              if (date != null)
-                Expanded(
-                  child: Text(
-                    date.toString(),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.apply(color: Colors.white),
-                  ),
-                ),
-              MyIconButton(
-                onPressed: () async {
-                  final picked = await myRangePicker(context);
-                  if (picked != null) {
-                    setState(() {
-                      startDate = picked.start.formatCompactDate();
-                      endDate = picked.end.formatCompactDate();
-                      date =
-                          '${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}';
-                    });
-                  }
-                },
-                border: Border.all(color: Colors.grey.shade700),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 10,
-                ),
-                child: Row(
-                  spacing: 5,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.date_range_rounded,
-                      size: 15,
-                      color: Theme.of(context).hintColor,
-                    ),
-                    if (date == null)
-                      Text(
-                        'انتخاب بازه',
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        DateRangeFilterField(
+          label: 'بازه زمانی:',
+          value: dateRange,
+          onChanged: (range) => setState(() {
+            dateRange = range;
+          }),
         ),
 
         //
@@ -145,8 +97,8 @@ class _FilterAccountingModalState extends State<FilterAccountingModal> {
               search: accountingProvider.lastSearchedText,
               factorNumber: factorNum.isNotEmpty ? factorNum : null,
               isPrinted: selectedIsPrinted,
-              start: startDate,
-              end: endDate,
+              start: dateRange?.start.formatCompactDate(),
+              end: dateRange?.end.formatCompactDate(),
             );
             Navigator.pop(context);
           },

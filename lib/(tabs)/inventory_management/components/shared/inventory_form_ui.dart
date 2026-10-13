@@ -61,14 +61,6 @@ class InventoryFormHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (showRequiredHint)
-            Text(
-              '* الزامی',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: accent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
         ],
       ),
     );
@@ -196,7 +188,9 @@ class InventoryFormField extends StatelessWidget {
     onSubmitted: onSubmitted,
     onChanged: onChanged,
     textDirection: textDirection,
-    textAlign: textDirection == TextDirection.ltr ? TextAlign.left : TextAlign.right,
+    textAlign: textDirection == TextDirection.ltr
+        ? TextAlign.left
+        : TextAlign.right,
     style: Theme.of(context).textTheme.bodyMedium,
     decoration: inventoryInputDecoration(
       context,
@@ -283,19 +277,15 @@ InputDecoration inventoryInputDecoration(
   return InputDecoration(
     labelText: label,
     hintText: hint,
-    prefixIcon: Icon(
-      icon,
-      size: 19,
-      color: hasError ? errorColor : null,
-    ),
+    prefixIcon: Icon(icon, size: 19, color: hasError ? errorColor : null),
     isDense: true,
     filled: true,
     fillColor: hasError
         ? errorColor.withValues(alpha: .05)
         : scheme.surfaceContainerLow,
-    labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: hasError ? errorColor : null,
-    ),
+    labelStyle: Theme.of(
+      context,
+    ).textTheme.labelSmall?.copyWith(color: hasError ? errorColor : null),
     hintStyle: Theme.of(
       context,
     ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),

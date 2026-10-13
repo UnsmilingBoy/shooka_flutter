@@ -13,6 +13,7 @@ class Device {
   final String creator;
   final String isConnected;
   final String serialNumber;
+  final String? code;
   final String? address;
   final String? city;
   final String? province;
@@ -25,6 +26,7 @@ class Device {
     required this.plan,
     required this.province,
     required this.serialNumber,
+    this.code,
     required this.id,
     required this.name,
     required this.organization,
@@ -65,6 +67,7 @@ class Device {
       city: json["city"] ?? "",
       province: json["province"] ?? "",
       serialNumber: json["serial_number"] ?? "",
+      code: json["code"]?.toString(),
       plan: json["plan"] == "free" ? "آزاد" : "طرح بهینه سازی",
     );
   }

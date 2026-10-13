@@ -15,8 +15,10 @@ class EventProvider with ChangeNotifier {
   int _eventsTotalCount = 0;
   int _eventsPage = 1;
   bool _preserveScrollAfterReload = false;
-  int? lastSelectedCreator;
-  int? lastSelectedDevice;
+
+  /// Comma-separated installer ids for multi-select (e.g. "1,2,3").
+  String? lastSelectedCreator;
+  String? lastSelectedDevice;
   String? lastSearchedText;
   String? lastSelectedTitle;
   String? lastSelectedOrganization;
@@ -44,8 +46,8 @@ class EventProvider with ChangeNotifier {
   // Load Events
   //
   Future<void> loadEvents({
-    int? creator,
-    int? device,
+    String? creator,
+    String? device,
     String? start,
     String? end,
     String? title,
@@ -62,64 +64,63 @@ class EventProvider with ChangeNotifier {
     _eventsPage = 1;
     filterCount = 0;
 
-    // For filtering state
-    if (creator != null) {
-      lastSelectedCreator = creator;
+    // For filtering state (multi-select values are comma-separated strings)
+    if (creator != null && creator.trim().isNotEmpty) {
+      lastSelectedCreator = creator.trim();
       filterCount++;
     } else {
       lastSelectedCreator = null;
     }
-    if (device != null) {
-      lastSelectedDevice = device;
+    if (device != null && device.trim().isNotEmpty) {
+      lastSelectedDevice = device.trim();
       filterCount++;
     } else {
       lastSelectedDevice = null;
     }
-    if (title != null) {
-      lastSelectedTitle = title;
+    if (title != null && title.trim().isNotEmpty) {
+      lastSelectedTitle = title.trim();
       filterCount++;
     } else {
       lastSelectedTitle = null;
     }
-    if (organization != null) {
-      lastSelectedOrganization = organization;
+    if (organization != null && organization.trim().isNotEmpty) {
+      lastSelectedOrganization = organization.trim();
       filterCount++;
     } else {
       lastSelectedOrganization = null;
     }
-    if (administration != null) {
-      lastSelectedAdministration = administration;
+    if (administration != null && administration.trim().isNotEmpty) {
+      lastSelectedAdministration = administration.trim();
       filterCount++;
     } else {
       lastSelectedAdministration = null;
     }
-    if (province != null) {
-      lastSelectedProvince = province;
+    if (province != null && province.trim().isNotEmpty) {
+      lastSelectedProvince = province.trim();
       filterCount++;
     } else {
       lastSelectedProvince = null;
     }
-    if (city != null) {
-      lastSelectedCity = city;
+    if (city != null && city.trim().isNotEmpty) {
+      lastSelectedCity = city.trim();
       filterCount++;
     } else {
       lastSelectedCity = null;
     }
-    if (plan != null) {
-      lastSelectedPlan = plan;
+    if (plan != null && plan.trim().isNotEmpty) {
+      lastSelectedPlan = plan.trim();
       filterCount++;
     } else {
       lastSelectedPlan = null;
     }
-    if (start != null) {
-      lastSelectedStart = start;
+    if (start != null && start.trim().isNotEmpty) {
+      lastSelectedStart = start.trim();
       filterCount++;
     } else {
       lastSelectedStart = null;
     }
-    if (end != null) {
-      lastSelectedEnd = end;
-      filterCount++;
+    if (end != null && end.trim().isNotEmpty) {
+      lastSelectedEnd = end.trim();
     } else {
       lastSelectedEnd = null;
     }
@@ -205,6 +206,18 @@ class EventProvider with ChangeNotifier {
   //
   // Add Event
   //
+  /// Category whose text gets the auto checklist appended silently.
+  static const _generalVisitCategory = 'بازدید کلی';
+
+  /// Auto-appended to the text of [_generalVisitCategory]; never shown in UI.
+  static const _generalVisitAutoItems = [
+    'بررسی اتصال سنسور ها به کلکتور',
+    'بازدید از تابلو برق موتورخانه',
+    'اطمینان از ارتباط دستگاه با سرور',
+    'بررسی وضعیت کنترل دستگاه',
+    'بررسی سلامت سنسور ها',
+  ];
+
   Future<int> addEvent({
     required String device,
     required String title,
@@ -215,9 +228,24 @@ class EventProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      final payload = events.map((e) {
+        if (e is Map &&
+            e['category']?.toString().trim() == _generalVisitCategory) {
+          final entry = Map<String, dynamic>.from(e);
+          final userText = (entry['text']?.toString() ?? '').trim();
+          final numbered = [
+            for (var i = 0; i < _generalVisitAutoItems.length; i++)
+              '${i + 1}- ${_generalVisitAutoItems[i]}',
+          ].join('\n');
+          entry['text'] = userText.isEmpty ? numbered : '$userText\n$numbered';
+          return entry;
+        }
+        return e;
+      }).toList();
+
       int status = await api.addEvent(
         device: device,
-        events: events,
+        events: payload,
         title: title,
       );
       return status;

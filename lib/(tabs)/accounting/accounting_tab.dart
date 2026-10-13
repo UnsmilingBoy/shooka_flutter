@@ -347,20 +347,20 @@ class FactorTile extends StatelessWidget {
                     hasFactorNumber
                         ? 'فاکتور: ${factor.factorNumber}'
                         : 'فاکتور #${factor.factorId}',
-                    style: Theme.of(context).textTheme.titleSmall?.apply(
-                      color: selectedTextColor,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.apply(color: selectedTextColor),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 6),
-                hasFactorNumber
-                    ? _PrintedBadge(isPrinted: factor.isPrinted)
-                    : _StatusBadge(
-                        label: 'ثبت نشده',
-                        color: Colors.orange,
-                        icon: Icons.edit_off_rounded,
-                      ),
+                if (!hasFactorNumber) ...[
+                  const SizedBox(width: 6),
+                  _StatusBadge(
+                    label: 'ثبت نشده',
+                    color: Colors.orange,
+                    icon: Icons.edit_off_rounded,
+                  ),
+                ],
               ],
             ),
             // Info row — wrap to prevent overflow
@@ -379,9 +379,9 @@ class FactorTile extends StatelessWidget {
                     ),
                     Text(
                       '${factor.groups.length} رویداد',
-                      style: Theme.of(context).textTheme.labelSmall?.apply(
-                        color: selectedTextColor,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.apply(color: selectedTextColor),
                     ),
                   ],
                 ),
@@ -397,9 +397,9 @@ class FactorTile extends StatelessWidget {
                     Flexible(
                       child: Text(
                         '${_formatPrice(factor.totalPrice)} ریال',
-                        style: Theme.of(context).textTheme.labelSmall?.apply(
-                          color: selectedTextColor,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelSmall?.apply(color: selectedTextColor),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -417,9 +417,9 @@ class FactorTile extends StatelessWidget {
                     Flexible(
                       child: Text(
                         factor.createdAt,
-                        style: Theme.of(context).textTheme.labelSmall?.apply(
-                          color: selectedTextColor,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelSmall?.apply(color: selectedTextColor),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -431,9 +431,9 @@ class FactorTile extends StatelessWidget {
             if (factor.note != null && factor.note!.isNotEmpty)
               Text(
                 factor.note!,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: selectedHintColor,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: selectedHintColor),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -458,41 +458,6 @@ class FactorTile extends StatelessWidget {
       buffer.write(str[i]);
     }
     return buffer.toString();
-  }
-}
-
-class _PrintedBadge extends StatelessWidget {
-  final bool isPrinted;
-  const _PrintedBadge({required this.isPrinted});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isPrinted ? Colors.green : Theme.of(context).hintColor;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.4), width: 0.8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 4,
-        children: [
-          Icon(
-            isPrinted ? Icons.print_rounded : Icons.print_disabled_rounded,
-            size: 12,
-            color: color,
-          ),
-          Text(
-            isPrinted ? 'چاپ شده' : 'چاپ نشده',
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: color, fontSize: 10),
-          ),
-        ],
-      ),
-    );
   }
 }
 

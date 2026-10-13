@@ -143,7 +143,7 @@ class DeviceProvider with ChangeNotifier {
       _filterStates[DeviceListMode.suspended]!.filterCount;
 
   // Legacy filter getters for backward compatibility
-  int? get lastSelectedInstaller =>
+  String? get lastSelectedInstaller =>
       _filterStates[DeviceListMode.all]!.selectedInstaller;
   String? get lastSearchedText =>
       _filterStates[DeviceListMode.all]!.searchedText;
@@ -156,10 +156,12 @@ class DeviceProvider with ChangeNotifier {
       _filterStates[DeviceListMode.all]!.selectedCity;
   String? get lastSelectedPlan =>
       _filterStates[DeviceListMode.all]!.selectedPlan;
+  String? get lastSelectedFlowchart =>
+      _filterStates[DeviceListMode.all]!.selectedFlowchart;
   String? get lastStartDate => _filterStates[DeviceListMode.all]!.startDate;
   String? get lastEndDate => _filterStates[DeviceListMode.all]!.endDate;
 
-  int? get lastRejectedSelectedInstaller =>
+  String? get lastRejectedSelectedInstaller =>
       _filterStates[DeviceListMode.rejected]!.selectedInstaller;
   String? get lastRejectedSearchedText =>
       _filterStates[DeviceListMode.rejected]!.searchedText;
@@ -173,12 +175,14 @@ class DeviceProvider with ChangeNotifier {
       _filterStates[DeviceListMode.rejected]!.selectedCity;
   String? get lastRejectedSelectedPlan =>
       _filterStates[DeviceListMode.rejected]!.selectedPlan;
+  String? get lastRejectedSelectedFlowchart =>
+      _filterStates[DeviceListMode.rejected]!.selectedFlowchart;
   String? get lastRejectedStartDate =>
       _filterStates[DeviceListMode.rejected]!.startDate;
   String? get lastRejectedEndDate =>
       _filterStates[DeviceListMode.rejected]!.endDate;
 
-  int? get lastSuspendedSelectedInstaller =>
+  String? get lastSuspendedSelectedInstaller =>
       _filterStates[DeviceListMode.suspended]!.selectedInstaller;
   String? get lastSuspendedSearchedText =>
       _filterStates[DeviceListMode.suspended]!.searchedText;
@@ -192,23 +196,27 @@ class DeviceProvider with ChangeNotifier {
       _filterStates[DeviceListMode.suspended]!.selectedCity;
   String? get lastSuspendedSelectedPlan =>
       _filterStates[DeviceListMode.suspended]!.selectedPlan;
+  String? get lastSuspendedSelectedFlowchart =>
+      _filterStates[DeviceListMode.suspended]!.selectedFlowchart;
   String? get lastSuspendedStartDate =>
       _filterStates[DeviceListMode.suspended]!.startDate;
   String? get lastSuspendedEndDate =>
       _filterStates[DeviceListMode.suspended]!.endDate;
 
-  /// Unified method to load devices for any mode
+  /// Unified method to load devices for any mode.
+  /// [installer] is a comma-separated list of installer ids for multi-select.
   Future<void> loadDevicesForMode({
     required DeviceListMode mode,
     required bool all,
     int? page,
-    int? installer,
+    String? installer,
     String? organization,
     String? administration,
     String? province,
     String? city,
     String? search,
     String? plan,
+    String? flowchart,
     String? start,
     String? end,
   }) async {
@@ -224,6 +232,7 @@ class DeviceProvider with ChangeNotifier {
       province: province,
       city: city,
       plan: plan,
+      flowchart: flowchart,
       start: start,
       end: end,
       search: search,
@@ -242,6 +251,7 @@ class DeviceProvider with ChangeNotifier {
         province: province,
         search: search,
         plan: plan,
+        flowchart: flowchart,
         start: start,
         end: end,
         isRejected: mode == DeviceListMode.rejected ? true : null,
@@ -296,13 +306,14 @@ class DeviceProvider with ChangeNotifier {
   Future<void> loadDevices({
     required bool all,
     int? page,
-    int? installer,
+    String? installer,
     String? organization,
     String? administration,
     String? province,
     String? city,
     String? search,
     String? plan,
+    String? flowchart,
     String? start,
     String? end,
   }) async {
@@ -317,6 +328,7 @@ class DeviceProvider with ChangeNotifier {
       city: city,
       search: search,
       plan: plan,
+      flowchart: flowchart,
       start: start,
       end: end,
     );
@@ -326,13 +338,14 @@ class DeviceProvider with ChangeNotifier {
   Future<void> loadRejectedDevices({
     required bool all,
     int? page,
-    int? installer,
+    String? installer,
     String? organization,
     String? administration,
     String? province,
     String? city,
     String? search,
     String? plan,
+    String? flowchart,
     String? start,
     String? end,
   }) async {
@@ -347,6 +360,7 @@ class DeviceProvider with ChangeNotifier {
       city: city,
       search: search,
       plan: plan,
+      flowchart: flowchart,
       start: start,
       end: end,
     );
@@ -356,13 +370,14 @@ class DeviceProvider with ChangeNotifier {
   Future<void> loadSuspendedDevices({
     required bool all,
     int? page,
-    int? installer,
+    String? installer,
     String? organization,
     String? administration,
     String? province,
     String? city,
     String? search,
     String? plan,
+    String? flowchart,
     String? start,
     String? end,
   }) async {
@@ -377,6 +392,7 @@ class DeviceProvider with ChangeNotifier {
       city: city,
       search: search,
       plan: plan,
+      flowchart: flowchart,
       start: start,
       end: end,
     );
@@ -407,6 +423,7 @@ class DeviceProvider with ChangeNotifier {
           province: filterState.selectedProvince,
           city: filterState.selectedCity,
           plan: filterState.selectedPlan,
+          flowchart: filterState.selectedFlowchart,
           start: filterState.startDate,
           end: filterState.endDate,
           isRejected: mode == DeviceListMode.rejected ? true : null,
@@ -511,6 +528,7 @@ class DeviceProvider with ChangeNotifier {
   Future<int> addDevice({
     required String name,
     required String serialNumber,
+    required String code,
     required String installationAddress,
     required String engineRoomFeature,
     required int location,
@@ -539,6 +557,7 @@ class DeviceProvider with ChangeNotifier {
         name: name,
         organization: organization,
         serialNumber: serialNumber,
+        code: code,
         plan: plan,
         images: formattedImages, // Use the new list here
         checkListItems: checkListItems,
@@ -564,6 +583,7 @@ class DeviceProvider with ChangeNotifier {
     required int id,
     String? name,
     String? serialNumber,
+    String? code,
     String? installationAddress,
     String? engineRoomFeature,
     int? location,
@@ -585,6 +605,7 @@ class DeviceProvider with ChangeNotifier {
         name: name,
         organization: organization,
         serialNumber: serialNumber,
+        code: code,
         plan: plan,
       );
       return status;
@@ -1014,14 +1035,16 @@ class DeviceProvider with ChangeNotifier {
   }
 
   //
-  // Complete a Device Flowchart Step (marks it done with an optional note).
-  // Optimistic: flips the cached step to done immediately, reloads from the
+  // Complete / revert a Device Flowchart Step (marks it done with an optional
+  // note, or reverts it back to incomplete when [isDone] is false).
+  // Optimistic: flips the cached step immediately, reloads from the
   // server on success, rolls back on failure. Returns the HTTP status code.
   //
   Future<int> completeFlowchartStep({
     required int deviceId,
     required int flowchartItemId,
     String note = '',
+    bool isDone = true,
   }) async {
     final key = '$deviceId:$flowchartItemId';
     if (_flowchartCompletingKeys.contains(key)) return -1;
@@ -1038,9 +1061,9 @@ class DeviceProvider with ChangeNotifier {
                     flowchartItemId: step.flowchartItemId,
                     label: step.label,
                     order: step.order,
-                    isDone: true,
-                    doneAt: step.doneAt,
-                    doneBy: step.doneBy,
+                    isDone: isDone,
+                    doneAt: isDone ? step.doneAt : null,
+                    doneBy: isDone ? step.doneBy : null,
                     note: note.isEmpty ? step.note : note,
                     createdAt: step.createdAt,
                     updatedAt: step.updatedAt,
@@ -1057,6 +1080,7 @@ class DeviceProvider with ChangeNotifier {
         deviceId: deviceId,
         flowchartItemId: flowchartItemId,
         note: note,
+        isDone: isDone,
       );
       if (status == 200) {
         await loadDeviceFlowchart(deviceId: deviceId, forceRefresh: true);
@@ -1077,7 +1101,11 @@ class DeviceProvider with ChangeNotifier {
   //
   //  Export Devices to Excel
   //
+  bool _exporting = false;
+
   Future<void> exportDevicesToExcel() async {
+    if (_exporting) return; // concurrent export already in flight
+    _exporting = true;
     try {
       log('Starting device export with current filters...');
       final devices = await api.fetchDevicesForExport(
@@ -1088,6 +1116,7 @@ class DeviceProvider with ChangeNotifier {
         city: lastSelectedCity,
         search: lastSearchedText,
         plan: lastSelectedPlan,
+        flowchart: lastSelectedFlowchart,
         start: lastStartDate,
         end: lastEndDate,
       );
@@ -1099,6 +1128,8 @@ class DeviceProvider with ChangeNotifier {
     } catch (e) {
       log('Error exporting devices: $e');
       rethrow;
+    } finally {
+      _exporting = false;
     }
   }
 
@@ -1166,6 +1197,7 @@ class DeviceProvider with ChangeNotifier {
         province: filterState.selectedProvince,
         city: filterState.selectedCity,
         plan: filterState.selectedPlan,
+        flowchart: filterState.selectedFlowchart,
         start: filterState.startDate,
         end: filterState.endDate,
       );

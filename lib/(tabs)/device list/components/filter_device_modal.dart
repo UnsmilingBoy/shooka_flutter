@@ -5,11 +5,13 @@ import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
+import 'package:shooka_flutter/models/app_panel.dart';
 import 'package:shooka_flutter/models/device_filter_state.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/general_provider.dart';
-import 'package:shooka_flutter/utils/buttons/my_icon_button.dart';
-import 'package:shooka_flutter/utils/datepickers/my_range_picker.dart';
+import 'package:shooka_flutter/services/providers/user_provider.dart';
+import 'package:shooka_flutter/utils/datepickers/date_range_filter_field.dart';
+import 'package:shooka_flutter/utils/dropdowns/multi_searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 
 class FilterDeviceModal extends StatefulWidget {
@@ -22,16 +24,29 @@ class FilterDeviceModal extends StatefulWidget {
 }
 
 class _FilterDeviceModalState extends State<FilterDeviceModal> {
-  // Dropdown Initial values
-  String? orgInitialValue;
-  String? installerInitialValue;
-  String? parentInitialValue;
-  String? provinceInitialValue;
-  String? cityInitialValue;
-  String? planInitialValue;
-  String? date;
-  String? startDate;
-  String? endDate;
+  // Multi-select values (lists of DropdownItemModel values)
+  List<String> selectedInstallers = [];
+  List<String> selectedOrgs = [];
+  List<String> selectedAdmins = [];
+  List<String> selectedProvinces = [];
+  List<String> selectedCities = [];
+  List<String> selectedPlans = [];
+  List<String> selectedFlowcharts = [];
+  JalaliRange? dateRange;
+
+  List<String> _split(String? value) {
+    if (value == null || value.trim().isEmpty) return [];
+    return value
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  String? _join(List<String> values) {
+    if (values.isEmpty) return null;
+    return values.join(',');
+  }
 
   @override
   void initState() {
@@ -39,120 +54,100 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
     final deviceProvider = Provider.of<DeviceProvider>(context, listen: false);
     final filterState = deviceProvider.getFilterState(widget.mode);
 
-    // Use filter state from the current mode
-    orgInitialValue = filterState.selectedOrg;
-    installerInitialValue = filterState.selectedInstaller?.toString();
-    parentInitialValue = filterState.selectedAdmin;
-    provinceInitialValue = filterState.selectedProvince;
-    cityInitialValue = filterState.selectedCity;
-    planInitialValue = filterState.selectedPlan;
-    startDate = filterState.startDate;
-    endDate = filterState.endDate;
-
-    // Reconstruct date display string if dates are saved
-    if (startDate != null && endDate != null) {
-      try {
-        // Parse the compact date format (YYYY-MM-DD) with dashes
-        final startParts = startDate!.split('/');
-        final endParts = endDate!.split('/');
-
-        final start = Jalali(
-          int.parse(startParts[0]),
-          int.parse(startParts[1]),
-          int.parse(startParts[2]),
-        );
-        final end = Jalali(
-          int.parse(endParts[0]),
-          int.parse(endParts[1]),
-          int.parse(endParts[2]),
-        );
-
-        date = "${start.formatFullDate()} تا ${end.formatFullDate()}";
-      } catch (e) {
-        log("Error parsing saved dates: $e");
-        date = null;
-      }
-    }
+    // Use filter state from the current mode (comma-separated -> lists)
+    selectedInstallers = _split(filterState.selectedInstaller);
+    selectedOrgs = _split(filterState.selectedOrg);
+    selectedAdmins = _split(filterState.selectedAdmin);
+    selectedProvinces = _split(filterState.selectedProvince);
+    selectedCities = _split(filterState.selectedCity);
+    selectedPlans = _split(filterState.selectedPlan);
+    selectedFlowcharts = _split(filterState.selectedFlowchart);
+    dateRange = tryParseCompactRange(filterState.startDate, filterState.endDate);
   }
 
   @override
   Widget build(BuildContext context) {
     final generalProvider = context.watch<GeneralProvider>();
     final deviceProvider = context.watch<DeviceProvider>();
+    final canSeeFlowchart = context
+        .watch<UserProvider>()
+        .accessControl
+        .hasAccessTo(AppPanel.flowchart);
 
-    final filterOptions = [
-      {
-        "label": "نصاب",
-        "items": (generalProvider.filters?["installers"] ?? [])
-            .map<DropdownItemModel>(
-              (installer) => DropdownItemModel(
-                value: installer["id"].toString(),
-                label: installer["installer"].toString(),
-              ),
-            )
-            .toList(),
-        "initialValue": installerInitialValue,
-      },
-      {
-        "label": "سازمان",
-        "items": (generalProvider.filters?["organizations"] ?? [])
-            .map<DropdownItemModel>(
-              (organization) => DropdownItemModel(
-                value: organization["organization"].toString(),
-                label: organization["organization"].toString(),
-              ),
-            )
-            .toList(),
-        "initialValue": orgInitialValue,
-      },
-      {
-        "label": "وزارت‌خانه",
-        "items": (generalProvider.filters?["administration"] ?? [])
-            .map<DropdownItemModel>(
-              (administration) => DropdownItemModel(
-                value: administration["administration"].toString(),
-                label: administration["administration"].toString(),
-              ),
-            )
-            .toList(),
-        "initialValue": parentInitialValue,
-      },
-      {
-        "label": "استان",
-        // map to province strings, convert to Set to remove duplicates, then build items
-        "items": (generalProvider.filters?["locations"] ?? [])
-            .map((location) => location["location"][0].toString())
-            .toSet()
-            .map<DropdownItemModel>(
-              (province) => DropdownItemModel(value: province, label: province),
-            )
-            .toList(),
-        "initialValue": provinceInitialValue,
-      },
-      {
-        "label": "شهر",
-        // map to city strings, convert to Set to remove duplicates, then build items
-        "items": (generalProvider.filters?["locations"] ?? [])
-            .map((location) => location["location"][1].toString())
-            .toSet()
-            .map<DropdownItemModel>(
-              (city) => DropdownItemModel(value: city, label: city),
-            )
-            .toList(),
-        "initialValue": cityInitialValue,
-      },
-      {
-        "label": "پلن",
-        "items": [
-          DropdownItemModel(value: "free", label: "آزاد"),
-          DropdownItemModel(
-            value: "optimized",
-            label: "طرح بهینه سازی شرکت گاز",
+    final installerItems = (generalProvider.filters?["installers"] ?? [])
+        .map<DropdownItemModel>(
+          (installer) => DropdownItemModel(
+            value: installer["id"].toString(),
+            label: installer["installer"].toString(),
           ),
-        ],
-        "initialValue": planInitialValue,
-      },
+        )
+        .toList();
+
+    final orgItems = (generalProvider.filters?["organizations"] ?? [])
+        .map<DropdownItemModel>(
+          (organization) => DropdownItemModel(
+            value: organization["organization"].toString(),
+            label: organization["organization"].toString(),
+          ),
+        )
+        .toList();
+
+    final adminItems = (generalProvider.filters?["administration"] ?? [])
+        .map<DropdownItemModel>(
+          (administration) => DropdownItemModel(
+            value: administration["administration"].toString(),
+            label: administration["administration"].toString(),
+          ),
+        )
+        .toList();
+
+    final provinceItems = (generalProvider.filters?["locations"] ?? [])
+        .map((location) => location["location"][0].toString())
+        .toSet()
+        .map<DropdownItemModel>(
+          (province) => DropdownItemModel(value: province, label: province),
+        )
+        .toList();
+
+    final cityItems = (generalProvider.filters?["locations"] ?? [])
+        .where(
+          (location) =>
+              selectedProvinces.isEmpty ||
+              selectedProvinces.contains(location["location"][0].toString()),
+        )
+        .map((location) => location["location"][1].toString())
+        .toSet()
+        .map<DropdownItemModel>(
+          (city) => DropdownItemModel(value: city, label: city),
+        )
+        .toList();
+
+    final planItems = [
+      DropdownItemModel(value: "free", label: "آزاد"),
+      DropdownItemModel(value: "optimized", label: "طرح بهینه سازی شرکت گاز"),
     ];
+
+    final flowchartItems = (generalProvider.filters?["flowchart"] ?? [])
+        .map<DropdownItemModel>(
+          (flowchart) => DropdownItemModel(
+            value: flowchart["label"].toString(),
+            label: flowchart["label"].toString(),
+          ),
+        )
+        .toList();
+
+    // Migrate any previously-saved flowchart ids to labels, since the
+    // filter now sends label text instead of ids.
+    final flowchartLabelById = {
+      for (final flowchart in (generalProvider.filters?["flowchart"] ?? []))
+        flowchart["id"].toString(): flowchart["label"].toString(),
+    };
+    final effectiveSelectedFlowcharts = flowchartItems.isEmpty
+        ? selectedFlowcharts
+        : selectedFlowcharts
+              .map((v) => flowchartLabelById[v] ?? v)
+              .where((v) => flowchartItems.any((item) => item.value == v))
+              .toList();
 
     //
     // Body
@@ -161,126 +156,111 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
       title: "فیلتر موتورخانه ها",
       children: [
         //
-        // Filter options
+        // Filter options (all multi-select)
         //
-        ListView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.all(0),
-          itemCount: filterOptions.length,
-          itemBuilder: (context, index) => SearchableDropdownWithLabel(
-            iconOnPressed: () => setState(() {
-              final label = filterOptions[index]["label"] as String;
-              if (label == "نصاب") installerInitialValue = null;
-              if (label == "سازمان") orgInitialValue = null;
-              if (label == "وزارت‌خانه") parentInitialValue = null;
-              if (label == "استان") provinceInitialValue = null;
-              if (label == "شهر") cityInitialValue = null;
-              if (label == "پلن") planInitialValue = null;
-            }),
-            onChanged: (value) => setState(() {
-              final label = filterOptions[index]["label"] as String;
-              if (label == "نصاب") {
-                installerInitialValue = value;
-              } else if (label == "سازمان") {
-                orgInitialValue = value;
-              } else if (label == "وزارت‌خانه") {
-                parentInitialValue = value;
-              } else if (label == "استان") {
-                provinceInitialValue = value;
-              } else if (label == "شهر") {
-                cityInitialValue = value;
-              } else if (label == "پلن") {
-                planInitialValue = value;
-              }
-            }),
-            items: filterOptions[index]["items"] as List<DropdownItemModel>,
-            label: filterOptions[index]["label"] as String,
-            placeholder: "انتخاب کنید",
-            initialValue: filterOptions[index]["initialValue"] as String?,
-          ),
+        MultiSelectSearchableDropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            selectedInstallers.clear();
+          }),
+          onChanged: (values) => setState(() {
+            selectedInstallers = values;
+          }),
+          items: installerItems,
+          label: "نصاب",
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedInstallers,
         ),
-
-        //
-        // Date range picker
-        //
-        Padding(
-          padding: const EdgeInsets.only(top: 5.0, bottom: 10),
-          child: Row(
-            spacing: 10,
-            children: [
-              Text("بازه زمانی نصب:"),
-              if (date != null)
-                Expanded(
-                  child: Text(
-                    date.toString(),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.apply(color: Colors.white),
-                  ),
-                ),
-              Row(
-                spacing: 5,
-                children: [
-                  if (date != null)
-                    MyIconButton(
-                      onPressed: () {
-                        setState(() {
-                          date = null;
-                          startDate = null;
-                          endDate = null;
-                        });
-                      },
-                      border: Border.all(color: Colors.grey.shade700),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
-                      ),
-                      child: Icon(
-                        Icons.clear,
-                        size: 15,
-                        color: Theme.of(context).hintColor,
-                      ),
-                    ),
-                  MyIconButton(
-                    //
-                    // Date Range Picker
-                    //
-                    onPressed: () async {
-                      var picked = await myRangePicker(context);
-
-                      if (picked != null) {
-                        setState(() {
-                          startDate = picked.start.formatCompactDate();
-                          endDate = picked.end.formatCompactDate();
-                          date =
-                              "${picked.start.formatFullDate()} تا ${picked.end.formatFullDate()}";
-                        });
-                      }
-                    },
-                    border: Border.all(color: Colors.grey.shade700),
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                    child: Row(
-                      spacing: 5,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.date_range_rounded,
-                          size: 15,
-                          color: Theme.of(context).hintColor,
-                        ),
-                        if (date == null)
-                          Text(
-                            "انتخاب بازه",
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        MultiSelectSearchableDropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            selectedOrgs.clear();
+          }),
+          onChanged: (values) => setState(() {
+            selectedOrgs = values;
+          }),
+          items: orgItems,
+          label: "سازمان",
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedOrgs,
+        ),
+        MultiSelectSearchableDropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            selectedAdmins.clear();
+          }),
+          onChanged: (values) => setState(() {
+            selectedAdmins = values;
+          }),
+          items: adminItems,
+          label: "وزارت‌خانه",
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedAdmins,
+        ),
+        MultiSelectSearchableDropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            selectedProvinces.clear();
+            // Clear cities that no longer belong to selected provinces
+            selectedCities = selectedCities
+                .where((city) => cityItems.any((item) => item.value == city))
+                .toList();
+          }),
+          onChanged: (values) => setState(() {
+            selectedProvinces = values;
+            // Drop cities that are no longer visible
+            selectedCities = selectedCities
+                .where((city) => cityItems.any((item) => item.value == city))
+                .toList();
+          }),
+          items: provinceItems,
+          label: "استان",
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedProvinces,
+        ),
+        MultiSelectSearchableDropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            selectedCities.clear();
+          }),
+          onChanged: (values) => setState(() {
+            selectedCities = values;
+          }),
+          items: cityItems,
+          label: "شهر",
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedCities,
+        ),
+        MultiSelectSearchableDropdownWithLabel(
+          iconOnPressed: () => setState(() {
+            selectedPlans.clear();
+          }),
+          onChanged: (values) => setState(() {
+            selectedPlans = values;
+          }),
+          items: planItems,
+          label: "پلن",
+          placeholder: "انتخاب کنید (چندتایی)",
+          initialValues: selectedPlans,
+        ),
+        if (canSeeFlowchart)
+          MultiSelectSearchableDropdownWithLabel(
+            iconOnPressed: () => setState(() {
+              selectedFlowcharts.clear();
+            }),
+            onChanged: (values) => setState(() {
+              selectedFlowcharts = values;
+            }),
+            items: flowchartItems,
+            label: "وضعیت دستگاه",
+            placeholder: "انتخاب کنید (چندتایی)",
+            initialValues: effectiveSelectedFlowcharts,
           ),
+
+        //
+        // Date range picker (shared, Jalali)
+        //
+        DateRangeFilterField(
+          label: "بازه زمانی نصب:",
+          value: dateRange,
+          onChanged: (range) => setState(() {
+            dateRange = range;
+          }),
         ),
 
         //
@@ -289,27 +269,40 @@ class _FilterDeviceModalState extends State<FilterDeviceModal> {
         ModalBottomButtons(
           saveText: "فیلتر",
           onSave: () {
-            log("installer is: $installerInitialValue");
+            log("installers are: $selectedInstallers");
             final filterState = deviceProvider.getFilterState(widget.mode);
+
+            // Resolve to label text (migrating any stale saved ids).
+            final flowchartToSend = canSeeFlowchart
+                ? _join(
+                    selectedFlowcharts
+                        .map((v) => flowchartLabelById[v] ?? v)
+                        .where(
+                          (v) =>
+                              flowchartItems.isEmpty ||
+                              flowchartItems.any((item) => item.value == v),
+                        )
+                        .toList(),
+                  )
+                : filterState.selectedFlowchart;
 
             deviceProvider.loadDevicesForMode(
               mode: widget.mode,
               all: false,
               page: 1,
               search: filterState.searchedText,
-              installer: installerInitialValue != null
-                  ? int.tryParse(installerInitialValue ?? "-1")
-                  : null,
-              administration: parentInitialValue,
-              city: cityInitialValue,
-              organization: orgInitialValue,
-              province: provinceInitialValue,
-              plan: planInitialValue,
-              start: startDate,
-              end: endDate,
+              installer: _join(selectedInstallers),
+              administration: _join(selectedAdmins),
+              city: _join(selectedCities),
+              organization: _join(selectedOrgs),
+              province: _join(selectedProvinces),
+              plan: _join(selectedPlans),
+              flowchart: flowchartToSend,
+              start: dateRange?.start.formatCompactDate(),
+              end: dateRange?.end.formatCompactDate(),
             );
 
-            Navigator.pop(context);
+            Navigator.pop(context, true);
           },
         ),
       ],

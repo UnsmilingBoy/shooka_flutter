@@ -38,7 +38,9 @@ class _DevicePageState extends State<DevicePage> {
       context.read<DeviceProvider>().loadCompleteDeviceInfo(
         id: widget.deviceId,
       ),
-      context.read<EventProvider>().loadEvents(device: widget.deviceId),
+      context.read<EventProvider>().loadEvents(
+        device: widget.deviceId.toString(),
+      ),
       context.read<DeviceProvider>().loadFlowchartItems(),
       context.read<DeviceProvider>().loadFlowchartOrderedItems(),
       context.read<DeviceProvider>().loadDeviceFlowchart(

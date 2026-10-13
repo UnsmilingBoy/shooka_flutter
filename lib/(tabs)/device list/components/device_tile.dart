@@ -430,16 +430,16 @@ class _DeviceTileState extends State<DeviceTile> {
               title: Text(
                 overflow: TextOverflow.ellipsis,
                 widget.name,
-                style: Theme.of(context).textTheme.titleSmall?.apply(
-                  color: widget.isSelected ? Colors.white : null,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.apply(color: selectedTextColor),
               ),
               subtitle: Text(
                 overflow: TextOverflow.ellipsis,
                 "سازمان: ${widget.org}",
-                style: Theme.of(context).textTheme.labelSmall?.apply(
-                  color: widget.isSelected ? Colors.grey.shade400 : null,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.apply(color: selectedTextColor),
               ),
               trailing: widget.showRejectionNote
                   // For rejected devices on mobile: only show rejection note button

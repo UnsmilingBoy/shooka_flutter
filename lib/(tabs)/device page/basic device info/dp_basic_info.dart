@@ -25,6 +25,7 @@ class _BasicDeviceInformationState extends State<BasicDeviceInformation> {
 
     var deviceInfoList = [
       {"title": 'نام', "value": basicData?.name},
+      {"title": 'کد موتورخانه', "value": basicData?.code},
       {"title": 'نام سازمان / خصوصی', "value": basicData?.organization},
       {"title": 'نام نهاد / خصوصی', "value": basicData?.administration},
       {"title": 'نام نصاب', "value": basicData?.creator},

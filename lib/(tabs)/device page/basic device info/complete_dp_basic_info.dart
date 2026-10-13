@@ -20,6 +20,7 @@ class CompleteDpBasicInfo extends StatefulWidget {
 class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _serialNumberController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
   final TextEditingController _meterSubscriptionNumberController =
       TextEditingController();
   String? orgInitialValue;
@@ -35,6 +36,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
 
     _nameController.text = basicData?.name ?? '';
     _serialNumberController.text = basicData?.serialNumber ?? '';
+    _codeController.text = basicData?.code ?? '';
     _meterSubscriptionNumberController.text =
         completeData?.meterSubscriptionNumber ?? '';
     orgInitialValue = generalProvider.filters?["organizations"]
@@ -59,6 +61,15 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _serialNumberController.dispose();
+    _codeController.dispose();
+    _meterSubscriptionNumberController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final generalProvider = context.watch<GeneralProvider>();
     final deviceProvider = context.watch<DeviceProvider>();
@@ -69,6 +80,7 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
         "label": "آپدیت شماره سریال دستگاه",
         "controller": _serialNumberController,
       },
+      {"label": "کد موتورخانه", "controller": _codeController},
       {
         "label": "شماره اشتراک",
         "controller": _meterSubscriptionNumberController,
@@ -185,6 +197,9 @@ class _CompleteDpBasicInfoState extends State<CompleteDpBasicInfo> {
                 serialNumber: _serialNumberController.text == ""
                     ? null
                     : _serialNumberController.text,
+                code: _codeController.text.trim() == ""
+                    ? null
+                    : _codeController.text.trim(),
                 organization: int.parse(orgInitialValue ?? '-1'),
                 engineRoomFeature: featureInitialValue ?? '',
                 plan: planInitialValue,

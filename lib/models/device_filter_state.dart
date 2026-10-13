@@ -8,13 +8,16 @@ enum DeviceListMode {
 /// Class to hold filter state for device lists
 /// Prevents duplication of filter state variables across different modes
 class DeviceFilterState {
-  int? selectedInstaller;
+  /// Comma-separated ids for multi-select (e.g. "1,2,3").
+  String? selectedInstaller;
   String? searchedText;
+  /// Comma-separated values for multi-select filters.
   String? selectedOrg;
   String? selectedAdmin;
   String? selectedProvince;
   String? selectedCity;
   String? selectedPlan;
+  String? selectedFlowchart;
   String? startDate;
   String? endDate;
   int filterCount;
@@ -36,6 +39,7 @@ class DeviceFilterState {
     this.selectedProvince,
     this.selectedCity,
     this.selectedPlan,
+    this.selectedFlowchart,
     this.startDate,
     this.endDate,
     this.filterCount = 0,
@@ -53,69 +57,91 @@ class DeviceFilterState {
     selectedProvince = null;
     selectedCity = null;
     selectedPlan = null;
+    selectedFlowchart = null;
     startDate = null;
     endDate = null;
     filterCount = 0;
   }
 
-  /// Update filter state from parameters and calculate filterCount
+  /// Update filter state from parameters and calculate filterCount.
+  /// Multi-select values are passed as comma-separated strings
+  /// (e.g. "1,2,3"). Empty strings are treated as null.
   void updateFilters({
-    int? installer,
+    String? installer,
     String? organization,
     String? administration,
     String? province,
     String? city,
     String? plan,
+    String? flowchart,
     String? start,
     String? end,
     String? search,
   }) {
     filterCount = 0;
 
-    if (installer != null) {
-      selectedInstaller = installer;
+    String? norm(String? v) =>
+        (v == null || v.trim().isEmpty) ? null : v.trim();
+
+    final installerN = norm(installer);
+    if (installerN != null) {
+      selectedInstaller = installerN;
       filterCount++;
     } else {
       selectedInstaller = null;
     }
 
-    if (organization != null) {
-      selectedOrg = organization;
+    final orgN = norm(organization);
+    if (orgN != null) {
+      selectedOrg = orgN;
       filterCount++;
     } else {
       selectedOrg = null;
     }
 
-    if (administration != null) {
-      selectedAdmin = administration;
+    final adminN = norm(administration);
+    if (adminN != null) {
+      selectedAdmin = adminN;
       filterCount++;
     } else {
       selectedAdmin = null;
     }
 
-    if (province != null) {
-      selectedProvince = province;
+    final provinceN = norm(province);
+    if (provinceN != null) {
+      selectedProvince = provinceN;
       filterCount++;
     } else {
       selectedProvince = null;
     }
 
-    if (city != null) {
-      selectedCity = city;
+    final cityN = norm(city);
+    if (cityN != null) {
+      selectedCity = cityN;
       filterCount++;
     } else {
       selectedCity = null;
     }
 
-    if (plan != null) {
-      selectedPlan = plan;
+    final planN = norm(plan);
+    if (planN != null) {
+      selectedPlan = planN;
       filterCount++;
     } else {
       selectedPlan = null;
     }
 
-    if (start != null) {
-      startDate = start;
+    final flowchartN = norm(flowchart);
+    if (flowchartN != null) {
+      selectedFlowchart = flowchartN;
+      filterCount++;
+    } else {
+      selectedFlowchart = null;
+    }
+
+    final startN = norm(start);
+    if (startN != null) {
+      startDate = startN;
       filterCount++;
     } else {
       startDate = null;
@@ -152,6 +178,7 @@ class DeviceFilterState {
       'province': selectedProvince,
       'city': selectedCity,
       'plan': selectedPlan,
+      'flowchart': selectedFlowchart,
       'start': startDate,
       'end': endDate,
       'search': searchedText,
