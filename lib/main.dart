@@ -17,6 +17,7 @@ import 'package:shooka_flutter/(tabs)/profile/profile_page.dart';
 import 'package:shooka_flutter/(tabs)/users/users.dart';
 import 'package:shooka_flutter/(tabs)/views/views.dart';
 import 'package:shooka_flutter/components/splash_screen.dart';
+import 'package:shooka_flutter/components/web_update_banner.dart';
 import 'package:shooka_flutter/core/theme/theme.dart';
 import 'package:shooka_flutter/core/theme/theme_provider.dart';
 import 'package:shooka_flutter/(tabs)/home/home_page.dart';
@@ -173,7 +174,15 @@ class MyApp extends StatelessWidget {
                   data: MediaQuery.of(
                     context,
                   ).copyWith(textScaler: TextScaler.linear(scale)),
-                  child: child!,
+                  child: Column(
+                    children: [
+                      // Web-only: shows an update button when a newer
+                      // `flutter build web` is detected via version.json.
+                      // No-op on Android/iOS/Windows.
+                      const WebUpdateBanner(),
+                      Expanded(child: child!),
+                    ],
+                  ),
                 );
               },
             );

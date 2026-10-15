@@ -51,10 +51,9 @@ class _DpFlowchartState extends State<DpFlowchart> {
 
   void _load() {
     if (!mounted) return;
-    final hasAccess = context
-        .read<UserProvider>()
-        .accessControl
-        .hasAccessTo(AppPanel.flowchart);
+    final hasAccess = context.read<UserProvider>().accessControl.hasAccessTo(
+      AppPanel.flowchart,
+    );
     if (!hasAccess) return;
     final provider = context.read<DeviceProvider>();
     provider.loadDeviceFlowchart(deviceId: widget.deviceId);
@@ -70,10 +69,7 @@ class _DpFlowchartState extends State<DpFlowchart> {
 
   void _retry() {
     final provider = context.read<DeviceProvider>();
-    provider.loadDeviceFlowchart(
-      deviceId: widget.deviceId,
-      forceRefresh: true,
-    );
+    provider.loadDeviceFlowchart(deviceId: widget.deviceId, forceRefresh: true);
     provider.loadFlowchartOrderedItems(forceRefresh: true);
   }
 
@@ -100,10 +96,9 @@ class _DpFlowchartState extends State<DpFlowchart> {
 
   @override
   Widget build(BuildContext context) {
-    final hasAccess = context
-        .watch<UserProvider>()
-        .accessControl
-        .hasAccessTo(AppPanel.flowchart);
+    final hasAccess = context.watch<UserProvider>().accessControl.hasAccessTo(
+      AppPanel.flowchart,
+    );
     if (!hasAccess) return const SizedBox.shrink();
 
     final provider = context.watch<DeviceProvider>();
@@ -141,17 +136,11 @@ class _DpFlowchartState extends State<DpFlowchart> {
           : _TitleStatusPill(text: statusText, color: statusColor),
       children: [
         if (loading && steps == null)
-          const Padding(
-            padding: EdgeInsets.all(40.0),
-            child: Loading(),
-          )
+          const Padding(padding: EdgeInsets.all(40.0), child: Loading())
         else if (error != null && steps == null)
           _ErrorBox(message: "خطا در دریافت پیشرفت دستگاه.", onRetry: _retry)
         else if (steps == null || steps.isEmpty)
-          _FallbackTemplate(
-            onRetry: _retry,
-            onReorder: _openReorderSheet,
-          )
+          _FallbackTemplate(onRetry: _retry, onReorder: _openReorderSheet)
         else
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -343,9 +332,7 @@ class _DeviceTimeline extends StatelessWidget {
     final firstPending = sorted.indexWhere((s) => !s.isDone);
     // Only the most recent done step can be reverted — keeps the flowchart
     // sequential (no holes in the middle).
-    final lastDone = firstPending == -1
-        ? sorted.length - 1
-        : firstPending - 1;
+    final lastDone = firstPending == -1 ? sorted.length - 1 : firstPending - 1;
 
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
@@ -429,11 +416,7 @@ class _StepRow extends StatelessWidget {
                           size: 17,
                           color: Colors.green,
                         )
-                      : Icon(
-                          _iconFor(step.label),
-                          size: 15,
-                          color: ring,
-                        ),
+                      : Icon(_iconFor(step.label), size: 15, color: ring),
                 ),
               ),
               if (!isLast)
@@ -550,9 +533,7 @@ class _StepRow extends StatelessWidget {
                               child: Text(
                                 step.note.trim(),
                                 style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                    ),
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
                               ),
                             ),
                           ],
@@ -563,12 +544,9 @@ class _StepRow extends StatelessWidget {
                     // flowchart sequential. Settlement steps are settled via
                     // the inventory forms, so they never show actions.
                     // (Revert lives beside the status chip above.)
-                    if (isCurrent && !_isSettlementStep(step)) ...[
+                    if (isCurrent) ...[
                       const SizedBox(height: 8),
-                      _CompleteStepButton(
-                        deviceId: deviceId,
-                        step: step,
-                      ),
+                      _CompleteStepButton(deviceId: deviceId, step: step),
                     ],
                   ],
                 ),
@@ -713,36 +691,37 @@ class _RevertStepButton extends StatelessWidget {
               )
             : const Icon(Icons.undo_rounded, size: 15),
         label: Text(submitting ? "..." : "بازگردانی"),
-        style: OutlinedButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-            fontWeight: FontWeight.w900,
-            fontSize: 11.5,
-          ),
-          foregroundColor: scheme.error,
-          backgroundColor: scheme.error.withValues(alpha: .12),
-          side: BorderSide(
-            color: scheme.error.withValues(alpha: .8),
-            width: 1.2,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.disabled)) return null;
-            if (states.contains(WidgetState.pressed)) {
-              return scheme.error.withValues(alpha: .25);
-            }
-            if (states.contains(WidgetState.hovered)) {
-              return scheme.error.withValues(alpha: .18);
-            }
-            return null;
-          }),
-        ),
+        style:
+            OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                fontSize: 11.5,
+              ),
+              foregroundColor: scheme.error,
+              backgroundColor: scheme.error.withValues(alpha: .12),
+              side: BorderSide(
+                color: scheme.error.withValues(alpha: .8),
+                width: 1.2,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ).copyWith(
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) return null;
+                if (states.contains(WidgetState.pressed)) {
+                  return scheme.error.withValues(alpha: .25);
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return scheme.error.withValues(alpha: .18);
+                }
+                return null;
+              }),
+            ),
       ),
     );
   }
@@ -818,13 +797,8 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
     if (isDesktop) {
       return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        insetPadding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 24,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 460),
           padding: const EdgeInsets.all(20),
@@ -999,7 +973,8 @@ bool _isSettlementStep(DeviceFlowchartStep step) {
       label.contains('توسه');
 }
 
-IconData _iconFor(String label) {  if (label.contains("اشتراک")) return Icons.card_membership_outlined;
+IconData _iconFor(String label) {
+  if (label.contains("اشتراک")) return Icons.card_membership_outlined;
   if (label.contains("نصب")) return Icons.build_outlined;
   if (label.contains("مستند")) return Icons.upload_file_outlined;
   if (label.contains("ناظر")) return Icons.verified_outlined;
@@ -1162,10 +1137,7 @@ class _FallbackTemplate extends StatelessWidget {
         provider.flowchartOrderedLoading || provider.flowchartLoading;
 
     if (loading && items.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(40.0),
-        child: Loading(),
-      );
+      return const Padding(padding: EdgeInsets.all(40.0), child: Loading());
     }
     if (items.isEmpty) {
       return Padding(
@@ -1430,7 +1402,9 @@ class _ReorderSheetState extends State<_ReorderSheet> {
                                     item.description.trim(),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.labelSmall
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
                                         ?.copyWith(
                                           color: scheme.onSurfaceVariant,
                                         ),

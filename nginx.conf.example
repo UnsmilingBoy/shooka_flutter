@@ -1,0 +1,88 @@
+# Example nginx config for Flutter web that fixes "must press Ctrl+F5".
+#
+# Root cause of your issue: index.html + main.dart.js + flutter_bootstrap.js
+# were served with nginx's default caching (Last-Modified / ETag only).
+# A normal F5 revalidates heuristically and often serves the browser's disk
+# cache, so users stay on the old build. Ctrl+F5 forces a network fetch,
+# which is why it "fixed" it.
+#
+# Fix: NEVER cache the entry points, cache static subdirs for 1 year.
+# The app additionally polls app_build.json (cache-busted, BUILD_ID
+# comparison) and shows an update banner with a hard-reload button (see
+# lib/services/web_update_service.dart + lib/components/web_update_banner.dart
+# + tool/build_web.dart).
+#
+# Deploy with:
+#   dart run tool/build_web.dart
+#   rsync -av --delete build/web/ /var/www/shooka/
+#   nginx -t && systemctl reload nginx
+#
+# Verify with:
+#   curl -I https://YOUR_HOST/                  # must contain: no-store, no-cache
+#   curl -I https://YOUR_HOST/app_build.json    # must contain: no-store, no-cache
+#   curl -I https://YOUR_HOST/main.dart.js      # must contain: no-store, no-cache
+#   curl -I https://YOUR_HOST/assets/...png     # may contain: max-age=31536000, immutable
+
+server {
+    listen 80;
+    server_name YOUR_HOST;
+    # return 301 https://$host$request_uri;  # uncomment when TLS is ready
+}
+
+# server {
+#     listen 443 ssl;
+#     server_name YOUR_HOST;
+#
+#     ssl_certificate /etc/nginx/ssl/fullchain.pem;
+#     ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+
+    root /var/www/shooka;
+    index index.html;
+    charset utf-8;
+
+    # Gzip the (large) JS/WASM payloads.
+    gzip on;
+    gzip_types text/css application/javascript application/json font/ttf font/woff2 image/svg+xml;
+    gzip_min_length 1024;
+
+    # ---- 1. NEVER cache entry points (this is the actual fix) ----
+    location = / {
+        try_files /index.html =404;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+    }
+
+    # Root JS + metadata: filename is STABLE across builds
+    # (main.dart.js keeps the same name!), so it must revalidate.
+    location ~* ^/(flutter_bootstrap\.js|flutter\.js|main\.dart\.js|flutter_service_worker\.js|app_build\.json|version\.json|manifest\.json)$ {
+        expires -1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        # access_log off;
+    }
+
+    # ---- 2. SPA fallback (Flutter path routing) ----
+    # NOTE: /index.html fallback is internally redirected to
+    # `location = /index.html` above, so it keeps the no-cache headers.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # ---- 3. Long-cache ONLY versioned/static subdirectories ----
+    # Safe: canvaskit/ changes only with Flutter engine upgrades,
+    # assets/ + icons/ change rarely and are re-requested after entry
+    # points revalidate. Never put root *.js here.
+    location ~* ^/(assets|canvaskit|icons)/ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        access_log off;
+    }
+# }

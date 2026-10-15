@@ -1,32 +1,11 @@
 <!doctype html>
 <html lang="fa">
   <head>
-    <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
     <base href="$FLUTTER_BASE_HREF" />
 
     <meta charset="UTF-8" />
     <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
     <meta name="description" content="A new Flutter project." />
-
-    <!-- Prevent caching -->
-    <meta
-      http-equiv="Cache-Control"
-      content="no-cache, no-store, must-revalidate"
-    />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
 
     <!-- iOS meta tags & icons -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -40,22 +19,34 @@
     <title>shooka_flutter</title>
     <link rel="manifest" href="manifest.json" />
 
+    <!--
+      Freshness strategy (see nginx.conf.example + WebUpdateBanner):
+      - nginx serves index.html / flutter_bootstrap.js / main.dart.js /
+        app_build.json with `Cache-Control: no-cache` so a normal F5
+        always revalidates the entry points.
+      - Hashed/static assets (canvaskit, assets/) are cached immutably.
+      - The app polls app_build.json (cache-busted) and compares its
+        `build_id` against the BUILD_ID baked in via --dart-define
+        (see tool/build_web.dart). On mismatch it shows an update banner
+        with a hard-reload button.
+      Do NOT delete CacheStorage on every load here: that forces a full
+      re-download (canvaskit ~5MB) on every visit and still does not fix
+      HTTP caching of index.html itself. Targeted cleanup happens only
+      when the user presses the update button (see web_update_service.dart).
+    -->
     <script>
-      // Generate a cache-busting parameter based on build time
-      window.flutterWebVersion = Date.now();
-      // window.flutterConfiguration = {
-      //   canvasKitBaseUrl: "canvaskit/",
-      //   renderer: "html"
-      // };
+      // One-time legacy cleanup: unregister old Flutter service workers
+      // left over from previous PWA builds. No-op when none exist.
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          for (var r of regs) {
+            r.unregister();
+          }
+        });
+      }
     </script>
   </head>
   <body>
-    <script>
-      // Load flutter_bootstrap.js with cache busting
-      var script = document.createElement("script");
-      script.src = "flutter_bootstrap.js?v=" + window.flutterWebVersion;
-      script.async = true;
-      document.body.appendChild(script);
-    </script>
+    <script src="flutter_bootstrap.js" async></script>
   </body>
 </html>
