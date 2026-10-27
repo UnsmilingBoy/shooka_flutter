@@ -82,6 +82,11 @@ class InventorySettlement {
   final String note;
   final String createdAt;
 
+  /// Device codes / ids the settlement covers, when the API includes them on
+  /// the settlement object itself (instead of nesting it under each device).
+  final List<String> deviceCodes;
+  final List<int> deviceIds;
+
   const InventorySettlement({
     required this.id,
     required this.settlementType,
@@ -93,6 +98,8 @@ class InventorySettlement {
     this.receiptImage,
     this.note = '',
     this.createdAt = '',
+    this.deviceCodes = const [],
+    this.deviceIds = const [],
   });
 
   /// Normalizes both API values (`device` / `representatives`) and the
@@ -113,32 +120,91 @@ class InventorySettlement {
       ? 'تسویه حساب با نماینده'
       : 'تسویه حساب دستگاه (شرکت)';
 
-  factory InventorySettlement.fromJson(Map<String, dynamic> json) =>
-      InventorySettlement(
-        id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
-        settlementType:
-            json['settlement_type']?.toString() ??
-            json['settlementType']?.toString() ??
-            '',
-        amount: json['amount']?.toString() ?? '',
-        sourceBank: json['source_bank']?.toString() ?? '',
-        destinationBank: json['destination_bank']?.toString() ?? '',
-        sentTo: json['sent_to']?.toString() ?? '',
-        createdBy: json['created_by']?.toString() ?? '',
-        receiptImage: json['receipt_image']?.toString(),
-        note: json['note']?.toString() ?? '',
-        createdAt: json['created_at']?.toString() ?? '',
-      );
+  factory InventorySettlement.fromJson(Map<String, dynamic> json) {
+    final refs = _settlementDeviceRefs(json);
+    return InventorySettlement(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      settlementType:
+          json['settlement_type']?.toString() ??
+          json['settlementType']?.toString() ??
+          '',
+      amount: json['amount']?.toString() ?? '',
+      sourceBank: json['source_bank']?.toString() ?? '',
+      destinationBank: json['destination_bank']?.toString() ?? '',
+      sentTo: json['sent_to']?.toString() ?? '',
+      createdBy: json['created_by']?.toString() ?? '',
+      receiptImage: json['receipt_image']?.toString(),
+      note: json['note']?.toString() ?? '',
+      createdAt: json['created_at']?.toString() ?? '',
+      deviceCodes: refs.codes,
+      deviceIds: refs.ids,
+    );
+  }
 }
 
-List<InventorySettlement> _settlementsOf(Map<String, dynamic> json) =>
-    (json['settlements'] as List? ?? [])
-        .whereType<Map>()
-        .map(
-          (item) =>
-              InventorySettlement.fromJson(Map<String, dynamic>.from(item)),
-        )
-        .toList();
+/// Device references carried on a settlement object itself. The by-id API may
+/// send them as `devices` / `device_codes` / `device_ids`, either as codes,
+/// numeric ids, comma-separated text, or nested device maps.
+({List<String> codes, List<int> ids}) _settlementDeviceRefs(
+  Map<String, dynamic> json,
+) {
+  final codes = <String>[];
+  final ids = <int>[];
+  for (final key in const [
+    'devices',
+    'device_codes',
+    'device_ids',
+    'device_list',
+    'form_devices',
+    'settlement_devices',
+  ]) {
+    final raw = json[key];
+    final refs = raw is List
+        ? raw
+        : raw is String && raw.trim().isNotEmpty
+        ? raw.split(',')
+        : const <dynamic>[];
+    for (final ref in refs) {
+      if (ref is Map) {
+        // Either a plain device object, or a through-record that wraps it.
+        final nested = ref['device'] ?? ref['form_device'];
+        final source = nested is Map ? nested : ref;
+        final code = (source['code'] ?? source['device_code'])
+            ?.toString()
+            .trim();
+        if (code != null && code.isNotEmpty) codes.add(code);
+        final id = int.tryParse(
+          (source['id'] ?? source['device_id'])?.toString() ?? '',
+        );
+        if (id != null) ids.add(id);
+        continue;
+      }
+      final text = ref?.toString().trim() ?? '';
+      if (text.isEmpty) continue;
+      final id = int.tryParse(text);
+      if (id != null) {
+        ids.add(id);
+      } else {
+        codes.add(text);
+      }
+    }
+  }
+  return (codes: codes, ids: ids);
+}
+
+/// Settlements attached to a form or a device. The by-id API has used both
+/// `settlements` and `device_settlements` for the per-device link, so both are
+/// read; objects without an id are ignored as they carry no settlement data.
+List<InventorySettlement> _settlementsOf(Map<String, dynamic> json) => [
+  ...(json['settlements'] as List? ?? const []),
+  ...(json['device_settlements'] as List? ?? const []),
+]
+    .whereType<Map>()
+    .where((item) => item['id'] != null)
+    .map(
+      (item) => InventorySettlement.fromJson(Map<String, dynamic>.from(item)),
+    )
+    .toList();
 
 class InventoryDeviceFlowchartStep {
   final String label;
@@ -203,6 +269,11 @@ class InventoryDevice {
   bool get hasFlowchart => deviceFlowchart.isNotEmpty;
   int get flowchartDoneCount => deviceFlowchart.where((s) => s.isDone).length;
 
+  /// Number of steps in a device's flowchart. The get-by-id form API only
+  /// returns the completed steps, so a complete flow means all seven of them
+  /// are present.
+  static const int flowchartStepCount = 7;
+
   /// First pending step by order, or null when there are no steps or all
   /// are done.
   InventoryDeviceFlowchartStep? get currentFlowchartStep {
@@ -215,9 +286,14 @@ class InventoryDevice {
     return null;
   }
 
-  bool get isFlowchartComplete =>
-      deviceFlowchart.isNotEmpty &&
-      deviceFlowchart.every((s) => s.isDone);
+  bool get isFlowchartComplete => flowchartDoneCount >= flowchartStepCount;
+
+  /// True when either settlement flowchart step («تسویه حساب» or «تسویه حساب
+  /// با نماینده») is done for this device. The get-by-id API only returns the
+  /// completed steps, and `is_done` is set on them.
+  bool get hasSettlementStepDone => deviceFlowchart.any(
+    (step) => step.isDone && step.label.contains('تسویه'),
+  );
 
   factory InventoryDevice.fromJson(Map<String, dynamic> json) {
     final flowchartRaw = json['device_flowchart'];
@@ -418,20 +494,18 @@ class InventoryFormItem {
   List<InventorySettlement> get representativeSettlements =>
       allSettlements.where((s) => s.isRepresentative).toList();
 
-  /// Maps settlement id -> device codes it covers. The get-by-id API nests
-  /// the same settlement object under every device it covers, so coverage
-  /// is inferred from that nesting. Form-level-only settlements map to [].
+  /// Maps settlement id -> device codes it covers. Coverage comes from the
+  /// settlement's own device references when the API sends them, or from the
+  /// same settlement being nested under each device it covers.
   Map<int, List<String>> get settlementDeviceCodes {
     final map = <int, List<String>>{};
     for (final settlement in settlements) {
-      map.putIfAbsent(settlement.id, () => []);
+      map[settlement.id] = List<String>.from(settlement.deviceCodes);
     }
     for (final device in devices) {
       for (final settlement in device.settlements) {
-        map.putIfAbsent(settlement.id, () => []);
-        if (!map[settlement.id]!.contains(device.code)) {
-          map[settlement.id]!.add(device.code);
-        }
+        final list = map.putIfAbsent(settlement.id, () => []);
+        if (!list.contains(device.code)) list.add(device.code);
       }
     }
     return map;
@@ -448,6 +522,30 @@ class InventoryFormItem {
         (s) => s.isRepresentative == representative,
       );
       if (hasType) result.add(device.code);
+    }
+    return result;
+  }
+
+  /// Device codes that are already settled, of either type. Sources, in
+  /// order of reliability:
+  /// 1. settlements nested under each device by the by-id API,
+  /// 2. device references carried on form-level settlements (codes or ids),
+  /// 3. a done «تسویه حساب» / «تسویه حساب با نماینده» flowchart step.
+  Set<String> get settledDeviceCodes {
+    final codes = <String>{};
+    final ids = <int>{};
+    for (final settlement in settlements) {
+      codes.addAll(settlement.deviceCodes);
+      ids.addAll(settlement.deviceIds);
+    }
+    final result = <String>{};
+    for (final device in devices) {
+      final settled =
+          device.settlements.isNotEmpty ||
+          device.hasSettlementStepDone ||
+          codes.contains(device.code) ||
+          ids.contains(device.id);
+      if (settled) result.add(device.code);
     }
     return result;
   }

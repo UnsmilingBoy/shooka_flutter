@@ -16,6 +16,7 @@ class SoftwareSupportProvider with ChangeNotifier {
   int _eventsTotalPages = 1;
   int _eventsTotalCount = 0;
   int _eventsPage = 1;
+
   /// Comma-separated ids for multi-select (e.g. "1,2,3").
   String? lastSelectedCreator;
   String? lastSelectedDevice;
@@ -219,6 +220,19 @@ class SoftwareSupportProvider with ChangeNotifier {
       notifyListeners();
     }
     return _users;
+  }
+
+  /// Searches the support-user directory without replacing the cached page
+  /// used by the other user pickers — used to resolve a single user (e.g.
+  /// the recipient of an inventory form) that is not on the first page.
+  Future<List<SupportEventUser>> searchUsers({String? search}) async {
+    try {
+      final result = await api.fetchSupportEventUsers(page: 1, search: search);
+      return (result["results"] as List).cast<SupportEventUser>();
+    } catch (e) {
+      debugPrint("Error searching support event users: $e");
+      return [];
+    }
   }
 
   //

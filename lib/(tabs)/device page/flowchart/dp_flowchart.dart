@@ -6,7 +6,6 @@ import 'package:shooka_flutter/models/flowchart_item_data_class.dart';
 import 'package:shooka_flutter/services/providers/device_provider.dart';
 import 'package:shooka_flutter/services/providers/user_provider.dart';
 import 'package:shooka_flutter/utils/expansion%20tile/my_expansion_tile.dart';
-import 'package:shooka_flutter/utils/loadings/loading.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 /// Flowchart / process-steps section of the device page.
@@ -16,15 +15,40 @@ import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 ///
 /// Shows **per-device progress** from
 /// `POST /api/shouka/objects/flowchart/retrieve/` (`is_done`, `done_at`,
-/// `done_by`, `note`) with a progress header + vertical timeline. The current
-/// (first pending) step can be marked done — with an optional note — and the
-/// last completed step can be reverted back to incomplete, both via
-/// `POST /api/shouka/device/edit-info/` (`object_type: flowchart`, `is_done`).
-/// Plus an in-place **template reorder** sheet backed by
+/// `done_by`, `note`) with a progress summary + vertical timeline. The current
+/// (first pending) step can be completed in one tap, or completed with an
+/// optional note; the most recent completed step can be reverted. Both go
+/// through `POST /api/shouka/device/edit-info/` (`object_type: flowchart`,
+/// `is_done`). Plus an in-place **template reorder** sheet backed by
 /// `list/ordered/` + `edit/order/`.
 ///
 /// Works for both mobile ([device_page.dart]) and desktop
 /// ([device_detail_panel.dart]).
+///
+/// ## Layout
+///
+/// ```
+///  ◔ 43%   3 از 7 مرحله انجام شده            ⋮
+///          مرحله بعدی: «نصب دستگاه»
+///  ─────────────────────────────────────────
+///  ✓   اشتراک
+///  │   1403/05/12 · علی رضایی
+///  ●   نصب دستگاه                    [مرحله جاری]
+///  │   [ تکمیل مرحله ]  [ یادداشت ]
+///  ○   مستندات
+///  ── تسویه حساب ────────────────────────────
+///  ▣   تسویه حساب                [در انتظار تسویه]
+/// ```
+///
+/// Design notes:
+/// * Passive rows (done / pending) are flat so the eye lands on the single
+///   actionable step, which is the only row drawn as a card.
+/// * The step node itself carries the status (number, check, filled accent),
+///   so no status chip is repeated on every row.
+/// * Actions are reversible: completing a step is one tap and can be undone,
+///   which is why there is no confirmation dialog on the happy path.
+/// * All sizes/colours resolve from the theme ([_Skin]) so light and dark
+///   themes keep their contrast.
 class DpFlowchart extends StatefulWidget {
   final int deviceId;
 
@@ -73,22 +97,100 @@ class _DpFlowchartState extends State<DpFlowchart> {
     provider.loadFlowchartOrderedItems(forceRefresh: true);
   }
 
+  void _refresh() {
+    context.read<DeviceProvider>().loadDeviceFlowchart(
+      deviceId: widget.deviceId,
+      forceRefresh: true,
+    );
+  }
+
+  /// Marks [step] done right away (no dialog): the provider flips the cached
+  /// step optimistically and rolls back on failure, so the UI stays honest.
+  Future<void> _completeStep(DeviceFlowchartStep step) async {
+    final provider = context.read<DeviceProvider>();
+    try {
+      final status = await provider.completeFlowchartStep(
+        deviceId: widget.deviceId,
+        flowchartItemId: step.flowchartItemId,
+      );
+      if (!mounted) return;
+      if (status == 200) {
+        filledSuccessToast(title: "مرحله «${step.label}» تکمیل شد");
+      } else if (status == -1) {
+        flatErrorToast(
+          title: "ارتباط با سرور برقرار نشد",
+          description: "تغییری ثبت نشد؛ دوباره تلاش کنید.",
+        );
+      } else {
+        flatErrorToast(
+          title: "ثبت مرحله ناموفق بود",
+          description: "کد وضعیت: $status",
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      flatErrorToast(title: "خطا در ثبت مرحله", description: e.toString());
+    }
+  }
+
+  Future<void> _completeStepWithNote(DeviceFlowchartStep step) async {
+    await _showFlowModal<void>(
+      context,
+      (_) => _NoteSheet(
+        deviceId: widget.deviceId,
+        step: step,
+        isSettlement: _isSettlementStep(step),
+      ),
+    );
+  }
+
+  Future<void> _revertStep(DeviceFlowchartStep step) async {
+    final isSettlement = _isSettlementStep(step);
+    final confirmed = await _showFlowModal<bool>(
+      context,
+      (_) => _RevertDialog(step: step, isSettlement: isSettlement),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final provider = context.read<DeviceProvider>();
+    try {
+      final status = await provider.completeFlowchartStep(
+        deviceId: widget.deviceId,
+        flowchartItemId: step.flowchartItemId,
+        isDone: false,
+      );
+      if (!mounted) return;
+      if (status == 200) {
+        filledSuccessToast(title: "مرحله «${step.label}» بازگردانده شد");
+      } else if (status == -1) {
+        flatErrorToast(
+          title: "ارتباط با سرور برقرار نشد",
+          description: "تغییری ثبت نشد؛ دوباره تلاش کنید.",
+        );
+      } else {
+        flatErrorToast(
+          title: "بازگردانی مرحله ناموفق بود",
+          description: "کد وضعیت: $status",
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      flatErrorToast(
+        title: "خطا در بازگردانی مرحله",
+        description: e.toString(),
+      );
+    }
+  }
+
   Future<void> _openReorderSheet() async {
     final provider = context.read<DeviceProvider>();
     if (provider.flowchartOrderedItems.isEmpty) {
       await provider.loadFlowchartOrderedItems(forceRefresh: true);
     }
     if (!mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) => _ReorderSheet(
-        initial: context.read<DeviceProvider>().flowchartOrderedItems,
-      ),
+    await _showFlowModal<void>(
+      context,
+      (_) => _ReorderSheet(initial: provider.flowchartOrderedItems),
     );
     // Device steps keep their own `order`; re-sort view by re-reading.
     if (mounted) setState(() {});
@@ -105,451 +207,501 @@ class _DpFlowchartState extends State<DpFlowchart> {
     final steps = provider.deviceFlowchart(widget.deviceId);
     final loading = provider.deviceFlowchartLoading(widget.deviceId);
     final error = provider.deviceFlowchartError(widget.deviceId);
-
-    // Current flowchart status shown beside the (collapsed) title:
-    // the first pending step's label, or "تکمیل شده" when all are done.
-    String? statusText;
-    Color statusColor = Theme.of(context).colorScheme.primary;
-    if (loading && steps == null) {
-      statusText = "در حال بارگذاری...";
-      statusColor = Theme.of(context).hintColor;
-    } else if (error != null && steps == null) {
-      statusText = "خطا در دریافت وضعیت";
-      statusColor = Theme.of(context).colorScheme.error;
-    } else if (steps != null && steps.isNotEmpty) {
-      final sorted = List<DeviceFlowchartStep>.from(steps)
-        ..sort((a, b) => a.order.compareTo(b.order));
-      final firstPending = sorted.indexWhere((s) => !s.isDone);
-      if (firstPending == -1) {
-        statusText = "تکمیل شده";
-        statusColor = Colors.green;
-      } else {
-        statusText = sorted[firstPending].label;
-      }
-    }
+    final model = steps == null ? null : _FlowModel.from(steps);
 
     return MyExpansionTile(
       initiallyExpanded: false,
       title: "مراحل انجام کار",
-      titleTrailing: statusText == null
-          ? null
-          : _TitleStatusPill(text: statusText, color: statusColor),
+      titleTrailing: _HeaderBadge(model: model, hasError: error != null),
       children: [
-        if (loading && steps == null)
-          const Padding(padding: EdgeInsets.all(40.0), child: Loading())
-        else if (error != null && steps == null)
-          _ErrorBox(message: "خطا در دریافت پیشرفت دستگاه.", onRetry: _retry)
-        else if (steps == null || steps.isEmpty)
-          _FallbackTemplate(onRetry: _retry, onReorder: _openReorderSheet)
-        else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _ProgressHeader(
-                steps: steps,
-                reorderLoading: provider.flowchartReorderLoading,
-                onReorder: _openReorderSheet,
-                onRefresh: () => provider.loadDeviceFlowchart(
-                  deviceId: widget.deviceId,
-                  forceRefresh: true,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _DeviceTimeline(deviceId: widget.deviceId, steps: steps),
-              if (error != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  "به‌روزرسانی ناموفق بود؛ آخرین داده ذخیره‌شده نمایش داده می‌شود.",
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ],
+        _buildBody(
+          model: model,
+          loading: loading,
+          error: error,
+          submittingId: (step) => provider.isFlowchartStepSubmitting(
+            widget.deviceId,
+            step.flowchartItemId,
           ),
+        ),
       ],
     );
   }
-}
 
-/// Summary card: `X از Y`, animated bar, % badge, refresh + reorder actions.
-class _ProgressHeader extends StatelessWidget {
-  final List<DeviceFlowchartStep> steps;
-  final bool reorderLoading;
-  final VoidCallback onReorder;
-  final VoidCallback onRefresh;
+  Widget _buildBody({
+    required _FlowModel? model,
+    required bool loading,
+    required String? error,
+    required bool Function(DeviceFlowchartStep) submittingId,
+  }) {
+    if (model == null) {
+      if (loading) return const _FlowSkeleton();
+      if (error != null) {
+        return _MessageState(
+          icon: Icons.cloud_off_rounded,
+          title: "دریافت پیشرفت مراحل ناموفق بود",
+          message: "اتصال به سرور برقرار نشد. لطفاً دوباره تلاش کنید.",
+          actionLabel: "تلاش مجدد",
+          onAction: _retry,
+        );
+      }
+      return const _FlowSkeleton();
+    }
 
-  const _ProgressHeader({
-    required this.steps,
-    required this.reorderLoading,
-    required this.onReorder,
-    required this.onRefresh,
-  });
+    if (model.isEmpty) {
+      return _TemplatePreview(onRetry: _retry, onReorder: _openReorderSheet);
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final done = steps.where((s) => s.isDone).length;
-    final total = steps.length;
-    final progress = total == 0 ? 0.0 : done / total;
-    final percent = (progress * 100).round();
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: .06),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.primary.withValues(alpha: .25)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  percent == 100
-                      ? Icons.verified_rounded
-                      : Icons.timeline_rounded,
-                  color: scheme.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "$done از $total مرحله انجام شده",
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      percent == 100
-                          ? "فرایند این دستگاه کامل شده است"
-                          : "مراحل به ترتیب قالب چیدمان نمایش داده می‌شوند",
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: percent == 100
-                      ? Colors.green.withValues(alpha: .15)
-                      : scheme.primary.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  "$percent٪",
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: percent == 100 ? Colors.green : scheme.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: progress),
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => LinearProgressIndicator(
-                value: value,
-                minHeight: 8,
-                backgroundColor: scheme.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation(
-                  percent == 100 ? Colors.green : scheme.primary,
-                ),
-              ),
+    // One width probe for the whole section: rows pick their action layout
+    // from the real available width (a desktop panel is often much narrower
+    // than the screen). It also has to live above the timeline, because a
+    // [LayoutBuilder] nested inside the rows would break the intrinsic
+    // measurement the connectors rely on.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 420;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _SummaryCard(
+              model: model,
+              onRefresh: _refresh,
+              onReorder: _openReorderSheet,
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              TextButton.icon(
-                onPressed: onRefresh,
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text("به‌روزرسانی"),
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
+            const SizedBox(height: 16),
+            for (var i = 0; i < model.ordered.length; i++)
+              _StepRow(
+                key: ValueKey("fc_step_${model.ordered[i].flowchartItemId}"),
+                step: model.ordered[i],
+                number: i + 1,
+                status: model.ordered[i].isDone
+                    ? _StepStatus.done
+                    : (i == model.currentIndex
+                          ? _StepStatus.current
+                          : _StepStatus.pending),
+                connector: i < model.ordered.length - 1,
+                isLast: i == model.ordered.length - 1,
+                canRevert: model.ordered[i].isDone && i == model.undoIndex,
+                wide: wide,
+                submitting: submittingId(model.ordered[i]),
+                onComplete: i == model.currentIndex
+                    ? () => _completeStep(model.ordered[i])
+                    : null,
+                onCompleteWithNote: i == model.currentIndex
+                    ? () => _completeStepWithNote(model.ordered[i])
+                    : null,
+                onRevert: model.ordered[i].isDone && i == model.undoIndex
+                    ? () => _revertStep(model.ordered[i])
+                    : null,
               ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: reorderLoading ? null : onReorder,
-                icon: reorderLoading
-                    ? const SizedBox.square(
-                        dimension: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.reorder_rounded, size: 16),
-                label: const Text("ویرایش ترتیب قالب"),
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
+            if (model.settlement.isNotEmpty) ...[
+              _SettlementHeader(hasOrdered: model.ordered.isNotEmpty),
+              for (var i = 0; i < model.settlement.length; i++)
+                _StepRow(
+                  key: ValueKey(
+                    "fc_settlement_${model.settlement[i].flowchartItemId}",
+                  ),
+                  step: model.settlement[i],
+                  isSettlement: true,
+                  status: model.settlement[i].isDone
+                      ? _StepStatus.done
+                      : _StepStatus.pending,
+                  isLast: i == model.settlement.length - 1,
+                  canRevert: model.settlement[i].isDone,
+                  wide: wide,
+                  submitting: submittingId(model.settlement[i]),
+                  onComplete: model.settlement[i].isDone
+                      ? null
+                      : () => _completeStep(model.settlement[i]),
+                  onCompleteWithNote: model.settlement[i].isDone
+                      ? null
+                      : () => _completeStepWithNote(model.settlement[i]),
+                  onRevert: model.settlement[i].isDone
+                      ? () => _revertStep(model.settlement[i])
+                      : null,
                 ),
-              ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Vertical timeline of per-device steps: done / current / pending.
-///
-/// Only the current (first pending) step is actionable — completing steps in
-/// order keeps the flowchart sequential.
-class _DeviceTimeline extends StatelessWidget {
-  final int deviceId;
-  final List<DeviceFlowchartStep> steps;
-
-  const _DeviceTimeline({required this.deviceId, required this.steps});
-
-  @override
-  Widget build(BuildContext context) {
-    final sorted = List<DeviceFlowchartStep>.from(steps)
-      ..sort((a, b) => a.order.compareTo(b.order));
-    final firstPending = sorted.indexWhere((s) => !s.isDone);
-    // Only the most recent done step can be reverted — keeps the flowchart
-    // sequential (no holes in the middle).
-    final lastDone = firstPending == -1 ? sorted.length - 1 : firstPending - 1;
-
-    return ListView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: sorted.length,
-      itemBuilder: (context, index) {
-        final step = sorted[index];
-        final isLast = index == sorted.length - 1;
-        final isCurrent = index == firstPending;
-        return _StepRow(
-          deviceId: deviceId,
-          step: step,
-          isLast: isLast,
-          isCurrent: isCurrent,
-          canRevert: step.isDone && index == lastDone,
+            if (error != null) _StaleBanner(onRetry: _retry),
+          ],
         );
       },
     );
   }
 }
 
-class _StepRow extends StatelessWidget {
-  final int deviceId;
-  final DeviceFlowchartStep step;
-  final bool isLast;
-  final bool isCurrent;
-  final bool canRevert;
+// ---------------------------------------------------------------------------
+// Section header badge (collapsed tile)
+// ---------------------------------------------------------------------------
 
-  const _StepRow({
-    required this.deviceId,
-    required this.step,
-    required this.isLast,
-    required this.isCurrent,
-    this.canRevert = false,
+/// Compact "how far along" pill shown beside the collapsed section title.
+///
+/// Always visible (unlike the old behaviour, which hid the status until a
+/// first step was approved) so the section answers "is this device done?"
+/// without being opened.
+class _HeaderBadge extends StatelessWidget {
+  final _FlowModel? model;
+  final bool hasError;
+
+  const _HeaderBadge({required this.model, required this.hasError});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    final m = model;
+
+    if (m == null) {
+      if (!hasError) return const SizedBox.shrink();
+      return _Pill(
+        text: "خطا",
+        tone: skin.danger,
+        icon: Icons.error_outline_rounded,
+      );
+    }
+    if (m.isEmpty) return const SizedBox.shrink();
+
+    final tone = m.isComplete ? skin.success : skin.accent;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(7, 3, 9, 3),
+      decoration: BoxDecoration(
+        color: tone.tint,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: tone.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox.square(
+            dimension: 13,
+            child: CircularProgressIndicator(
+              value: m.progress,
+              strokeWidth: 2.4,
+              strokeCap: StrokeCap.round,
+              backgroundColor: tone.fill.withValues(alpha: .18),
+              valueColor: AlwaysStoppedAnimation(tone.ink),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            m.isComplete ? "کامل" : "${m.doneCount}/${m.total}",
+            style: _text(
+              context,
+              size: 11,
+              weight: FontWeight.w700,
+              color: tone.ink,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Summary card
+// ---------------------------------------------------------------------------
+
+enum _SummaryAction { refresh, reorder }
+
+/// Progress summary: percentage ring, "X of Y" and what comes next.
+class _SummaryCard extends StatelessWidget {
+  final _FlowModel model;
+  final VoidCallback onRefresh;
+  final VoidCallback onReorder;
+
+  const _SummaryCard({
+    required this.model,
+    required this.onRefresh,
+    required this.onReorder,
   });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final showRevert = canRevert && !isCurrent && !_isSettlementStep(step);
-    final Color ring;
-    final Color fill;
-    if (step.isDone) {
-      ring = Colors.green;
-      fill = Colors.green.withValues(alpha: .15);
-    } else if (isCurrent) {
-      ring = scheme.primary;
-      fill = scheme.primary.withValues(alpha: .12);
+    final skin = _Skin.of(context);
+    final tone = model.isComplete ? skin.success : skin.accent;
+    final next = model.nextStep;
+
+    final String subtitle;
+    if (model.isComplete) {
+      subtitle = "همه مراحل انجام شده است";
+    } else if (next != null) {
+      subtitle = "مرحله بعدی: «${next.label}»";
     } else {
-      ring = scheme.outline.withValues(alpha: .6);
-      fill = scheme.surfaceContainerHighest;
+      subtitle = "هنوز مرحله‌ای ثبت نشده است";
     }
 
-    return IntrinsicHeight(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 6, 12),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          tone.fill.withValues(alpha: .055),
+          skin.surface,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: tone.fill.withValues(alpha: .18)),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: fill,
-                  border: Border.all(color: ring, width: isCurrent ? 2 : 1.5),
-                  boxShadow: isCurrent
-                      ? [
-                          BoxShadow(
-                            color: ring.withValues(alpha: .3),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: step.isDone
-                      ? const Icon(
-                          Icons.check_rounded,
-                          size: 17,
-                          color: Colors.green,
-                        )
-                      : Icon(_iconFor(step.label), size: 15, color: ring),
-                ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    color: step.isDone
-                        ? Colors.green.withValues(alpha: .5)
-                        : ring.withValues(alpha: .35),
-                  ),
-                ),
-            ],
+          _ProgressRing(
+            value: model.progress,
+            percent: model.percent,
+            tone: tone,
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isCurrent
-                      ? scheme.primary.withValues(alpha: .05)
-                      : scheme.surfaceContainerLow.withValues(alpha: .6),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isCurrent
-                        ? scheme.primary.withValues(alpha: .35)
-                        : scheme.outline.withValues(alpha: .25),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "${model.doneCount} از ${model.total} مرحله انجام شده",
+                  style: _text(
+                    context,
+                    size: 13,
+                    weight: FontWeight.w700,
+                    color: skin.ink,
+                    height: 1.45,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            step.label,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        IntrinsicWidth(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _StatusChip(
-                                done: step.isDone,
-                                current: isCurrent,
-                              ),
-                              if (showRevert) ...[
-                                const SizedBox(height: 6),
-                                _RevertStepButton(
-                                  deviceId: deviceId,
-                                  step: step,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _MetaPill(
-                          icon: Icons.format_list_numbered_rounded,
-                          text: "مرحله ${step.order}",
-                        ),
-                        if (step.doneAt != null)
-                          _MetaPill(
-                            icon: Icons.event_available_outlined,
-                            text: step.doneAt!,
-                            highlight: true,
-                          ),
-                        if (_doneByText(step) != null)
-                          _MetaPill(
-                            icon: Icons.person_outline_rounded,
-                            text: _doneByText(step)!,
-                          ),
-                      ],
-                    ),
-                    if (step.note.trim().isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: scheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: scheme.outline.withValues(alpha: .25),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.notes_rounded,
-                              size: 14,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                step.note.trim(),
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(color: scheme.onSurfaceVariant),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    // Only the current step can be completed — keeps the
-                    // flowchart sequential. Settlement steps are settled via
-                    // the inventory forms, so they never show actions.
-                    // (Revert lives beside the status chip above.)
-                    if (isCurrent) ...[
-                      const SizedBox(height: 8),
-                      _CompleteStepButton(deviceId: deviceId, step: step),
-                    ],
-                  ],
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: _text(
+                    context,
+                    size: 11.5,
+                    color: model.isComplete ? tone.ink : skin.inkMuted,
+                    height: 1.5,
+                  ),
                 ),
+              ],
+            ),
+          ),
+          PopupMenuButton<_SummaryAction>(
+            tooltip: "گزینه‌های بیشتر",
+            icon: Icon(Icons.more_vert_rounded, size: 20, color: skin.inkMuted),
+            onSelected: (action) {
+              if (action == _SummaryAction.refresh) {
+                onRefresh();
+              } else {
+                onReorder();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: _SummaryAction.refresh,
+                child: _MenuRow(
+                  icon: Icons.refresh_rounded,
+                  label: "به‌روزرسانی وضعیت",
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: _SummaryAction.reorder,
+                child: _MenuRow(
+                  icon: Icons.reorder_rounded,
+                  label: "ویرایش ترتیب مراحل",
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MenuRow({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: skin.inkMuted),
+        const SizedBox(width: 10),
+        Text(label, style: _text(context, size: 12.5, color: skin.ink)),
+      ],
+    );
+  }
+}
+
+/// Circular percentage gauge. Animates between values so a step completion
+/// reads as progress rather than a jump.
+class _ProgressRing extends StatelessWidget {
+  final double value;
+  final int percent;
+  final _Tone tone;
+
+  const _ProgressRing({
+    required this.value,
+    required this.percent,
+    required this.tone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: "$percent درصد تکمیل شده",
+      excludeSemantics: true,
+      child: SizedBox.square(
+        dimension: 48,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: value.clamp(0, 1)),
+          duration: const Duration(milliseconds: 650),
+          curve: Curves.easeOutCubic,
+          builder: (context, animated, _) => Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox.square(
+                dimension: 48,
+                child: CircularProgressIndicator(
+                  value: animated,
+                  strokeWidth: 4.5,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor: tone.fill.withValues(alpha: .16),
+                  valueColor: AlwaysStoppedAnimation(tone.fill),
+                ),
+              ),
+              Text(
+                "$percent٪",
+                style: _text(
+                  context,
+                  size: 11,
+                  weight: FontWeight.w700,
+                  color: tone.ink,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Timeline rows
+// ---------------------------------------------------------------------------
+
+enum _StepStatus { done, current, pending }
+
+const double _kGutter = 40;
+const double _kNodeSize = 32;
+const double _kNodeTop = 2;
+
+/// One step of the timeline.
+///
+/// Passive rows (done / pending) are flat; rows that carry actions are drawn
+/// as cards so the single actionable step is unmistakable.
+class _StepRow extends StatelessWidget {
+  final DeviceFlowchartStep step;
+  final int? number;
+  final _StepStatus status;
+  final bool connector;
+  final bool isLast;
+  final bool isSettlement;
+  final bool canRevert;
+  final bool wide;
+  final bool submitting;
+  final VoidCallback? onComplete;
+  final VoidCallback? onCompleteWithNote;
+  final VoidCallback? onRevert;
+
+  const _StepRow({
+    super.key,
+    required this.step,
+    this.number,
+    required this.status,
+    this.connector = false,
+    this.isLast = false,
+    this.isSettlement = false,
+    this.canRevert = false,
+    this.wide = true,
+    this.submitting = false,
+    this.onComplete,
+    this.onCompleteWithNote,
+    this.onRevert,
+  });
+
+  bool get _actionable => onComplete != null || onCompleteWithNote != null;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    final tone = isSettlement ? skin.warning : skin.accent;
+
+    // [IntrinsicHeight] lets the connector fill whatever height the step
+    // content ends up needing (notes, actions, wrapped titles). It is the only
+    // reliable way to do this without a manual height pass; the list is short
+    // enough for the extra measurement to be free.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: _kGutter,
+            child: Column(
+              children: [
+                const SizedBox(height: _kNodeTop),
+                _StepNode(
+                  status: status,
+                  number: number,
+                  isSettlement: isSettlement,
+                  tone: tone,
+                  skin: skin,
+                ),
+                if (connector)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: const EdgeInsets.only(top: 5),
+                      decoration: BoxDecoration(
+                        color: status == _StepStatus.done
+                            ? skin.success.fill.withValues(alpha: .32)
+                            : skin.line,
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                padding: _actionable
+                    ? const EdgeInsets.fromLTRB(12, 11, 12, 12)
+                    : const EdgeInsets.symmetric(vertical: 9),
+                decoration: _actionable
+                    ? BoxDecoration(
+                        color: Color.alphaBlend(
+                          tone.fill.withValues(alpha: .05),
+                          skin.surface,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: tone.fill.withValues(alpha: .34),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: tone.fill.withValues(alpha: .07),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      )
+                    : null,
+                child: _content(context, skin, tone),
               ),
             ),
           ),
@@ -558,197 +710,977 @@ class _StepRow extends StatelessWidget {
     );
   }
 
-  String? _doneByText(DeviceFlowchartStep step) {
-    final by = step.doneBy;
-    if (by == null) return null;
-    final text = by.toString().trim();
-    if (text.isEmpty || text == "null") return null;
-    return text;
-  }
-}
+  Widget _content(BuildContext context, _Skin skin, _Tone tone) {
+    final done = status == _StepStatus.done;
+    final stamp = _stampLabel(step.doneAt);
+    final person = _personLabel(step.doneBy);
+    final note = step.note.trim();
+    final hasMeta = done && (stamp != null || person != null);
 
-/// Action button on the current step. Opens a confirm dialog with an optional
-/// note field, then marks the step done via the provider.
-///
-/// On wide screens (desktop) the confirm UI is a centered window; on compact
-/// screens it stays a bottom sheet — same breakpoint convention as the rest
-/// of the app (`width >= 900`).
-class _CompleteStepButton extends StatelessWidget {
-  final int deviceId;
-  final DeviceFlowchartStep step;
-
-  const _CompleteStepButton({required this.deviceId, required this.step});
-
-  Future<void> _openSheet(BuildContext context) async {
-    final content = _CompleteStepSheet(deviceId: deviceId, step: step);
-    if (MediaQuery.sizeOf(context).width >= 900) {
-      await showDialog<void>(context: context, builder: (_) => content);
-    } else {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        builder: (_) => content,
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final submitting = context
-        .watch<DeviceProvider>()
-        .isFlowchartStepSubmitting(deviceId, step.flowchartItemId);
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: submitting ? null : () => _openSheet(context),
-        icon: submitting
-            ? const SizedBox.square(
-                dimension: 15,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                step.label,
+                style: _text(
+                  context,
+                  size: 13,
+                  weight: done ? FontWeight.w500 : FontWeight.w700,
+                  color: status == _StepStatus.pending
+                      ? skin.inkMuted
+                      : skin.ink,
+                  height: 1.45,
                 ),
-              )
-            : const Icon(Icons.check_circle_outline_rounded, size: 17),
-        label: Text(submitting ? "در حال ثبت..." : "تکمیل این مرحله"),
-        style:
-            FilledButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              textStyle: Theme.of(
-                context,
-              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.green.withValues(alpha: .35),
-              disabledForegroundColor: Colors.white.withValues(alpha: .9),
-            ).copyWith(
-              overlayColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.disabled)) return null;
-                if (states.contains(WidgetState.pressed)) {
-                  return Colors.white.withValues(alpha: .24);
-                }
-                if (states.contains(WidgetState.hovered)) {
-                  return Colors.white.withValues(alpha: .14);
-                }
-                if (states.contains(WidgetState.focused)) {
-                  return Colors.white.withValues(alpha: .12);
-                }
-                return null;
-              }),
+              ),
             ),
-      ),
-    );
-  }
-}
-
-/// Revert button on the last done step. Opens a confirm dialog, then flips
-/// the step back to incomplete (`is_done: false`) via the provider.
-class _RevertStepButton extends StatelessWidget {
-  final int deviceId;
-  final DeviceFlowchartStep step;
-
-  const _RevertStepButton({required this.deviceId, required this.step});
-
-  Future<void> _openSheet(BuildContext context) async {
-    final content = _CompleteStepSheet(
-      deviceId: deviceId,
-      step: step,
-      isDone: false,
-    );
-    if (MediaQuery.sizeOf(context).width >= 900) {
-      await showDialog<void>(context: context, builder: (_) => content);
-    } else {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            if (isSettlement) ...[
+              const SizedBox(width: 8),
+              _Pill(
+                text: done ? "تسویه شده" : "در انتظار تسویه",
+                tone: done ? skin.success : skin.warning,
+              ),
+            ] else if (status == _StepStatus.current) ...[
+              const SizedBox(width: 8),
+              _Pill(text: "مرحله جاری", tone: skin.accent),
+            ],
+            if (canRevert) ...[
+              const SizedBox(width: 4),
+              _RevertButton(
+                tone: done && isSettlement ? skin.warning : skin.neutral,
+                tooltip: isSettlement ? "لغو تسویه" : "بازگردانی این مرحله",
+                onPressed: submitting ? null : onRevert,
+              ),
+            ],
+          ],
         ),
-        builder: (_) => content,
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final submitting = context
-        .watch<DeviceProvider>()
-        .isFlowchartStepSubmitting(deviceId, step.flowchartItemId);
-    final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: "بازگردانی به ناتمام",
-      child: OutlinedButton.icon(
-        onPressed: submitting ? null : () => _openSheet(context),
-        icon: submitting
-            ? const SizedBox.square(
-                dimension: 13,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.undo_rounded, size: 15),
-        label: Text(submitting ? "..." : "بازگردانی"),
-        style:
-            OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                fontSize: 11.5,
+        if (hasMeta) ...[
+          const SizedBox(height: 5),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (stamp != null)
+                _MetaItem(icon: Icons.event_available_rounded, text: stamp),
+              if (person != null)
+                _MetaItem(icon: Icons.person_outline_rounded, text: person),
+            ],
+          ),
+        ],
+        if (note.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsetsDirectional.fromSTEB(10, 7, 10, 8),
+            decoration: BoxDecoration(
+              color: skin.ink.withValues(alpha: .035),
+              borderRadius: BorderRadius.circular(8),
+              border: BorderDirectional(
+                start: BorderSide(
+                  color: done
+                      ? skin.success.fill.withValues(alpha: .45)
+                      : skin.lineStrong,
+                  width: 2.5,
+                ),
               ),
-              foregroundColor: scheme.error,
-              backgroundColor: scheme.error.withValues(alpha: .12),
-              side: BorderSide(
-                color: scheme.error.withValues(alpha: .8),
-                width: 1.2,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ).copyWith(
-              overlayColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.disabled)) return null;
-                if (states.contains(WidgetState.pressed)) {
-                  return scheme.error.withValues(alpha: .25);
-                }
-                if (states.contains(WidgetState.hovered)) {
-                  return scheme.error.withValues(alpha: .18);
-                }
-                return null;
-              }),
             ),
-      ),
+            child: Text(
+              note,
+              style: _text(
+                context,
+                size: 11.5,
+                color: skin.inkMuted,
+                height: 1.6,
+              ),
+            ),
+          ),
+        ],
+        if (_actionable) ...[
+          const SizedBox(height: 11),
+          _ActionsRow(
+            tone: tone,
+            skin: skin,
+            wide: wide,
+            submitting: submitting,
+            primaryLabel: isSettlement ? "ثبت تسویه" : "تکمیل مرحله",
+            onComplete: onComplete,
+            onCompleteWithNote: onCompleteWithNote,
+          ),
+        ],
+      ],
     );
   }
 }
 
-/// Confirm form: shows the step, takes an optional note, submits.
-///
-/// Renders as a centered window on desktop and as bottom-sheet content on
-/// mobile (decided by the caller via `showDialog` / `showModalBottomSheet`).
-class _CompleteStepSheet extends StatefulWidget {
-  final int deviceId;
-  final DeviceFlowchartStep step;
-  final bool isDone;
+/// Status node in the timeline gutter: numbered when pending, checked when
+/// done, filled with the accent when it is the current step.
+class _StepNode extends StatelessWidget {
+  final _StepStatus status;
+  final int? number;
+  final bool isSettlement;
+  final _Tone tone;
+  final _Skin skin;
 
-  const _CompleteStepSheet({
-    required this.deviceId,
-    required this.step,
-    this.isDone = true,
+  const _StepNode({
+    required this.status,
+    required this.number,
+    required this.isSettlement,
+    required this.tone,
+    required this.skin,
   });
 
   @override
-  State<_CompleteStepSheet> createState() => _CompleteStepSheetState();
+  Widget build(BuildContext context) {
+    final done = status == _StepStatus.done;
+    final current = status == _StepStatus.current;
+
+    final Color background;
+    final Color border;
+    final Color foreground;
+    if (done) {
+      background = skin.success.tint;
+      border = skin.success.fill.withValues(alpha: .45);
+      foreground = skin.success.ink;
+    } else if (current) {
+      background = tone.fill;
+      border = tone.fill;
+      foreground = Colors.white;
+    } else if (isSettlement) {
+      background = tone.tint;
+      border = tone.fill.withValues(alpha: .40);
+      foreground = tone.ink;
+    } else {
+      background = skin.surface;
+      border = skin.lineStrong;
+      foreground = skin.inkFaint;
+    }
+
+    final Widget child;
+    if (done) {
+      child = Icon(Icons.check_rounded, size: 17, color: foreground);
+    } else if (isSettlement) {
+      child = Icon(Icons.payments_outlined, size: 15, color: foreground);
+    } else {
+      child = Text(
+        "${number ?? ''}",
+        style: _text(
+          context,
+          size: 12,
+          weight: FontWeight.w700,
+          color: foreground,
+          height: 1,
+        ),
+      );
+    }
+
+    return Semantics(
+      label: done
+          ? "انجام شده"
+          : current
+          ? "مرحله جاری"
+          : "در انتظار انجام",
+      excludeSemantics: true,
+      child: Container(
+        width: _kNodeSize,
+        height: _kNodeSize,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: background,
+          shape: isSettlement ? BoxShape.rectangle : BoxShape.circle,
+          borderRadius: isSettlement ? BorderRadius.circular(10) : null,
+          border: Border.all(color: border, width: current ? 1.5 : 1.2),
+          boxShadow: current
+              ? [
+                  BoxShadow(
+                    color: tone.fill.withValues(alpha: .26),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
+        ),
+        child: child,
+      ),
+    );
+  }
 }
 
-class _CompleteStepSheetState extends State<_CompleteStepSheet> {
+class _MetaItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _MetaItem({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: skin.inkFaint),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: _text(context, size: 11, color: skin.inkMuted, height: 1.4),
+        ),
+      ],
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  final String text;
+  final _Tone tone;
+  final IconData? icon;
+
+  const _Pill({required this.text, required this.tone, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: tone.tint,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: tone.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: tone.ink),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            text,
+            maxLines: 1,
+            style: _text(
+              context,
+              size: 10.5,
+              weight: FontWeight.w700,
+              color: tone.ink,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RevertButton extends StatelessWidget {
+  final _Tone tone;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  const _RevertButton({
+    required this.tone,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      iconSize: 17,
+      style: IconButton.styleFrom(
+        foregroundColor: tone.ink,
+        backgroundColor: tone.fill.withValues(alpha: .07),
+        hoverColor: tone.fill.withValues(alpha: .14),
+        minimumSize: const Size.square(36),
+        maximumSize: const Size.square(36),
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      icon: const Icon(Icons.undo_rounded),
+    );
+  }
+}
+
+/// Primary + optional-note actions of an actionable step.
+class _ActionsRow extends StatelessWidget {
+  final _Tone tone;
+  final _Skin skin;
+  final bool wide;
+  final bool submitting;
+  final String primaryLabel;
+  final VoidCallback? onComplete;
+  final VoidCallback? onCompleteWithNote;
+
+  const _ActionsRow({
+    required this.tone,
+    required this.skin,
+    required this.wide,
+    required this.submitting,
+    required this.primaryLabel,
+    required this.onComplete,
+    required this.onCompleteWithNote,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = FilledButton.icon(
+      onPressed: submitting ? null : onComplete,
+      icon: submitting
+          ? const SizedBox.square(
+              dimension: 15,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Icon(Icons.check_rounded, size: 18),
+      label: Text(submitting ? "در حال ثبت..." : primaryLabel),
+      style: FilledButton.styleFrom(
+        backgroundColor: tone.fill,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: tone.fill.withValues(alpha: .40),
+        disabledForegroundColor: Colors.white.withValues(alpha: .85),
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        textStyle: _text(
+          context,
+          size: 12.5,
+          weight: FontWeight.w700,
+          height: 1.3,
+        ),
+      ),
+    );
+
+    if (!wide) {
+      return Row(
+        children: [
+          Expanded(child: primary),
+          const SizedBox(width: 8),
+          IconButton.outlined(
+            onPressed: submitting ? null : onCompleteWithNote,
+            tooltip: "تکمیل با یادداشت",
+            iconSize: 19,
+            style: IconButton.styleFrom(
+              foregroundColor: skin.inkMuted,
+              side: BorderSide(color: skin.lineStrong),
+              minimumSize: const Size.square(44),
+              maximumSize: const Size.square(44),
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            icon: const Icon(Icons.edit_note_rounded),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        primary,
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          onPressed: submitting ? null : onCompleteWithNote,
+          icon: const Icon(Icons.edit_note_rounded, size: 18),
+          label: const Text("یادداشت"),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: skin.inkMuted,
+            side: BorderSide(color: skin.lineStrong),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            textStyle: _text(
+              context,
+              size: 12.5,
+              weight: FontWeight.w600,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Header separating the unordered settlement steps from the ordered flow.
+class _SettlementHeader extends StatelessWidget {
+  final bool hasOrdered;
+
+  const _SettlementHeader({required this.hasOrdered});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    return Container(
+      margin: EdgeInsets.only(top: hasOrdered ? 10 : 0, bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: skin.warning.tint,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: skin.warning.fill.withValues(alpha: .22)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.payments_outlined, size: 16, color: skin.warning.ink),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "تسویه حساب",
+                  style: _text(
+                    context,
+                    size: 12,
+                    weight: FontWeight.w700,
+                    color: skin.warning.ink,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  "مستقل از ترتیب مراحل — هر زمان قابل ثبت یا لغو",
+                  style: _text(
+                    context,
+                    size: 10.5,
+                    color: skin.inkMuted,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// States: skeleton / error / empty / template preview
+// ---------------------------------------------------------------------------
+
+/// Pulsing placeholder that mirrors the real layout, so the section does not
+/// jump in height when data arrives.
+class _FlowSkeleton extends StatefulWidget {
+  const _FlowSkeleton();
+
+  @override
+  State<_FlowSkeleton> createState() => _FlowSkeletonState();
+}
+
+class _FlowSkeletonState extends State<_FlowSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final CurvedAnimation _curve;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _curve = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _opacity = Tween<double>(begin: .45, end: 1).animate(_curve);
+  }
+
+  @override
+  void dispose() {
+    _curve.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    final bone = skin.ink.withValues(alpha: .07);
+
+    return FadeTransition(
+      opacity: _opacity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 76,
+            decoration: BoxDecoration(
+              color: bone,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (var i = 0; i < 3; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: _kNodeSize,
+                    height: _kNodeSize,
+                    decoration: BoxDecoration(
+                      color: bone,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: i.isEven ? 150 : 110,
+                          height: 11,
+                          decoration: BoxDecoration(
+                            color: bone,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Container(
+                          width: i.isEven ? 90 : 130,
+                          height: 9,
+                          decoration: BoxDecoration(
+                            color: bone,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Centred icon + copy + single action, used for the error and empty states.
+class _MessageState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _MessageState({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 18, 8, 10),
+        child: Column(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: skin.ink.withValues(alpha: .05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 24, color: skin.inkFaint),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: _text(
+                context,
+                size: 13,
+                weight: FontWeight.w700,
+                color: skin.ink,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: _text(
+                context,
+                size: 11.5,
+                color: skin.inkMuted,
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 14),
+            FilledButton.tonalIcon(
+              onPressed: onAction,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: Text(actionLabel),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 11,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                textStyle: _text(
+                  context,
+                  size: 12.5,
+                  weight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown when `retrieve/` returns nothing: fall back to the global template
+/// so the section is never blank, with the same reorder entry point.
+class _TemplatePreview extends StatelessWidget {
+  final VoidCallback onRetry;
+  final VoidCallback onReorder;
+
+  const _TemplatePreview({required this.onRetry, required this.onReorder});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    final provider = context.watch<DeviceProvider>();
+    final items = provider.flowchartOrderedItems.isNotEmpty
+        ? provider.flowchartOrderedItems
+        : provider.flowchartItems;
+    final loading =
+        provider.flowchartOrderedLoading || provider.flowchartLoading;
+
+    if (loading && items.isEmpty) return const _FlowSkeleton();
+
+    if (items.isEmpty) {
+      return _MessageState(
+        icon: Icons.route_outlined,
+        title: "مرحله‌ای برای این دستگاه تعریف نشده است",
+        message:
+            "پس از تعریف قالب مراحل، پیشرفت این دستگاه اینجا نمایش داده می‌شود.",
+        actionLabel: "تلاش مجدد",
+        onAction: onRetry,
+      );
+    }
+
+    final sorted = List<FlowchartItem>.from(items)
+      ..sort((a, b) => a.order.compareTo(b.order));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: skin.ink.withValues(alpha: .035),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: skin.line),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline_rounded, size: 16, color: skin.inkFaint),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "برای این دستگاه هنوز پیشرفتی ثبت نشده است. مراحل قالب به این ترتیب است:",
+                  style: _text(
+                    context,
+                    size: 11,
+                    color: skin.inkMuted,
+                    height: 1.6,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (var i = 0; i < sorted.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: skin.ink.withValues(alpha: .05),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Text(
+                    "${i + 1}",
+                    style: _text(
+                      context,
+                      size: 10.5,
+                      weight: FontWeight.w700,
+                      color: skin.inkFaint,
+                      height: 1,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    sorted[i].label,
+                    style: _text(
+                      context,
+                      size: 12,
+                      color: skin.inkMuted,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: onReorder,
+            icon: const Icon(Icons.reorder_rounded, size: 17),
+            label: const Text("ویرایش ترتیب مراحل"),
+            style: TextButton.styleFrom(
+              foregroundColor: skin.accent.ink,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              textStyle: _text(
+                context,
+                size: 12,
+                weight: FontWeight.w600,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Slim notice shown when a refresh failed but cached data is still on screen.
+class _StaleBanner extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _StaleBanner({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsetsDirectional.fromSTEB(10, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: skin.warning.tint,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: skin.warning.fill.withValues(alpha: .22)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 15, color: skin.warning.ink),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              "آخرین اطلاعات ذخیره‌شده نمایش داده می‌شود.",
+              style: _text(
+                context,
+                size: 10.5,
+                color: skin.inkMuted,
+                height: 1.5,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            style: TextButton.styleFrom(
+              foregroundColor: skin.warning.ink,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              textStyle: _text(
+                context,
+                size: 11,
+                weight: FontWeight.w700,
+                height: 1.2,
+              ),
+            ),
+            child: const Text("به‌روزرسانی"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Modals
+// ---------------------------------------------------------------------------
+
+/// Shared modal shell: a centred dialog on wide screens, a bottom sheet on
+/// phones — same content, correct ergonomics for each.
+Future<T?> _showFlowModal<T>(BuildContext context, WidgetBuilder builder) {
+  final scheme = Theme.of(context).colorScheme;
+  final wide = MediaQuery.sizeOf(context).width >= 720;
+
+  if (wide) {
+    return showDialog<T>(
+      context: context,
+      builder: (_) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Dialog(
+          backgroundColor: scheme.surface,
+          surfaceTintColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 470),
+            child: builder(context),
+          ),
+        ),
+      ),
+    );
+  }
+
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    backgroundColor: scheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (sheetContext) => Directionality(
+      textDirection: TextDirection.rtl,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: SingleChildScrollView(child: builder(sheetContext)),
+      ),
+    ),
+  );
+}
+
+/// Header used by every modal in this file.
+class _ModalHeader extends StatelessWidget {
+  final IconData icon;
+  final _Tone tone;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onClose;
+
+  const _ModalHeader({
+    required this.icon,
+    required this.tone,
+    required this.title,
+    this.subtitle,
+    this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: tone.tint,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 20, color: tone.ink),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: _text(
+                  context,
+                  size: 14,
+                  weight: FontWeight.w700,
+                  color: skin.ink,
+                  height: 1.4,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: _text(
+                    context,
+                    size: 11.5,
+                    color: skin.inkMuted,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (onClose != null)
+          IconButton(
+            onPressed: onClose,
+            tooltip: "بستن",
+            iconSize: 20,
+            visualDensity: VisualDensity.compact,
+            color: skin.inkMuted,
+            icon: const Icon(Icons.close_rounded),
+          ),
+      ],
+    );
+  }
+}
+
+/// Completes a step together with an optional note.
+class _NoteSheet extends StatefulWidget {
+  final int deviceId;
+  final DeviceFlowchartStep step;
+  final bool isSettlement;
+
+  const _NoteSheet({
+    required this.deviceId,
+    required this.step,
+    required this.isSettlement,
+  });
+
+  @override
+  State<_NoteSheet> createState() => _NoteSheetState();
+}
+
+class _NoteSheetState extends State<_NoteSheet> {
   final _note = TextEditingController();
   bool _saving = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -758,479 +1690,273 @@ class _CompleteStepSheetState extends State<_CompleteStepSheet> {
 
   Future<void> _submit() async {
     if (_saving) return;
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
     try {
       final status = await context.read<DeviceProvider>().completeFlowchartStep(
         deviceId: widget.deviceId,
         flowchartItemId: widget.step.flowchartItemId,
         note: _note.text.trim(),
-        isDone: widget.isDone,
       );
       if (!mounted) return;
       if (status == 200) {
-        filledSuccessToast(
-          title: widget.isDone
-              ? "مرحله «${widget.step.label}» انجام شد"
-              : "مرحله «${widget.step.label}» به ناتمام برگشت",
-        );
+        filledSuccessToast(title: "مرحله «${widget.step.label}» تکمیل شد");
         Navigator.pop(context);
+      } else if (status == -1) {
+        setState(() {
+          _saving = false;
+          _error = "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
+        });
       } else {
-        flatErrorToast(
-          title: widget.isDone
-              ? "ثبت مرحله ناموفق بود"
-              : "بازگردانی مرحله ناموفق بود",
-          description: "کد وضعیت: $status",
-        );
+        setState(() {
+          _saving = false;
+          _error = "ثبت مرحله ناموفق بود (کد $status). دوباره تلاش کنید.";
+        });
       }
-    } catch (e) {
-      flatErrorToast(
-        title: widget.isDone ? "خطا در ثبت مرحله" : "خطا در بازگردانی مرحله",
-        description: e.toString(),
-      );
-    } finally {
-      if (mounted) setState(() => _saving = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = "خطا در ارتباط با سرور. دوباره تلاش کنید.";
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
-    if (isDesktop) {
-      return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 460),
-          padding: const EdgeInsets.all(20),
-          child: _form(context, autofocusNote: true),
-        ),
-      );
-    }
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-          left: 16,
-          right: 16,
-          top: 12,
-        ),
-        child: _form(context, autofocusNote: false),
-      ),
-    );
-  }
-
-  Widget _form(BuildContext context, {required bool autofocusNote}) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final isDone = widget.isDone;
-    final accent = isDone ? Colors.green : scheme.error;
+    final skin = _Skin.of(context);
+    final tone = widget.isSettlement ? skin.warning : skin.accent;
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: scheme.outline.withValues(alpha: .45)),
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: skin.lineStrong),
     );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: .14),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isDone ? Icons.task_alt_rounded : Icons.undo_rounded,
-                color: accent,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isDone ? "تکمیل مرحله" : "بازگردانی مرحله",
-                    style: textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isDone
-                        ? "«${widget.step.label}» به‌عنوان انجام‌شده ثبت می‌شود"
-                        : "«${widget.step.label}» به حالت ناتمام برمی‌گردد",
-                    style: textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: .1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                "مرحله ${widget.step.order}",
-                style: textTheme.labelSmall?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              onPressed: _saving ? null : () => Navigator.pop(context),
-              icon: const Icon(Icons.close_rounded),
-              tooltip: "بستن",
-              visualDensity: VisualDensity.compact,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _note,
-          autofocus: autofocusNote,
-          maxLines: 4,
-          minLines: 2,
-          textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _submit(),
-          style: textTheme.bodyMedium,
-          decoration: InputDecoration(
-            labelText: "یادداشت",
-            hintText: isDone
-                ? "توضیح کوتاه درباره انجام این مرحله (اختیاری)..."
-                : "دلیل بازگردانی این مرحله (اختیاری)...",
-            prefixIcon: const Icon(Icons.edit_note_rounded, size: 20),
-            isDense: true,
-            filled: true,
-            fillColor: scheme.surfaceContainerLow,
-            border: border,
-            enabledBorder: border,
-            focusedBorder: border.copyWith(
-              borderSide: BorderSide(color: scheme.primary, width: 1.4),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: _saving ? null : _submit,
-                icon: _saving
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Icon(
-                        isDone ? Icons.check_rounded : Icons.undo_rounded,
-                        size: 18,
-                      ),
-                label: Text(
-                  _saving
-                      ? "در حال ثبت..."
-                      : (isDone ? "ثبت انجام مرحله" : "ثبت بازگردانی"),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: isDone ? Colors.green : scheme.error,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            TextButton(
-              onPressed: _saving ? null : () => Navigator.pop(context),
-              child: const Text("انصراف"),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
 
-/// Settlement steps ("تسویه حساب" / "تسویه حساب با نماینده") are settled
-/// through the inventory settlement forms, not from the flowchart — so they
-/// never show complete / revert actions here.
-bool _isSettlementStep(DeviceFlowchartStep step) {
-  final label = step.label;
-  return label.contains('تسویه') ||
-      label.contains('توسعه') ||
-      label.contains('توسه');
-}
-
-IconData _iconFor(String label) {
-  if (label.contains("اشتراک")) return Icons.card_membership_outlined;
-  if (label.contains("نصب")) return Icons.build_outlined;
-  if (label.contains("مستند")) return Icons.upload_file_outlined;
-  if (label.contains("ناظر")) return Icons.verified_outlined;
-  if (label.contains("فاکتور")) return Icons.receipt_long_outlined;
-  if (label.contains("نماینده")) return Icons.badge_outlined;
-  if (label.contains("تسویه")) return Icons.payments_outlined;
-  return Icons.circle_outlined;
-}
-
-/// Small pill shown beside the collapsed tile title with the current
-/// flowchart status (first pending step label, or "تکمیل شده").
-class _TitleStatusPill extends StatelessWidget {
-  final String text;
-  final Color color;
-
-  const _TitleStatusPill({required this.text, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .13),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final bool done;
-  final bool current;
-
-  const _StatusChip({required this.done, required this.current});
-
-  @override
-  Widget build(BuildContext context) {
-    final String text;
-    final Color color;
-    if (done) {
-      text = "انجام شده";
-      color = Colors.green;
-    } else if (current) {
-      text = "مرحله جاری";
-      color = Theme.of(context).colorScheme.primary;
-    } else {
-      text = "در انتظار";
-      color = Colors.grey;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .13),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
-    );
-  }
-}
-
-class _MetaPill extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final bool highlight;
-
-  const _MetaPill({
-    required this.icon,
-    required this.text,
-    this.highlight = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: highlight
-            ? Colors.green.withValues(alpha: .1)
-            : scheme.surfaceContainerHighest.withValues(alpha: .7),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 12,
-            color: highlight ? Colors.green : scheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: highlight ? Colors.green : scheme.onSurfaceVariant,
-              fontWeight: highlight ? FontWeight.w800 : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorBox extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorBox({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(message),
-          const SizedBox(height: 8),
-          TextButton(onPressed: onRetry, child: const Text("تلاش مجدد")),
-        ],
-      ),
-    );
-  }
-}
-
-/// Shown when retrieve/ returns nothing: fall back to the global template
-/// so the section is never blank, with the same reorder entry point.
-class _FallbackTemplate extends StatelessWidget {
-  final VoidCallback onRetry;
-  final VoidCallback onReorder;
-
-  const _FallbackTemplate({required this.onRetry, required this.onReorder});
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<DeviceProvider>();
-    final ordered = provider.flowchartOrderedItems;
-    final items = ordered.isNotEmpty ? ordered : provider.flowchartItems;
-    final loading =
-        provider.flowchartOrderedLoading || provider.flowchartLoading;
-
-    if (loading && items.isEmpty) {
-      return const Padding(padding: EdgeInsets.all(40.0), child: Loading());
-    }
-    if (items.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            Text(
-              "پیشرفتی برای این دستگاه ثبت نشده و قالبی یافت نشد.",
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-            TextButton(onPressed: onRetry, child: const Text("تلاش مجدد")),
-          ],
-        ),
-      );
-    }
-    final sorted = List<FlowchartItem>.from(items)
-      ..sort((a, b) => a.order.compareTo(b.order));
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerLow.withValues(alpha: .7),
-            borderRadius: BorderRadius.circular(10),
+          _ModalHeader(
+            icon: Icons.edit_note_rounded,
+            tone: tone,
+            title: widget.isSettlement
+                ? "ثبت تسویه با یادداشت"
+                : "تکمیل با یادداشت",
+            subtitle: "«${widget.step.label}»",
+            onClose: _saving ? null : () => Navigator.pop(context),
           ),
-          child: Text(
-            "پیشرفتی برای این دستگاه ثبت نشده؛ قالب کلی مراحل نمایش داده می‌شود.",
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).hintColor,
+          const SizedBox(height: 16),
+          TextField(
+            controller: _note,
+            autofocus: true,
+            minLines: 3,
+            maxLines: 5,
+            textInputAction: TextInputAction.newline,
+            style: _text(context, size: 13, color: skin.ink, height: 1.6),
+            decoration: InputDecoration(
+              hintText: "توضیح کوتاه درباره این مرحله (اختیاری)",
+              hintStyle: _text(
+                context,
+                size: 12,
+                color: skin.inkFaint,
+                height: 1.6,
+              ),
+              filled: true,
+              fillColor: skin.ink.withValues(alpha: .03),
+              contentPadding: const EdgeInsets.all(12),
+              border: border,
+              enabledBorder: border,
+              focusedBorder: border.copyWith(
+                borderSide: BorderSide(color: tone.fill, width: 1.4),
+              ),
             ),
-            textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(height: 8),
-        ...sorted.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Row(
               children: [
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outline.withValues(alpha: .5),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "${item.order == 0 ? sorted.indexOf(item) + 1 : item.order}",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 15,
+                  color: skin.danger.ink,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    item.label,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    _error!,
+                    style: _text(
+                      context,
+                      size: 11,
+                      color: skin.danger.ink,
+                      height: 1.5,
                     ),
                   ),
                 ),
               ],
             ),
+          ],
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _saving ? null : _submit,
+                  icon: _saving
+                      ? const SizedBox.square(
+                          dimension: 15,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check_rounded, size: 18),
+                  label: Text(_saving ? "در حال ثبت..." : "ثبت و تکمیل"),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: tone.fill,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: tone.fill.withValues(alpha: .40),
+                    disabledForegroundColor: Colors.white.withValues(
+                      alpha: .85,
+                    ),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: _text(
+                      context,
+                      size: 12.5,
+                      weight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: _saving ? null : () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: skin.inkMuted,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
+                  textStyle: _text(
+                    context,
+                    size: 12.5,
+                    weight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+                child: const Text("انصراف"),
+              ),
+            ],
           ),
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: onReorder,
-            icon: const Icon(Icons.reorder_rounded, size: 16),
-            label: const Text("ویرایش ترتیب قالب"),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-/// Bottom sheet with drag-to-reorder for the global template.
+/// Confirms reverting a completed step. Resolves to `true` when confirmed.
+class _RevertDialog extends StatelessWidget {
+  final DeviceFlowchartStep step;
+  final bool isSettlement;
+
+  const _RevertDialog({required this.step, required this.isSettlement});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
+    final tone = isSettlement ? skin.warning : skin.danger;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ModalHeader(
+            icon: Icons.undo_rounded,
+            tone: tone,
+            title: isSettlement ? "لغو تسویه" : "بازگردانی مرحله",
+            onClose: () => Navigator.pop(context, false),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: skin.ink.withValues(alpha: .035),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: skin.line),
+            ),
+            child: Text(
+              isSettlement
+                  ? "«${step.label}» از حالت تسویه‌شده خارج می‌شود و باید دوباره ثبت شود."
+                  : "«${step.label}» به حالت ناتمام برمی‌گردد و باید دوباره تکمیل شود.",
+              style: _text(
+                context,
+                size: 12,
+                color: skin.inkMuted,
+                height: 1.7,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.undo_rounded, size: 18),
+                  label: Text(isSettlement ? "لغو تسویه" : "بازگردانی"),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: tone.fill,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: _text(
+                      context,
+                      size: 12.5,
+                      weight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(
+                  foregroundColor: skin.inkMuted,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
+                  textStyle: _text(
+                    context,
+                    size: 12.5,
+                    weight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+                child: const Text("انصراف"),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Drag-to-reorder editor for the global step template.
 class _ReorderSheet extends StatefulWidget {
   final List<FlowchartItem> initial;
 
@@ -1242,6 +1968,7 @@ class _ReorderSheet extends StatefulWidget {
 
 class _ReorderSheetState extends State<_ReorderSheet> {
   late List<FlowchartItem> _rows;
+  late List<String> _initialOrder;
   bool _saving = false;
 
   @override
@@ -1249,193 +1976,550 @@ class _ReorderSheetState extends State<_ReorderSheet> {
     super.initState();
     _rows = List<FlowchartItem>.from(widget.initial)
       ..sort((a, b) => a.order.compareTo(b.order));
+    _initialOrder = _rows.map(_rowKey).toList();
   }
 
-  Future<void> _save() async {
-    if (_saving) return;
-    final missingId = _rows.any((r) => r.itemId == null);
-    if (missingId) {
-      flatErrorToast(title: "شناسه برخی مراحل نامشخص است؛ ذخیره ممکن نیست");
-      return;
+  String _rowKey(FlowchartItem item) =>
+      "${item.itemId ?? 'x'}|${item.label}|${item.order}";
+
+  bool get _dirty {
+    if (_rows.length != _initialOrder.length) return true;
+    for (var i = 0; i < _rows.length; i++) {
+      if (_rowKey(_rows[i]) != _initialOrder[i]) return true;
     }
+    return false;
+  }
+
+  bool get _hasMissingIds => _rows.any((row) => row.itemId == null);
+
+  Future<void> _save() async {
+    if (_saving || !_dirty || _hasMissingIds) return;
     setState(() => _saving = true);
     try {
       await context.read<DeviceProvider>().reorderFlowchartItems(_rows);
       if (!mounted) return;
-      filledSuccessToast(title: "ترتیب مراحل با موفقیت ذخیره شد");
+      filledSuccessToast(title: "ترتیب مراحل ذخیره شد");
       Navigator.pop(context);
     } catch (e) {
-      flatErrorToast(title: "خطا در ذخیره ترتیب", description: e.toString());
-    } finally {
-      if (mounted) setState(() => _saving = false);
+      if (!mounted) return;
+      setState(() => _saving = false);
+      flatErrorToast(
+        title: "ذخیره ترتیب ناموفق بود",
+        description: e.toString(),
+      );
     }
+  }
+
+  void _reset() {
+    setState(() {
+      _rows = List<FlowchartItem>.from(widget.initial)
+        ..sort((a, b) => a.order.compareTo(b.order));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-          left: 16,
-          right: 16,
-          top: 12,
-        ),
+    final skin = _Skin.of(context);
+
+    if (_rows.length < 2) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.reorder_rounded,
-                    color: scheme.primary,
-                    size: 19,
-                  ),
+            _ModalHeader(
+              icon: Icons.reorder_rounded,
+              tone: skin.accent,
+              title: "ترتیب مراحل",
+              subtitle: "برای جابه‌جایی حداقل دو مرحله لازم است.",
+              onClose: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.tonal(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("بستن"),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ModalHeader(
+            icon: Icons.reorder_rounded,
+            tone: skin.accent,
+            title: "ترتیب مراحل",
+            subtitle: "این ترتیب برای همه دستگاه‌های پروژه اعمال می‌شود.",
+            onClose: _saving ? null : () => Navigator.pop(context),
+          ),
+          const SizedBox(height: 14),
+          if (_hasMissingIds) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: skin.warning.tint,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: skin.warning.fill.withValues(alpha: .22),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              child: Text(
+                "برخی مراحل شناسه ندارند و ذخیره ممکن نیست.",
+                style: _text(
+                  context,
+                  size: 11,
+                  color: skin.warning.ink,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: (MediaQuery.sizeOf(context).height * .5).clamp(
+                180.0,
+                380.0,
+              ),
+            ),
+            child: ReorderableListView.builder(
+              shrinkWrap: true,
+              buildDefaultDragHandles: false,
+              itemCount: _rows.length,
+              onReorderItem: (oldIndex, newIndex) {
+                setState(() {
+                  final moved = _rows.removeAt(oldIndex);
+                  _rows.insert(newIndex, moved);
+                });
+              },
+              proxyDecorator: (child, index, animation) => Material(
+                elevation: 6,
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                child: child,
+              ),
+              itemBuilder: (context, index) {
+                final item = _rows[index];
+                return Container(
+                  key: ObjectKey(item),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+                  decoration: BoxDecoration(
+                    color: skin.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: skin.line),
+                  ),
+                  child: Row(
                     children: [
-                      Text(
-                        "ویرایش ترتیب قالب",
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.grab,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              Icons.drag_indicator_rounded,
+                              size: 20,
+                              color: skin.inkFaint,
+                            ),
+                          ),
                         ),
                       ),
-                      Text(
-                        "ردیف‌ها را بکشید و رها کنید؛ ترتیب جدید برای همه دستگاه‌ها اعمال می‌شود",
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 24,
+                        height: 24,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: skin.accent.tint,
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Text(
+                          "${index + 1}",
+                          style: _text(
+                            context,
+                            size: 10.5,
+                            weight: FontWeight.w700,
+                            color: skin.accent.ink,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              item.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: _text(
+                                context,
+                                size: 12.5,
+                                weight: FontWeight.w600,
+                                color: skin.ink,
+                                height: 1.5,
+                              ),
+                            ),
+                            if (item.description.trim().isNotEmpty)
+                              Text(
+                                item.description.trim(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: _text(
+                                  context,
+                                  size: 10.5,
+                                  color: skin.inkFaint,
+                                  height: 1.5,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
-                ),
-              ],
+                );
+              },
             ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.55,
-                ),
-                child: ReorderableListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _rows.length,
-                  onReorderItem: (oldIndex, newIndex) {
-                    setState(() {
-                      final moved = _rows.removeAt(oldIndex);
-                      _rows.insert(newIndex, moved);
-                    });
-                  },
-                  proxyDecorator: (child, _, __) => Material(
-                    elevation: 4,
-                    borderRadius: BorderRadius.circular(10),
-                    child: child,
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              if (_dirty)
+                TextButton(
+                  onPressed: _saving ? null : _reset,
+                  style: TextButton.styleFrom(
+                    foregroundColor: skin.inkMuted,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 13,
+                    ),
+                    textStyle: _text(
+                      context,
+                      size: 12,
+                      weight: FontWeight.w600,
+                      height: 1.3,
+                    ),
                   ),
-                  itemBuilder: (context, index) {
-                    final item = _rows[index];
-                    return Container(
-                      key: ValueKey(
-                        "flowchart_order_${item.itemId ?? item.label}_$index",
-                      ),
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 9,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: scheme.outline.withValues(alpha: .3),
+                  child: const Text("بازگردانی"),
+                ),
+              const Spacer(),
+              FilledButton.icon(
+                onPressed: (_saving || !_dirty || _hasMissingIds)
+                    ? null
+                    : _save,
+                icon: _saving
+                    ? const SizedBox.square(
+                        dimension: 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              color: scheme.primary.withValues(alpha: .12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "${index + 1}",
-                                style: Theme.of(context).textTheme.labelMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      color: scheme.primary,
-                                    ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 9),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.labelMedium
-                                      ?.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                                if (item.description.trim().isNotEmpty)
-                                  Text(
-                                    item.description.trim(),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.drag_handle_rounded,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                      )
+                    : const Icon(Icons.check_rounded, size: 18),
+                label: Text(_saving ? "در حال ذخیره..." : "ذخیره ترتیب"),
+                style: FilledButton.styleFrom(
+                  backgroundColor: skin.accent.fill,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: skin.accent.fill.withValues(
+                    alpha: .35,
+                  ),
+                  disabledForegroundColor: Colors.white.withValues(alpha: .85),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 13,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  textStyle: _text(
+                    context,
+                    size: 12.5,
+                    weight: FontWeight.w700,
+                    height: 1.3,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: _saving ? null : _save,
-              icon: _saving
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check_rounded, size: 18),
-              label: Text(_saving ? "در حال ذخیره..." : "ذخیره ترتیب"),
-            ),
-          ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Model + helpers
+// ---------------------------------------------------------------------------
+
+/// Display model: ordered steps (sequential) and settlement steps
+/// (independent), plus the derived positions the UI needs.
+class _FlowModel {
+  final List<DeviceFlowchartStep> ordered;
+  final List<DeviceFlowchartStep> settlement;
+  final int doneCount;
+  final int total;
+
+  /// Index in [ordered] of the first pending step — the only actionable one.
+  final int? currentIndex;
+
+  /// Index in [ordered] of the most recent completed step, which is the only
+  /// ordered step that may be reverted.
+  final int? undoIndex;
+
+  const _FlowModel({
+    required this.ordered,
+    required this.settlement,
+    required this.doneCount,
+    required this.total,
+    required this.currentIndex,
+    required this.undoIndex,
+  });
+
+  bool get isEmpty => ordered.isEmpty && settlement.isEmpty;
+  bool get isComplete => total > 0 && doneCount == total;
+  double get progress => total == 0 ? 0 : doneCount / total;
+  int get percent => (progress * 100).round();
+
+  /// First step still waiting for action, ordered steps first.
+  DeviceFlowchartStep? get nextStep {
+    final index = currentIndex;
+    if (index != null) return ordered[index];
+    for (final step in settlement) {
+      if (!step.isDone) return step;
+    }
+    return null;
+  }
+
+  factory _FlowModel.from(List<DeviceFlowchartStep> steps) {
+    final ordered = <DeviceFlowchartStep>[];
+    final settlement = <DeviceFlowchartStep>[];
+    for (final step in steps) {
+      if (_isSettlementStep(step) || step.order <= 0) {
+        settlement.add(step);
+      } else {
+        ordered.add(step);
+      }
+    }
+    ordered.sort((a, b) => a.order.compareTo(b.order));
+
+    var done = 0;
+    for (final step in steps) {
+      if (step.isDone) done++;
+    }
+
+    final currentIndex = ordered.indexWhere((step) => !step.isDone);
+    final undoIndex = ordered.lastIndexWhere((step) => step.isDone);
+
+    return _FlowModel(
+      ordered: ordered,
+      settlement: settlement,
+      doneCount: done,
+      total: steps.length,
+      currentIndex: currentIndex < 0 ? null : currentIndex,
+      undoIndex: undoIndex < 0 ? null : undoIndex,
+    );
+  }
+}
+
+/// Settlement steps ("تسویه حساب" / "تسویه حساب با نماینده") are detected by
+/// their label — the backend creates them without a usable `order`, and they
+/// are actioned independently of the ordered steps.
+bool _isSettlementStep(DeviceFlowchartStep step) =>
+    step.label.contains('تسویه');
+
+/// Human-readable completion stamp. The API sends Jalali strings such as
+/// `1403/05/12 14:22:31`; normalise padding and drop the seconds.
+String? _stampLabel(String? raw) {
+  final text = (raw ?? '').trim();
+  if (text.isEmpty || text == 'null') return null;
+  final match = RegExp(
+    r'^(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?',
+  ).firstMatch(text);
+  if (match == null) return text;
+  final date =
+      "${match[1]}/${match[2]!.padLeft(2, '0')}/${match[3]!.padLeft(2, '0')}";
+  if (match[4] == null) return date;
+  return "$date - ${match[4]!.padLeft(2, '0')}:${match[5]}";
+}
+
+/// `done_by` arrives either as a display name or as an object; both resolve to
+/// something readable, and never to the literal "null".
+String? _personLabel(dynamic value) {
+  if (value == null) return null;
+  if (value is String) {
+    final text = value.trim();
+    return (text.isEmpty || text == 'null') ? null : text;
+  }
+  if (value is Map) {
+    for (final key in const [
+      'full_name',
+      'name',
+      'display_name',
+      'username',
+      'phone',
+    ]) {
+      final candidate = value[key];
+      if (candidate == null) continue;
+      final text = candidate.toString().trim();
+      if (text.isNotEmpty && text != 'null') return text;
+    }
+    final id = value['id'];
+    return id == null ? null : "#$id";
+  }
+  final text = value.toString().trim();
+  return (text.isEmpty || text == 'null') ? null : text;
+}
+
+/// Shared text style helper: the app uses Vazirmatn with no tracking, and
+/// explicit sizes here keep the dense timeline readable.
+TextStyle _text(
+  BuildContext context, {
+  double size = 13,
+  FontWeight weight = FontWeight.w500,
+  Color? color,
+  double height = 1.5,
+}) {
+  final base = Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
+  return base.copyWith(
+    fontSize: size,
+    fontWeight: weight,
+    color: color,
+    height: height,
+    letterSpacing: 0,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Colour system
+// ---------------------------------------------------------------------------
+
+/// A semantic colour set: a solid fill (buttons), a readable ink (text/icons
+/// on the surface) and a translucent tint (backgrounds/borders).
+@immutable
+class _Tone {
+  final Color fill;
+  final Color ink;
+  final Color tint;
+
+  const _Tone({required this.fill, required this.ink, required this.tint});
+
+  Color get border => ink.withValues(alpha: .30);
+}
+
+/// Theme-derived palette. Explicit values (instead of the M3 baseline
+/// `surfaceContainer*` greys) keep light and dark surfaces neutral rather than
+/// purple-tinted, and guarantee readable contrast for the small type used in
+/// the timeline.
+@immutable
+class _Skin {
+  final Color surface;
+  final Color ink;
+  final Color inkMuted;
+  final Color inkFaint;
+  final Color line;
+  final Color lineStrong;
+  final _Tone accent;
+  final _Tone success;
+  final _Tone warning;
+  final _Tone danger;
+  final _Tone neutral;
+
+  const _Skin({
+    required this.surface,
+    required this.ink,
+    required this.inkMuted,
+    required this.inkFaint,
+    required this.line,
+    required this.lineStrong,
+    required this.accent,
+    required this.success,
+    required this.warning,
+    required this.danger,
+    required this.neutral,
+  });
+
+  static _Skin of(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final on = scheme.onSurface;
+
+    if (theme.brightness == Brightness.dark) {
+      return _Skin(
+        surface: scheme.surface,
+        ink: on,
+        inkMuted: on.withValues(alpha: .70),
+        inkFaint: on.withValues(alpha: .48),
+        line: on.withValues(alpha: .10),
+        lineStrong: on.withValues(alpha: .20),
+        accent: _Tone(
+          fill: const Color(0xFF1976D2),
+          ink: const Color(0xFF90CAF9),
+          tint: const Color(0xFF90CAF9).withValues(alpha: .14),
         ),
+        success: _Tone(
+          fill: const Color(0xFF2E7D32),
+          ink: const Color(0xFF81C784),
+          tint: const Color(0xFF81C784).withValues(alpha: .14),
+        ),
+        warning: _Tone(
+          fill: const Color(0xFFB26A00),
+          ink: const Color(0xFFFFB74D),
+          tint: const Color(0xFFFFB74D).withValues(alpha: .14),
+        ),
+        danger: _Tone(
+          fill: const Color(0xFFC62828),
+          ink: const Color(0xFFFF8A80),
+          tint: const Color(0xFFFF8A80).withValues(alpha: .12),
+        ),
+        neutral: _Tone(
+          fill: on,
+          ink: on.withValues(alpha: .72),
+          tint: on.withValues(alpha: .08),
+        ),
+      );
+    }
+
+    return _Skin(
+      surface: scheme.surface,
+      ink: on,
+      inkMuted: on.withValues(alpha: .62),
+      inkFaint: on.withValues(alpha: .42),
+      line: on.withValues(alpha: .09),
+      lineStrong: on.withValues(alpha: .16),
+      accent: _Tone(
+        fill: Color.lerp(scheme.primary, Colors.black, .18)!,
+        ink: Color.lerp(scheme.primary, Colors.black, .34)!,
+        tint: scheme.primary.withValues(alpha: .09),
+      ),
+      success: _Tone(
+        fill: const Color(0xFF2E7D32),
+        ink: const Color(0xFF2E7D32),
+        tint: const Color(0xFF2E7D32).withValues(alpha: .09),
+      ),
+      warning: _Tone(
+        fill: const Color(0xFFB26A00),
+        ink: const Color(0xFFA15C00),
+        tint: const Color(0xFFB26A00).withValues(alpha: .09),
+      ),
+      danger: _Tone(
+        fill: const Color(0xFFB3261E),
+        ink: const Color(0xFFB3261E),
+        tint: const Color(0xFFB3261E).withValues(alpha: .08),
+      ),
+      neutral: _Tone(
+        fill: on,
+        ink: on.withValues(alpha: .58),
+        tint: on.withValues(alpha: .06),
       ),
     );
   }

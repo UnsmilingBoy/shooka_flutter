@@ -6,6 +6,7 @@ import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shooka_flutter/(tabs)/inventory_management/components/data/iran_provinces.dart';
 import 'package:shooka_flutter/(tabs)/inventory_management/components/shared/inventory_form_ui.dart';
+import 'package:shooka_flutter/models/software_support_data_class.dart';
 import 'package:shooka_flutter/services/providers/software_support_provider.dart';
 import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 
@@ -25,6 +26,42 @@ String matchIranProvince(String destination) {
 
 String jalaliDateText(Jalali date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+/// Resolves the «نماینده (گیرنده)» of an inventory form to a user.
+///
+/// Forms are submitted with the recipient's user id, but the get-by-id API
+/// returns it as the user's display name. Non-numeric values are therefore
+/// matched against the support-user directory — first in the already loaded
+/// page, then with a server-side search that leaves the cached users intact —
+/// so an edit form can preselect the recipient dropdown.
+Future<SupportEventUser?> resolveRecipientUser(
+  SoftwareSupportProvider provider,
+  String sentTo,
+) async {
+  final raw = sentTo.trim();
+  if (raw.isEmpty) return null;
+
+  final target = _normalizePersonName(raw);
+
+  SupportEventUser? find(List<SupportEventUser> users) {
+    SupportEventUser? partial;
+    for (final user in users) {
+      final fullName = _normalizePersonName(user.fullName);
+      if (fullName == target || _normalizePersonName(user.username) == target) {
+        return user;
+      }
+      if (partial == null && target.length >= 3 && fullName.contains(target)) {
+        partial = user;
+      }
+    }
+    return partial;
+  }
+
+  return find(provider.users) ?? find(await provider.searchUsers(search: raw));
+}
+
+String _normalizePersonName(String value) =>
+    value.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 
 /// Serial-number format shared by pack / device flows.
 /// Expected shape: `XXXX.XXXX.XXXX.XXXX` where each block is hex (0-9, A-F).
@@ -94,19 +131,29 @@ class RecipientDropdownField extends StatelessWidget {
   final int? userId;
   final ValueChanged<int?> onChanged;
 
+  /// A user resolved from the form being edited. The recipient may not be on
+  /// the first page of the shared user list, so it is merged into the items
+  /// to keep the current selection visible.
+  final SupportEventUser? resolvedUser;
+
   const RecipientDropdownField({
     super.key,
     required this.userId,
     required this.onChanged,
+    this.resolvedUser,
   });
 
   @override
   Widget build(BuildContext context) {
     final supportProvider = context.watch<SoftwareSupportProvider>();
+    final users = [
+      if (resolvedUser != null) resolvedUser!,
+      ...supportProvider.users.where((user) => user.id != resolvedUser?.id),
+    ];
     return SearchableDropdownWithLabel(
       initialValue: userId?.toString(),
       iconOnPressed: () => onChanged(null),
-      items: supportProvider.users
+      items: users
           .map<DropdownItemModel>(
             (user) => DropdownItemModel(
               value: user.id.toString(),

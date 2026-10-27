@@ -31,7 +31,16 @@ class _DeviceImagesState extends State<DeviceImages> {
   List<String> base64Images = [];
   bool isExporting = false;
 
-  Future<void> _exportSelectedImages(List<dynamic> images) async {
+  String _sanitizeFileName(String input) {
+    var name = input.trim().replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+    if (name.isEmpty) return 'device_images';
+    if (name.length > 100) name = name.substring(0, 100).trim();
+    if (name.isEmpty) return 'device_images';
+    return name;
+  }
+
+  Future<void> _exportSelectedImages(
+    List<dynamic> images, String deviceName) async {
     if (_selected.isEmpty) return;
 
     setState(() {
@@ -85,8 +94,8 @@ class _DeviceImagesState extends State<DeviceImages> {
       final zipData = zipEncoder.encode(archive);
 
       if (zipData != null) {
-        final fileName =
-            'device_images_${DateTime.now().millisecondsSinceEpoch}.zip';
+        final safeName = _sanitizeFileName(deviceName);
+        final fileName = '$safeName.zip';
 
         // For web platform
         if (kIsWeb) {
@@ -177,6 +186,10 @@ class _DeviceImagesState extends State<DeviceImages> {
     final deviceProvider = context.watch<DeviceProvider>();
 
     final images = deviceProvider.completeDeviceInfo?.engineroomImages ?? [];
+    final deviceName =
+        deviceProvider.device?.name ??
+        deviceProvider.completeDeviceInfo?.device ??
+        '';
 
     return MyExpansionTile(
       title: "مدیریت تصاویر موتورخانه",
@@ -366,7 +379,7 @@ class _DeviceImagesState extends State<DeviceImages> {
                 padding: EdgeInsets.all(15),
                 fillWidth: true,
                 child: deviceProvider.removeImageLoading
-                    ? Loading()
+                    ? Loading(color: Colors.white)
                     : Text(
                         "حذف تصاویر انتخاب شده",
                         style: Theme.of(
@@ -380,13 +393,13 @@ class _DeviceImagesState extends State<DeviceImages> {
                 onPressed: isExporting
                     ? null
                     : () async {
-                        await _exportSelectedImages(images);
+                        await _exportSelectedImages(images, deviceName);
                       },
                 color: Theme.of(context).primaryColor,
                 padding: EdgeInsets.all(15),
                 fillWidth: true,
                 child: isExporting
-                    ? Loading()
+                    ? Loading(color: Colors.white)
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

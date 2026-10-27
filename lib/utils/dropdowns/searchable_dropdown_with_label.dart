@@ -70,6 +70,15 @@ class _SearchableDropdownWithLabelState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialValue != widget.initialValue) {
       _updateSelectedItem();
+      return;
+    }
+    // Items often arrive after the first build (users are fetched async),
+    // while the initial value stays the same. Retry resolving it so an edit
+    // form keeps its preselected item instead of showing the placeholder.
+    if (selectedItem == null &&
+        widget.initialValue != null &&
+        !identical(oldWidget.items, widget.items)) {
+      _updateSelectedItem();
     }
   }
 

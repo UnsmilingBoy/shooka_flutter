@@ -412,6 +412,9 @@ class _DeviceCard extends StatelessWidget {
     final doneSteps = device.deviceFlowchart.where((s) => s.isDone).toList()
       ..sort((a, b) => a.order.compareTo(b.order));
     final lastDoneLabel = doneSteps.isEmpty ? null : doneSteps.last.label;
+    // The API only returns completed steps, so a full flow is all seven of
+    // them — including the two independent settlement steps.
+    final flowchartComplete = device.isFlowchartComplete;
     final chips = <Widget>[
       if (serialInvalid)
         StatusChip(label: 'سریال نامعتبر', color: scheme.error),
@@ -419,6 +422,8 @@ class _DeviceCard extends StatelessWidget {
         StatusChip(label: 'برگشت‌خورده', color: scheme.error),
       if (lastDoneLabel != null)
         StatusChip(label: lastDoneLabel, color: Colors.green),
+      if (flowchartComplete)
+        StatusChip(label: 'تکمیل شده', color: scheme.primary),
     ];
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

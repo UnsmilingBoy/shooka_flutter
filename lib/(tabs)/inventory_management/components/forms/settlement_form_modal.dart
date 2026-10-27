@@ -42,8 +42,9 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
     // Devices start deselected; the user picks which ones to settle.
   }
 
-  Set<String> get _settledForCurrentType =>
-      widget.form.settledCodes(representative: _isRepresentative);
+  /// Devices that already have a settlement — of either type. They are
+  /// disabled in the picker so a device can never be settled twice.
+  Set<String> get _settledCodes => widget.form.settledDeviceCodes;
 
   void _onTypeChanged(String value) {
     setState(() {
@@ -72,20 +73,18 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
   }
 
   Future<void> _submit() async {
-    final settled = _settledForCurrentType;
+    final settled = _settledCodes;
     final blocked = _selectedCodes.where(settled.contains).toList();
     if (blocked.isNotEmpty) {
       flatErrorToast(
         title: 'این دستگاه‌ها قبلاً تسویه شده‌اند',
         description:
-            'دستگاه ${blocked.join('، ')} برای این نوع تسویه ثبت شده است',
+            'دستگاه ${blocked.join('، ')} قبلاً تسویه شده و قابل انتخاب نیست',
       );
       return;
     }
-    if (_selectedCodes.isEmpty) {
-      flatErrorToast(title: 'حداقل یک دستگاه تسویه‌نشده را انتخاب کنید');
-      return;
-    }
+    // Device selection is optional — backend accepts a settlement with no
+    // devices (e.g. a representative settlement that isn't device-specific).
     if (_amount.text.trim().isEmpty ||
         int.tryParse(_amount.text.trim().replaceAll(',', '')) == null) {
       flatErrorToast(title: 'مبلغ تسویه معتبر وارد کنید');
@@ -202,13 +201,49 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
         message: 'این فرم دستگاهی ندارد؛ تسویه قابل ثبت نیست.',
       );
     }
-    final settled = _settledForCurrentType;
+    final settled = _settledCodes;
     final selectable = devices.where((d) => !settled.contains(d.code)).toList();
+    final deviceList = _ScrollableDeviceList(
+      key: ValueKey('settlement_devices_$_type'),
+      devices: devices,
+      settled: settled,
+      selected: _selectedCodes,
+      onToggle: (code) => setState(() {
+        if (_selectedCodes.contains(code)) {
+          _selectedCodes.remove(code);
+        } else {
+          _selectedCodes.add(code);
+        }
+      }),
+    );
+    // Every device already has a settlement (of either type). Since selecting
+    // devices is optional, keep the flow open and show the list read-only with
+    // an explanation instead of hiding it behind a blocking message.
     if (selectable.isEmpty) {
-      return InventoryEmptyItems(
-        message: _isRepresentative
-            ? 'همه دستگاه‌های این فرم قبلاً تسویه نماینده شده‌اند؛ امکان ثبت تسویه تکراری وجود ندارد.'
-            : 'همه دستگاه‌های این فرم قبلاً تسویه دستگاه شده‌اند؛ امکان ثبت تسویه تکراری وجود ندارد.',
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  'همه دستگاه‌های این فرم قبلاً تسویه شده‌اند؛ می‌توانید تسویه را بدون دستگاه ثبت کنید.',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          deviceList,
+        ],
       );
     }
     final allSelected = selectable.every(
@@ -251,7 +286,7 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    '${settled.length} دستگاه قبلاً برای این نوع تسویه ثبت شده و قابل انتخاب نیست.',
+                    '${settled.length} دستگاه قبلاً تسویه شده و قابل انتخاب نیست.',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -261,19 +296,7 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
             ),
           ),
         const SizedBox(height: 4),
-        _ScrollableDeviceList(
-          key: ValueKey('settlement_devices_$_type'),
-          devices: devices,
-          settled: settled,
-          selected: _selectedCodes,
-          onToggle: (code) => setState(() {
-            if (_selectedCodes.contains(code)) {
-              _selectedCodes.remove(code);
-            } else {
-              _selectedCodes.add(code);
-            }
-          }),
-        ),
+        deviceList,
       ],
     );
   }
@@ -287,7 +310,7 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
       children: [
         InventoryFormHeader(
           title: 'ثبت تسویه حساب',
-          description: 'دستگاه‌های این فرم را انتخاب و نوع تسویه را مشخص کنید.',
+          description: 'نوع تسویه را مشخص کنید؛ انتخاب دستگاه اختیاری است.',
           icon: Icons.payments_outlined,
         ),
         const SizedBox(height: 16),
@@ -319,7 +342,8 @@ class _SettlementFormModalState extends State<SettlementFormModal> {
         const SizedBox(height: 14),
         InventoryFormSection(
           title: 'دستگاه‌ها',
-          description: 'تسویه برای کدام دستگاه‌ها ثبت شود؟',
+          description:
+              'در صورت نیاز، دستگاه‌های تسویه‌نشده را انتخاب کنید (اختیاری)',
           icon: Icons.devices_other_outlined,
           child: _devicePicker(),
         ),
@@ -479,19 +503,26 @@ class _ScrollableDeviceListState extends State<_ScrollableDeviceList>
                 final titleText = (name != null && name.isNotEmpty)
                     ? name
                     : device.code;
-                final doneSteps = device.deviceFlowchart
-                    .where((s) => s.isDone)
-                    .toList()
-                  ..sort((a, b) => a.order.compareTo(b.order));
+                final doneSteps =
+                    device.deviceFlowchart.where((s) => s.isDone).toList()
+                      ..sort((a, b) => a.order.compareTo(b.order));
                 final lastDoneLabel = doneSteps.isEmpty
                     ? null
                     : doneSteps.last.label;
+                // Which settlement types already exist for this device, shown
+                // as a tooltip on the «تسویه شده» badge.
+                final settledTypeLabels = {
+                  for (final settlement in device.settlements)
+                    settlement.isRepresentative
+                        ? 'تسویه نماینده'
+                        : 'تسویه دستگاه',
+                }.toList();
                 return CheckboxListTile(
-                  value: isSettled ? true : checked,
+                  value: checked,
                   enabled: !isSettled,
                   dense: true,
                   controlAffinity: ListTileControlAffinity.leading,
-                  activeColor: isSettled ? scheme.outline : scheme.primary,
+                  activeColor: scheme.primary,
                   title: Row(
                     children: [
                       Expanded(
@@ -553,35 +584,40 @@ class _ScrollableDeviceListState extends State<_ScrollableDeviceList>
                           ),
                         ),
                       if (isSettled)
-                        Container(
-                          margin: const EdgeInsetsDirectional.only(start: 6),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.tertiary.withValues(alpha: .14),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.check_circle_rounded,
-                                size: 12,
-                                color: scheme.tertiary,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                'تسویه شده',
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: scheme.tertiary,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 10,
-                                    ),
-                              ),
-                            ],
+                        Tooltip(
+                          message: settledTypeLabels.isEmpty
+                              ? 'این دستگاه قبلاً تسویه شده است'
+                              : settledTypeLabels.join(' • '),
+                          child: Container(
+                            margin: const EdgeInsetsDirectional.only(start: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.tertiary.withValues(alpha: .14),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 12,
+                                  color: scheme.tertiary,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  'تسویه شده',
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        color: scheme.tertiary,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 10,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                     ],

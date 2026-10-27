@@ -156,6 +156,11 @@ class InventoryFormField extends StatelessWidget {
   final bool hasError;
   final String? errorText;
 
+  /// Renders the label above the field like [SearchableDropdownWithLabel]
+  /// instead of floating it inside the border. Used when a text field sits
+  /// next to one of those dropdowns so the two input boxes line up.
+  final bool externalLabel;
+
   const InventoryFormField({
     super.key,
     required this.label,
@@ -174,33 +179,43 @@ class InventoryFormField extends StatelessWidget {
     this.textDirection,
     this.hasError = false,
     this.errorText,
+    this.externalLabel = false,
   });
 
   @override
-  Widget build(BuildContext context) => TextField(
-    controller: controller,
-    readOnly: readOnly,
-    onTap: onTap,
-    maxLines: maxLines,
-    keyboardType: keyboardType,
-    focusNode: focusNode,
-    textInputAction: textInputAction,
-    onSubmitted: onSubmitted,
-    onChanged: onChanged,
-    textDirection: textDirection,
-    textAlign: textDirection == TextDirection.ltr
-        ? TextAlign.left
-        : TextAlign.right,
-    style: Theme.of(context).textTheme.bodyMedium,
-    decoration: inventoryInputDecoration(
-      context,
-      label: required ? '$label*' : label,
-      hint: hint,
-      icon: icon,
-      hasError: hasError,
-      errorText: errorText,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final labelText = required ? '$label*' : label;
+    final field = TextField(
+      controller: controller,
+      readOnly: readOnly,
+      onTap: onTap,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
+      onChanged: onChanged,
+      textDirection: textDirection,
+      textAlign: textDirection == TextDirection.ltr
+          ? TextAlign.left
+          : TextAlign.right,
+      style: Theme.of(context).textTheme.bodyMedium,
+      decoration: inventoryInputDecoration(
+        context,
+        label: externalLabel ? '' : labelText,
+        hint: hint,
+        icon: icon,
+        hasError: hasError,
+        errorText: errorText,
+      ),
+    );
+    if (!externalLabel) return field;
+    return Column(
+      spacing: 3,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [Text(labelText), field, const SizedBox(height: 10)],
+    );
+  }
 }
 
 class InventoryFormPair extends StatelessWidget {
@@ -275,7 +290,7 @@ InputDecoration inventoryInputDecoration(
     ),
   );
   return InputDecoration(
-    labelText: label,
+    labelText: label.isEmpty ? null : label,
     hintText: hint,
     prefixIcon: Icon(icon, size: 19, color: hasError ? errorColor : null),
     isDense: true,

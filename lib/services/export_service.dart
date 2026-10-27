@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:shooka_flutter/models/device_flowchart_step_data_class.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/models/inventory_form_data_class.dart';
 
@@ -20,9 +21,136 @@ class ExportService {
     return Excel.decodeBytes(bytes);
   }
 
+  /// Payload keys that may carry a device's per-step flowchart history. The
+  /// list endpoint has used more than one spelling over time, so all of them
+  /// are accepted — a wrong guess here silently yields zero columns.
+  static const _flowHistoryKeys = <String>[
+    'flowcharthistory',
+    'flowchart_history',
+    'device_flowchart',
+    'flowchart_items',
+    'flowchart',
+  ];
+
+  /// Coerces the shapes a "done" flag arrives in (bool, 0/1, "true", "done",
+  /// …) into a bool. `null` means unknown and renders as a blank cell.
+  static bool? _asDone(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    final text = value.toString().trim().toLowerCase();
+    if (text.isEmpty || text == 'null') return null;
+    if (const {'true', '1', 'done', 'completed', 'finished'}.contains(text)) {
+      return true;
+    }
+    if (const {'false', '0', 'pending', 'not_done', 'undone'}.contains(text)) {
+      return false;
+    }
+    return null;
+  }
+
+  static String? _flowLabelOf(Map entry) {
+    for (final key in const ['label', 'name', 'title', 'step']) {
+      final text = (entry[key] ?? '').toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+    return null;
+  }
+
+  static bool? _flowDoneOf(Map entry) {
+    for (final key in const [
+      'is_done',
+      'done',
+      'isDone',
+      'completed',
+      'is_completed',
+    ]) {
+      final done = _asDone(entry[key]);
+      if (done != null) return done;
+    }
+    // A finished step usually carries a timestamp even when the flag is
+    // absent, so treat a non-empty `done_at` as done.
+    for (final key in const ['done_at', 'completed_at', 'finished_at']) {
+      final text = (entry[key] ?? '').toString().trim();
+      if (text.isNotEmpty && text != 'null') return true;
+    }
+    return null;
+  }
+
+  static Map<String, bool?> _parseFlowHistory(dynamic raw) {
+    final progress = <String, bool?>{};
+    if (raw is List) {
+      for (final item in raw) {
+        if (item is Map) {
+          final label = _flowLabelOf(item);
+          if (label == null) continue;
+          progress[label] = _flowDoneOf(item);
+        } else if (item is String && item.trim().isNotEmpty) {
+          progress[item.trim()] = null;
+        }
+      }
+      return progress;
+    }
+    if (raw is Map) {
+      // A single step object rather than a `label -> value` map.
+      final single = _flowLabelOf(raw);
+      if (single != null) return {single: _flowDoneOf(raw)};
+      // `{label: true}` and `{label: {is_done: true}}` both occur.
+      raw.forEach((key, value) {
+        final label = key.toString().trim();
+        if (label.isEmpty) return;
+        progress[label] = value is Map ? _flowDoneOf(value) : _asDone(value);
+      });
+    }
+    return progress;
+  }
+
+  /// Reads a device's flowchart history as `label -> done`. Returns an empty
+  /// map when the row carries no flowchart data at all.
+  static Map<String, bool?> _flowchartProgress(Map<String, dynamic> device) {
+    for (final key in _flowHistoryKeys) {
+      final progress = _parseFlowHistory(device[key]);
+      if (progress.isNotEmpty) return progress;
+    }
+    return const {};
+  }
+
+  /// Fills [progressRows] from the per-device flowchart endpoint, used when
+  /// the list payload carried no history. Concurrency is bounded so a large
+  /// export does not open hundreds of sockets at once.
+  Future<void> _fillFlowchartFromApi(
+    List<Map<String, dynamic>> devices,
+    List<Map<String, bool?>> progressRows,
+    Future<List<DeviceFlowchartStep>> Function(int deviceId) loadFlowchart,
+  ) async {
+    var next = 0;
+    Future<void> worker() async {
+      while (next < devices.length) {
+        final index = next++;
+        final id = int.tryParse((devices[index]['id'] ?? '').toString());
+        if (id == null) continue;
+        try {
+          final steps = await loadFlowchart(id);
+          progressRows[index] = {
+            for (final step in steps) step.label: step.isDone,
+          };
+        } catch (e) {
+          log('Flowchart fetch failed for device $id: $e');
+        }
+      }
+    }
+
+    await Future.wait(List.generate(8, (_) => worker()));
+  }
+
   /// Export devices to Excel file
   /// [devices] - List of device data maps from API
-  Future<void> exportDevices(List<Map<String, dynamic>> devices) async {
+  /// [loadFlowchart] - optional per-device flowchart loader, used only when
+  /// the list payload carries no flowchart history (see [_flowchartProgress]).
+  Future<void> exportDevices(
+    List<Map<String, dynamic>> devices, {
+    Future<List<DeviceFlowchartStep>> Function(int deviceId)? loadFlowchart,
+  }) async {
     try {
       // Load the template
       final excel = await _loadTemplate();
@@ -46,6 +174,63 @@ class ExportService {
       // Column order in template: ردیف، اسامی نصب، شماره اشتراک، شهر،
       // تاریخ نصب، موبایل مشترک، شماره سریال دستگاه، کد داخلی دستگاه،
       // توضیحات، اسامی نصاب، شماره قرارداد، آدرس.
+      //
+      // Flowchart history columns are APPENDED after them (column 12+) —
+      // existing header cells are never touched, so template fills survive.
+
+      // Style for the appended flowchart header cells.
+      final flowHeaderStyle = CellStyle(
+        fontFamily: 'Vazirmatn',
+        fontSize: 11,
+        bold: true,
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+      );
+
+      // Collect the flowchart step labels (stable, first-seen order) from
+      // the rows themselves, since the labels come from the re-orderable
+      // backend flowchart template. Rows without history are skipped.
+      final progressRows = [
+        for (final device in devices) _flowchartProgress(device),
+      ];
+
+      // The devices-list serializer does not always include flowchart
+      // history — when it is missing everywhere, ask the per-device endpoint
+      // instead of silently dropping the columns.
+      if (devices.isNotEmpty &&
+          progressRows.every((row) => row.isEmpty) &&
+          loadFlowchart != null) {
+        log(
+          'No flowchart history in export payload — fetching per device '
+          'for ${devices.length} device(s)...',
+        );
+        await _fillFlowchartFromApi(devices, progressRows, loadFlowchart);
+      }
+
+      final flowLabels = <String>[];
+      for (final progress in progressRows) {
+        for (final label in progress.keys) {
+          if (!flowLabels.contains(label)) flowLabels.add(label);
+        }
+      }
+
+      if (flowLabels.isEmpty && devices.isNotEmpty) {
+        log(
+          'Flowchart columns skipped — no flowchart data found. '
+          'Device keys: ${devices.first.keys.toList()}',
+        );
+      } else {
+        log('Flowchart columns: ${flowLabels.length} step(s)');
+      }
+
+      // Header row for the flowchart columns (row 1 in the sheet).
+      for (var i = 0; i < flowLabels.length; i++) {
+        final headerCell = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 12 + i, rowIndex: 0),
+        );
+        headerCell.value = TextCellValue(flowLabels[i]);
+        headerCell.cellStyle = flowHeaderStyle;
+      }
 
       // Start from row 2 (row 1 is header in template)
       int rowIndex = 1;
@@ -149,6 +334,20 @@ class ExportService {
           device['installation_address']?.toString() ?? '',
         );
         cell10.cellStyle = cellStyle;
+
+        // Flowchart history columns (appended, column 12+): ✔ done,
+        // ✘ not done, blank when the step is unknown / legacy nulls.
+        // `rowIndex` starts at 1 and advances once per device, so the row's
+        // progress map is the one at `rowIndex - 1`.
+        final progress = progressRows[rowIndex - 1];
+        for (var i = 0; i < flowLabels.length; i++) {
+          final cell = sheet.cell(
+            CellIndex.indexByColumnRow(columnIndex: 12 + i, rowIndex: rowIndex),
+          );
+          final done = progress[flowLabels[i]];
+          cell.value = TextCellValue(done == null ? '' : (done ? '✔' : '✘'));
+          cell.cellStyle = cellStyle;
+        }
 
         rowIndex++;
       }

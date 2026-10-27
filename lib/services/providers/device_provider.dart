@@ -1123,7 +1123,12 @@ class DeviceProvider with ChangeNotifier {
       log('Fetched ${devices.length} devices for export');
 
       final exportService = ExportService();
-      await exportService.exportDevices(devices);
+      await exportService.exportDevices(
+        devices,
+        // Only used when the list payload has no flowchart history.
+        loadFlowchart: (deviceId) =>
+            api.fetchDeviceFlowchart(deviceId: deviceId),
+      );
       log('Export completed successfully');
     } catch (e) {
       log('Error exporting devices: $e');

@@ -1336,7 +1336,7 @@ class ApiService {
   //
   Future<dynamic> fetchDeviceItemsList({
     required int page,
-    int dataPerPage = 10,
+    int dataPerPage = 100,
     String? destination,
     String? exportUnit,
     String? postingType,
@@ -1393,7 +1393,19 @@ class ApiService {
       final payload = Map<String, dynamic>.from(response.data as Map);
       final form = payload['form'];
       if (form is! Map) throw Exception('Invalid inventory form response');
-      return InventoryFormItem.fromJson(Map<String, dynamic>.from(form));
+      final item = InventoryFormItem.fromJson(
+        Map<String, dynamic>.from(form),
+      );
+      // Diagnostic for the settlement picker: shows which source reports
+      // settled devices (nested settlements, settlement device refs, or the
+      // flowchart settlement steps).
+      log(
+        'WMS by-id #$formID → devices=${item.devices.length}, '
+        'formSettlements=${item.settlements.length}, '
+        'settledDevices=${item.settledDeviceCodes.length}, '
+        'refs=${item.settlements.map((s) => '${s.id}:${s.deviceCodes.length}c/${s.deviceIds.length}i').join('|')}',
+      );
+      return item;
     } on DioException catch (e) {
       throw Exception(
         "Failed to get inventory item by id: ${e.response?.statusCode}",

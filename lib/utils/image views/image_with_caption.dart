@@ -56,8 +56,7 @@ class ImageWithCaption extends StatelessWidget {
             if (loadingProgress == null) return child;
             return loadingFallback();
           },
-          errorBuilder: (context, error, stackTrace) =>
-              errorFallback(fit),
+          errorBuilder: (context, error, stackTrace) => errorFallback(fit),
         );
       }
       return CachedNetworkImage(

@@ -5,9 +5,11 @@ import 'package:shooka_flutter/(tabs)/inventory_management/components/shared/inv
 import 'package:shooka_flutter/(tabs)/profile/components/modal_template.dart';
 import 'package:shooka_flutter/components/modal_bottom_buttons.dart';
 import 'package:shooka_flutter/models/inventory_form_data_class.dart';
+import 'package:shooka_flutter/models/software_support_data_class.dart';
 import 'package:shooka_flutter/services/providers/inventory_provider.dart';
 import 'package:shooka_flutter/services/providers/software_support_provider.dart';
 import 'package:shooka_flutter/utils/datepickers/my_date_picker.dart';
+import 'package:shooka_flutter/utils/dropdowns/searchable_dropdown_with_label.dart';
 import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class PartsFormModal extends StatefulWidget {
@@ -37,6 +39,8 @@ class _PartsFormModalState extends State<PartsFormModal> {
   final _exportUnit = TextEditingController();
   final _postingType = TextEditingController();
   int? _selectedUserId;
+  String? _pendingRecipient;
+  SupportEventUser? _resolvedRecipient;
   final _date = TextEditingController();
   final _note = TextEditingController();
   final _installRows = <_InstallRow>[];
@@ -56,7 +60,14 @@ class _PartsFormModalState extends State<PartsFormModal> {
     _note.text = form.note;
     final matchedProvince = matchIranProvince(form.destination);
     _selectedProvince = matchedProvince.isEmpty ? null : matchedProvince;
-    _selectedUserId = int.tryParse(form.sentTo.trim());
+    final sentTo = form.sentTo.trim();
+    final sentToId = int.tryParse(sentTo);
+    _selectedUserId = sentToId != null && sentToId > 0 ? sentToId : null;
+    // The API may return the recipient as a display name; resolve it to a
+    // user id once the support-user list is available.
+    _pendingRecipient = _selectedUserId == null && sentTo.isNotEmpty
+        ? sentTo
+        : null;
     for (final row in _installRows) {
       row.dispose();
     }
@@ -96,11 +107,23 @@ class _PartsFormModalState extends State<PartsFormModal> {
     super.initState();
     _prefillFromForm();
     _loadItems();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final supportProvider = context.read<SoftwareSupportProvider>();
-      if (supportProvider.users.isEmpty && !supportProvider.usersLoading) {
-        supportProvider.fetchUsers();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRecipient());
+  }
+
+  /// Loads the support users and, when editing, resolves the form's recipient
+  /// (usually a display name) to a user so the dropdown starts selected.
+  Future<void> _loadRecipient() async {
+    final supportProvider = context.read<SoftwareSupportProvider>();
+    if (supportProvider.users.isEmpty && !supportProvider.usersLoading) {
+      await supportProvider.fetchUsers();
+    }
+    final pending = _pendingRecipient;
+    if (!mounted || pending == null || _selectedUserId != null) return;
+    final recipient = await resolveRecipientUser(supportProvider, pending);
+    if (!mounted || recipient == null) return;
+    setState(() {
+      _selectedUserId = recipient.id;
+      _resolvedRecipient = recipient;
     });
   }
 
@@ -128,12 +151,7 @@ class _PartsFormModalState extends State<PartsFormModal> {
 
   @override
   void dispose() {
-    for (final controller in [
-      _exportUnit,
-      _postingType,
-      _date,
-      _note,
-    ]) {
+    for (final controller in [_exportUnit, _postingType, _date, _note]) {
       controller.dispose();
     }
     for (final row in _installRows) {
@@ -236,6 +254,7 @@ class _PartsFormModalState extends State<PartsFormModal> {
         ),
         second: RecipientDropdownField(
           userId: _selectedUserId,
+          resolvedUser: _resolvedRecipient,
           onChanged: (value) => setState(() => _selectedUserId = value),
         ),
       ),
@@ -277,37 +296,28 @@ class _PartsFormModalState extends State<PartsFormModal> {
         _installRows.removeAt(index);
       }),
       child: InventoryFormPair(
-            first: DropdownButtonFormField<String>(
-              key: ValueKey('parts_install_${index}_${row.item}'),
-              initialValue: row.item,
-              isExpanded: true,
-              style: Theme.of(context).textTheme.bodyMedium,
-              decoration: inventoryInputDecoration(
-                context,
-                label: 'قلم قابل ارسال*',
-                icon: Icons.handyman_outlined,
-              ),
-              items: _options
-                  .map(
-                    (option) => DropdownMenuItem(
-                      value: option.name,
-                      child: Text(
-                        option.label,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => row.item = value),
-            ),
-            second: InventoryFormField(
-              label: 'تعداد',
-              controller: row.quantity,
-              icon: Icons.numbers_rounded,
-              keyboardType: TextInputType.number,
-              required: true,
-            ),
-          ),
+        first: SearchableDropdownWithLabel(
+          initialValue: row.item,
+          iconOnPressed: () => setState(() => row.item = null),
+          items: _options
+              .map(
+                (option) =>
+                    DropdownItemModel(value: option.name, label: option.label),
+              )
+              .toList(),
+          onChanged: (value) => setState(() => row.item = value),
+          label: 'قلم قابل ارسال*',
+          placeholder: 'انتخاب قلم...',
+        ),
+        second: InventoryFormField(
+          label: 'تعداد',
+          controller: row.quantity,
+          icon: Icons.numbers_rounded,
+          keyboardType: TextInputType.number,
+          required: true,
+          externalLabel: true,
+        ),
+      ),
     );
   }
 
