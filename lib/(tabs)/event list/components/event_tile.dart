@@ -26,6 +26,14 @@ class EventTile extends StatefulWidget {
   final String detailBackLabel;
   final String detailRouteName;
 
+  /// Requester info — only support events (software / installer) have it.
+  final String? requesterName;
+  final String? requesterPhone;
+  final bool isExternalRequester;
+
+  /// Support events have no completion / sending workflow.
+  final bool showStatusFields;
+
   const EventTile({
     super.key,
     required this.title,
@@ -49,6 +57,10 @@ class EventTile extends StatefulWidget {
     this.detailBackRoute = "/events",
     this.detailBackLabel = "رویدادها",
     this.detailRouteName = "/event_page",
+    this.requesterName,
+    this.requesterPhone,
+    this.isExternalRequester = false,
+    this.showStatusFields = true,
   });
 
   @override
@@ -63,6 +75,12 @@ class _EventTileState extends State<EventTile> {
     final selectedTextColor = (widget.isSelected && isLight)
         ? colorScheme.onPrimaryContainer
         : null;
+    final requesterName = (widget.requesterName ?? '').trim();
+    final requesterPhone = (widget.requesterPhone ?? '').trim();
+    final requesterLine = [requesterName, requesterPhone]
+        .where((value) => value.isNotEmpty)
+        .join('  •  ');
+    final hasRequester = requesterLine.isNotEmpty;
 
     return ContainerButton(
       borderRadius: widget.borderRadius,
@@ -91,6 +109,10 @@ class _EventTileState extends State<EventTile> {
                 onEditPressed: widget.onEditPressed,
                 backRoute: widget.detailBackRoute,
                 backLabel: widget.detailBackLabel,
+                requesterName: widget.requesterName,
+                requesterPhone: widget.requesterPhone,
+                isExternalRequester: widget.isExternalRequester,
+                showStatusFields: widget.showStatusFields,
               ),
             ),
           ),
@@ -136,7 +158,41 @@ class _EventTileState extends State<EventTile> {
             ),
           ],
         ),
-        subtitle: Text("دستگاه: ${widget.device}"),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "دستگاه: ${widget.device}",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (hasRequester)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(
+                  spacing: 4,
+                  children: [
+                    Icon(
+                      widget.isExternalRequester
+                          ? Icons.person_outline
+                          : Icons.support_agent,
+                      size: 14,
+                      color: selectedTextColor ?? colorScheme.secondary,
+                    ),
+                    Expanded(
+                      child: Text(
+                        "درخواست‌دهنده: $requesterLine",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        isThreeLine: hasRequester,
         subtitleTextStyle: Theme.of(context).textTheme.labelSmall?.apply(
           overflow: TextOverflow.ellipsis,
           color: selectedTextColor,

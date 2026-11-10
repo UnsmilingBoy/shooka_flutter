@@ -8,6 +8,7 @@ import 'package:shooka_flutter/(tabs)/inventory_management/components/insights/i
 import 'package:shooka_flutter/services/providers/inventory_provider.dart';
 import 'package:shooka_flutter/utils/buttons/container_button.dart';
 import 'package:shooka_flutter/utils/scaffolds/back_scaffold.dart';
+import 'package:shooka_flutter/utils/toastifications/toasts.dart';
 
 class InventoryManagementTab extends StatefulWidget {
   const InventoryManagementTab({super.key});
@@ -19,6 +20,10 @@ class InventoryManagementTab extends StatefulWidget {
 class _InventoryManagementTabState extends State<InventoryManagementTab> {
   final TextEditingController searchController = TextEditingController();
 
+  /// Guards against double-tap on the Excel export (each tap would rebuild
+  /// and download a whole workbook).
+  bool _exporting = false;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +34,31 @@ class _InventoryManagementTabState extends State<InventoryManagementTab> {
 
   Future<void> _handleRefresh() =>
       context.read<InventoryProvider>().loadForms();
+
+  /// Builds the day-by-day Excel workbook for the forms currently in view
+  /// (search + filters applied).
+  Future<void> _exportForms() async {
+    if (_exporting) return;
+    final provider = context.read<InventoryProvider>();
+    if (provider.forms.isEmpty) {
+      flatErrorToast(title: 'فرمی برای خروجی گرفتن وجود ندارد');
+      return;
+    }
+    setState(() => _exporting = true);
+    try {
+      final count = await provider.exportFormsToExcel();
+      if (!mounted) return;
+      filledSuccessToast(title: 'خروجی اکسل $count فرم آماده شد');
+    } catch (e) {
+      if (!mounted) return;
+      flatErrorToast(
+        title: 'خطا در تهیه خروجی اکسل',
+        description: e.toString(),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
 
   void _openFilters() {
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
@@ -79,6 +109,8 @@ class _InventoryManagementTabState extends State<InventoryManagementTab> {
                       provider.setSearch('');
                     },
                     onFilter: _openFilters,
+                    onExport: _exportForms,
+                    exporting: _exporting,
                     loading: provider.fetchLoading,
                   ),
                   const InventoryInsights(),
@@ -164,6 +196,8 @@ class _OperationsTab extends StatelessWidget {
   final ValueChanged<String> onSearch;
   final VoidCallback onClear;
   final VoidCallback onFilter;
+  final VoidCallback onExport;
+  final bool exporting;
   final bool loading;
 
   const _OperationsTab({
@@ -171,6 +205,8 @@ class _OperationsTab extends StatelessWidget {
     required this.onSearch,
     required this.onClear,
     required this.onFilter,
+    required this.onExport,
+    required this.exporting,
     required this.loading,
   });
 
@@ -192,6 +228,8 @@ class _OperationsTab extends StatelessWidget {
           onSearch: onSearch,
           onClear: onClear,
           onFilter: onFilter,
+          onExport: onExport,
+          exporting: exporting,
         ),
         const SizedBox(height: 10),
         _StatusRow(
@@ -333,6 +371,8 @@ class _InventoryToolbar extends StatelessWidget {
   final ValueChanged<String> onSearch;
   final VoidCallback onClear;
   final VoidCallback onFilter;
+  final VoidCallback onExport;
+  final bool exporting;
 
   const _InventoryToolbar({
     required this.controller,
@@ -340,6 +380,8 @@ class _InventoryToolbar extends StatelessWidget {
     required this.onSearch,
     required this.onClear,
     required this.onFilter,
+    required this.onExport,
+    required this.exporting,
   });
 
   @override
@@ -427,11 +469,58 @@ class _InventoryToolbar extends StatelessWidget {
           ),
         );
 
-        // Single filter action: full-width on compact screens, inline
-        // next to search on wider layouts.
+        // Export: tinted (not solid) so it reads as a secondary action next
+        // to the primary «فیلتر» button.
+        final exportButton = ContainerButton(
+          borderRadius: 12,
+          color: scheme.primary.withValues(alpha: 0.12),
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
+          onPressed: onExport,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (exporting)
+                SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: scheme.primary,
+                  ),
+                )
+              else
+                Icon(
+                  Icons.download_rounded,
+                  size: 18,
+                  color: scheme.primary,
+                ),
+              const SizedBox(width: 6),
+              Text(
+                compact ? 'اکسل' : 'خروجی اکسل',
+                style: textTheme.labelLarge?.apply(color: scheme.primary),
+              ),
+            ],
+          ),
+        );
+
+        // Actions: side by side and stretched on compact screens, inline
+        // next to the search field on wider layouts.
         final actions = compact
-            ? SizedBox(width: double.infinity, child: filterButton)
-            : Row(mainAxisSize: MainAxisSize.min, children: [filterButton]);
+            ? Row(
+                children: [
+                  Expanded(child: filterButton),
+                  const SizedBox(width: 10),
+                  Expanded(child: exportButton),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  filterButton,
+                  const SizedBox(width: 10),
+                  exportButton,
+                ],
+              );
 
         return Container(
           padding: const EdgeInsets.all(12),

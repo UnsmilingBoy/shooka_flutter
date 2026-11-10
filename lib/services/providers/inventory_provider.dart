@@ -208,7 +208,51 @@ class InventoryProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> exportFormsToExcel() async {
-    await exportService.exportInventoryForms(forms);
+  /// Exports every form matching the active filters/search to Excel, split
+  /// by day. The list only holds the pages scrolled into view so far, so the
+  /// remaining pages are fetched first — an export must not silently cover
+  /// just the first page.
+  ///
+  /// Returns the number of forms written.
+  Future<int> exportFormsToExcel() async {
+    final all = await _fetchAllForms();
+    final query = searchValue.trim().toLowerCase();
+    final selected = query.isEmpty
+        ? all
+        : all.where((form) => form.searchText.contains(query)).toList();
+    if (selected.isEmpty) {
+      throw Exception('فرمی برای خروجی گرفتن پیدا نشد');
+    }
+    await exportService.exportInventoryForms(selected);
+    return selected.length;
+  }
+
+  /// Loaded forms plus the pages that were not loaded yet, deduplicated by id.
+  Future<List<InventoryFormItem>> _fetchAllForms() async {
+    final result = <InventoryFormItem>[..._forms];
+    final seen = {for (final form in result) form.id};
+    var page = _page;
+    var pages = _totalPages;
+    // Hard stop so a misbehaving `page`/`pages` pair cannot loop forever.
+    var guard = 0;
+    while (page < pages && guard < 200) {
+      guard++;
+      final response = await api.fetchDeviceItemsList(
+        page: page + 1,
+        destination: destinationFilter,
+        start: startFilter,
+        end: endFilter,
+      );
+      for (final item in List<InventoryFormItem>.from(
+        response['results'] as List,
+      )) {
+        if (seen.add(item.id)) result.add(item);
+      }
+      final next = response['page'] as int;
+      pages = response['pages'] as int;
+      if (next <= page) break;
+      page = next;
+    }
+    return result;
   }
 }

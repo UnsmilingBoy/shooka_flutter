@@ -22,6 +22,53 @@ bool _flagOf(Map<String, dynamic> json, List<String> keys) {
   return false;
 }
 
+/// Formats internal device codes as compact ranges for display, e.g.
+/// `271..280` plus `282` becomes `271-280, 282`.
+///
+/// Consecutive numeric codes collapse into `start-end` once a run reaches
+/// three codes; shorter runs are listed individually so `271, 272` does not
+/// read like a range. Non-numeric codes are kept as-is, after the ranges.
+String formatDeviceCodeRange(Iterable<String> codes) {
+  final numbers = <int>{};
+  final others = <String>{};
+  for (final raw in codes) {
+    final text = raw.trim();
+    if (text.isEmpty) continue;
+    final number = int.tryParse(text);
+    if (number == null) {
+      others.add(text);
+    } else {
+      numbers.add(number);
+    }
+  }
+
+  final parts = <String>[];
+  if (numbers.isNotEmpty) {
+    final sorted = numbers.toList()..sort();
+    var start = sorted.first;
+    var end = start;
+    for (final number in sorted.skip(1)) {
+      if (number == end + 1) {
+        end = number;
+        continue;
+      }
+      parts.add(_codeRangeText(start, end));
+      start = number;
+      end = number;
+    }
+    parts.add(_codeRangeText(start, end));
+  }
+  parts.addAll(others.toList()..sort());
+  return parts.join(', ');
+}
+
+/// `271-280` for a run of three or more, otherwise the codes themselves.
+String _codeRangeText(int start, int end) {
+  if (end - start >= 2) return '$start-$end';
+  if (start == end) return '$start';
+  return '$start, $end';
+}
+
 class InventoryLineItem {
   final int formItemId;
   final String itemType;
@@ -470,6 +517,13 @@ class InventoryFormItem {
   int get deviceCount => devices.length;
   int get itemCount =>
       devices.fold(0, (sum, device) => sum + device.items.length);
+
+  /// Range covered by the internal device codes (کد داخلی) of the devices in
+  /// this form, derived from the devices themselves — nothing is stored or
+  /// submitted for it. `271..280` plus `282` reads `271-280, 282`.
+  /// Empty when the form has no devices or no codes.
+  String get deviceCodeRange =>
+      formatDeviceCodeRange(devices.map((device) => device.code));
 
   /// All settlements for this form: form-level ones plus per-device ones
   /// (deduplicated by id, since the API nests the same settlement under

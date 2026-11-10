@@ -78,11 +78,6 @@ class _AddSoftwareSupportModalState extends State<AddSoftwareSupportModal> {
           label: "موتورخانه",
           placeholder: "انتخاب موتورخانه...",
         ),
-        Outlinetextfieldwithlabel(
-          label: "عنوان",
-          controller: titleController,
-          placeHolder: "عنوان...",
-        ),
         SupportRequesterFields(
           users: supportProvider.users,
           phoneController: phoneController,
@@ -95,14 +90,19 @@ class _AddSoftwareSupportModalState extends State<AddSoftwareSupportModal> {
           },
           searchUsers: (filter) => supportProvider.fetchUsers(search: filter),
         ),
+        Outlinetextfieldwithlabel(
+          label: "درخواست",
+          controller: titleController,
+          placeHolder: "درخواست...",
+        ),
         Column(
           spacing: 3,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("توضیحات"),
+            Text("اقدام"),
             OutlineTextformfield(
               controller: textController,
-              placeholder: "توضیحات...",
+              placeholder: "اقدام...",
             ),
           ],
         ),
@@ -118,7 +118,7 @@ class _AddSoftwareSupportModalState extends State<AddSoftwareSupportModal> {
               return;
             }
             if (title.isEmpty) {
-              flatErrorToast(title: "عنوان وارد نشده است.");
+              flatErrorToast(title: "درخواست وارد نشده است.");
               return;
             }
             if (requesterPhoneType != 'external' && selectedUserId == null) {
@@ -141,7 +141,7 @@ class _AddSoftwareSupportModalState extends State<AddSoftwareSupportModal> {
               return;
             }
             if (text.isEmpty) {
-              flatErrorToast(title: "توضیحات وارد نشده است.");
+              flatErrorToast(title: "اقدام وارد نشده است.");
               return;
             }
 

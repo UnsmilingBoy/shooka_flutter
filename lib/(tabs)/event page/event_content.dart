@@ -16,6 +16,15 @@ class EventContent extends StatelessWidget {
   final bool isSent;
   final String? sentAt;
 
+  /// Requester info — only support events (software / installer) have it.
+  final String? requesterName;
+  final String? requesterPhone;
+  final bool isExternalRequester;
+
+  /// Support events have no completion / sending workflow, so their status
+  /// rows ("در انتظار تکمیل" / "ارسال نشده") are hidden.
+  final bool showStatusFields;
+
   const EventContent({
     super.key,
     required this.title,
@@ -29,6 +38,10 @@ class EventContent extends StatelessWidget {
     this.completedAt,
     this.isSent = false,
     this.sentAt,
+    this.requesterName,
+    this.requesterPhone,
+    this.isExternalRequester = false,
+    this.showStatusFields = true,
   });
 
   @override
@@ -81,6 +94,23 @@ class EventContent extends StatelessWidget {
                 context: context,
               ),
               //
+              // Requester (support events only)
+              //
+              if (requesterName != null && requesterName!.isNotEmpty)
+                _InfoRow(
+                  icon: Icons.support_agent,
+                  label:
+                      "درخواست‌دهنده:  $requesterName"
+                      "${isExternalRequester ? ' (خارج از سامانه)' : ''}",
+                  context: context,
+                ),
+              if (requesterPhone != null && requesterPhone!.isNotEmpty)
+                _InfoRow(
+                  icon: Icons.phone_outlined,
+                  label: "شماره تماس:  $requesterPhone",
+                  context: context,
+                ),
+              //
               // Date
               //
               _InfoRow(
@@ -100,25 +130,31 @@ class EventContent extends StatelessWidget {
               //
               // Completion status
               //
-              _InfoRow(
-                icon: isCompleted ? Icons.check_circle : Icons.pending_outlined,
-                label: isCompleted
-                    ? "تکمیل شده${completedAt != null ? ':  $completedAt' : ''}"
-                    : "در انتظار تکمیل",
-                context: context,
-                color: isCompleted ? Colors.green : Theme.of(context).hintColor,
-              ),
+              if (showStatusFields)
+                _InfoRow(
+                  icon: isCompleted
+                      ? Icons.check_circle
+                      : Icons.pending_outlined,
+                  label: isCompleted
+                      ? "تکمیل شده${completedAt != null ? ':  $completedAt' : ''}"
+                      : "در انتظار تکمیل",
+                  context: context,
+                  color: isCompleted
+                      ? Colors.green
+                      : Theme.of(context).hintColor,
+                ),
               //
               // Sent status
               //
-              _InfoRow(
-                icon: isSent ? Icons.send : Icons.schedule_send_outlined,
-                label: isSent
-                    ? "ارسال شده${sentAt != null ? ':  $sentAt' : ''}"
-                    : "ارسال نشده",
-                context: context,
-                color: isSent ? Colors.blue : Theme.of(context).hintColor,
-              ),
+              if (showStatusFields)
+                _InfoRow(
+                  icon: isSent ? Icons.send : Icons.schedule_send_outlined,
+                  label: isSent
+                      ? "ارسال شده${sentAt != null ? ':  $sentAt' : ''}"
+                      : "ارسال نشده",
+                  context: context,
+                  color: isSent ? Colors.blue : Theme.of(context).hintColor,
+                ),
             ],
           ),
 

@@ -22,6 +22,14 @@ class EventPage extends StatelessWidget {
   final String backRoute;
   final String backLabel;
 
+  /// Requester info — only support events (software / installer) have it.
+  final String? requesterName;
+  final String? requesterPhone;
+  final bool isExternalRequester;
+
+  /// Support events have no completion / sending workflow.
+  final bool showStatusFields;
+
   const EventPage({
     super.key,
     required this.title,
@@ -39,6 +47,10 @@ class EventPage extends StatelessWidget {
     this.onEditPressed,
     this.backRoute = "/events",
     this.backLabel = "رویدادها",
+    this.requesterName,
+    this.requesterPhone,
+    this.isExternalRequester = false,
+    this.showStatusFields = true,
   });
 
   @override
@@ -98,6 +110,10 @@ class EventPage extends StatelessWidget {
           completedAt: completedAt,
           isSent: isSent,
           sentAt: sentAt,
+          requesterName: requesterName,
+          requesterPhone: requesterPhone,
+          isExternalRequester: isExternalRequester,
+          showStatusFields: showStatusFields,
         ),
       ),
     );

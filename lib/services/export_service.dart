@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:shooka_flutter/models/device_flowchart_step_data_class.dart';
 import 'package:shooka_flutter/models/event_data_class.dart';
 import 'package:shooka_flutter/models/inventory_form_data_class.dart';
+import 'package:shooka_flutter/services/inventory_forms_workbook.dart';
 
 // ignore: avoid_web_libraries_in_flutter
 import 'package:universal_html/html.dart' as html;
@@ -187,6 +188,16 @@ class ExportService {
         verticalAlign: VerticalAlign.Center,
       );
 
+      // Style for the closing total row of the flowchart columns.
+      final flowSumStyle = CellStyle(
+        fontFamily: 'Vazirmatn',
+        fontSize: 11,
+        bold: true,
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        topBorder: Border(borderStyle: BorderStyle.Thin),
+      );
+
       // Collect the flowchart step labels (stable, first-seen order) from
       // the rows themselves, since the labels come from the re-orderable
       // backend flowchart template. Rows without history are skipped.
@@ -335,8 +346,10 @@ class ExportService {
         );
         cell10.cellStyle = cellStyle;
 
-        // Flowchart history columns (appended, column 12+): ✔ done,
-        // ✘ not done, blank when the step is unknown / legacy nulls.
+        // Flowchart history columns (appended, column 12+): 1 = done,
+        // 0 = not done, blank when the step is unknown / legacy nulls.
+        // Written as numbers (not text) so the closing row can total them
+        // and so the columns sort/filter numerically in Excel.
         // `rowIndex` starts at 1 and advances once per device, so the row's
         // progress map is the one at `rowIndex - 1`.
         final progress = progressRows[rowIndex - 1];
@@ -345,11 +358,40 @@ class ExportService {
             CellIndex.indexByColumnRow(columnIndex: 12 + i, rowIndex: rowIndex),
           );
           final done = progress[flowLabels[i]];
-          cell.value = TextCellValue(done == null ? '' : (done ? '✔' : '✘'));
+          cell.value = done == null
+              ? TextCellValue('')
+              : IntCellValue(done ? 1 : 0);
           cell.cellStyle = cellStyle;
         }
 
         rowIndex++;
+      }
+
+      // Closing row: one total per flowchart column, so the export answers
+      // "how many devices finished each step" without extra work in Excel.
+      // The totals are written as plain numbers rather than `SUM(...)`
+      // formulas — a formula without a cached value renders as 0 in viewers
+      // that do not recalculate on open, which would be worse than static.
+      if (flowLabels.isNotEmpty) {
+        final labelCell = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: rowIndex),
+        );
+        labelCell.value = TextCellValue('جمع');
+        labelCell.cellStyle = flowSumStyle;
+
+        for (var i = 0; i < flowLabels.length; i++) {
+          final label = flowLabels[i];
+          final total = progressRows.fold<int>(
+            0,
+            (sum, row) => sum + (row[label] == true ? 1 : 0),
+          );
+          final cell = sheet.cell(
+            CellIndex.indexByColumnRow(columnIndex: 12 + i, rowIndex: rowIndex),
+          );
+          cell.value = IntCellValue(total);
+          cell.cellStyle = flowSumStyle;
+        }
+        log('Flowchart totals row written at row ${rowIndex + 1}');
       }
 
       // Save the file
@@ -366,82 +408,17 @@ class ExportService {
     }
   }
 
-  /// Export inventory forms to Excel file
+  /// Exports inventory forms to Excel, split by the day each form was
+  /// received. The workbook layout (summary + per-day detail) lives in
+  /// `inventory_forms_workbook.dart`; this only handles saving the bytes.
   Future<void> exportInventoryForms(List<InventoryFormItem> forms) async {
     try {
-      final excel = Excel.createExcel();
-      final sheet = excel['فرم های انبار'];
-
-      final headerStyle = CellStyle(
-        fontFamily: 'Vazirmatn',
-        fontSize: 11,
-        bold: true,
-        horizontalAlign: HorizontalAlign.Right,
-        verticalAlign: VerticalAlign.Center,
-      );
-
-      final cellStyle = CellStyle(
-        fontFamily: 'Vazirmatn',
-        fontSize: 11,
-        horizontalAlign: HorizontalAlign.Right,
-        verticalAlign: VerticalAlign.Center,
-      );
-
-      final headers = [
-        'ردیف',
-        'نوع فرم',
-        'عنوان',
-        'طرف حساب',
-        'شماره سریال',
-        'کد داخلی دستگاه',
-        'تعداد',
-        'تاریخ ثبت',
-        'ثبت کننده',
-        'وضعیت',
-        'توضیحات',
-      ];
-
-      for (var i = 0; i < headers.length; i++) {
-        final cell = sheet.cell(
-          CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0),
-        );
-        cell.value = TextCellValue(headers[i]);
-        cell.cellStyle = headerStyle;
-      }
-
-      for (var row = 0; row < forms.length; row++) {
-        final form = forms[row];
-        final values = [
-          (row + 1).toString(),
-          form.id.toString(),
-          form.destination,
-          form.exportUnit,
-          form.postingType,
-          form.deviceCount.toString(),
-          form.createdAt,
-          form.createdBy,
-          form.amount,
-          form.note,
-        ];
-
-        for (var col = 0; col < values.length; col++) {
-          final cell = sheet.cell(
-            CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row + 1),
-          );
-          cell.value = TextCellValue(values[col]);
-          cell.cellStyle = cellStyle;
-        }
-      }
-
-      final fileBytes = excel.save();
-      if (fileBytes == null) {
-        throw Exception('Failed to generate Excel file');
-      }
-
+      final bytes = buildInventoryFormsWorkbook(forms);
       await _saveFile(
-        Uint8List.fromList(fileBytes),
+        bytes,
         'inventory_forms_${DateTime.now().millisecondsSinceEpoch}.xlsx',
       );
+      log('Inventory export: ${forms.length} form(s)');
     } catch (e) {
       log('Error exporting inventory forms to Excel: $e');
       rethrow;
@@ -559,17 +536,13 @@ $cards
 
   /// One compact event card (header + 2-col meta + details table).
   String _eventCard(Event e, int index) {
-    final req = _requesterName(e.registeredRequester);
-    final ext = (e.externalRequester ?? '').trim();
-    final requester = req.isNotEmpty ? req : ext;
+    final requester = e.requesterDisplayName ?? '';
     final domain = (e.domain ?? '').trim();
     final domainBadge = domain.isEmpty
         ? ''
         : '<span class="badge badge-blue">${_escapeHtml(_domainLabel(domain))}</span>';
 
-    final phone = (e.requesterPhoneNumber ?? '').trim().isEmpty
-        ? '—'
-        : e.requesterPhoneNumber!.trim();
+    final phone = e.requesterPhone ?? '—';
     final dateLtr = _ltr(e.timestamp);
     final metaRows = [
       ['دستگاه', e.deviceName, 'زمان ثبت', dateLtr],
@@ -663,24 +636,6 @@ $details
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
-  }
-
-  /// Resolve the display name of a registered requester, which may be a
-  /// plain string or an object (e.g. `{"username": "...", "first_name": ...}`).
-  String _requesterName(dynamic requester) {
-    if (requester == null) return '';
-    if (requester is String) return requester;
-    if (requester is Map) {
-      final firstName = requester['first_name']?.toString();
-      final username = requester['username']?.toString();
-      final name = requester['name']?.toString();
-      return [
-        firstName,
-        name,
-        username,
-      ].where((s) => s != null && s.isNotEmpty).join(' ');
-    }
-    return requester.toString();
   }
 
   /// Get current Persian date

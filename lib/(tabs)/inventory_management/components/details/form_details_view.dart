@@ -176,7 +176,12 @@ class _FormDetailsContent extends StatelessWidget {
             description: 'وضعیت هر دستگاه را ببینید',
             icon: Icons.devices_other_outlined,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (form.deviceCodeRange.isNotEmpty) ...[
+                  _DeviceCodeRange(range: form.deviceCodeRange),
+                  const SizedBox(height: 10),
+                ],
                 for (final device in form.devices) _DeviceCard(device: device),
               ],
             ),
@@ -393,6 +398,57 @@ class _DetailsInfo extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Range covered by the internal device codes (کد داخلی) of the devices in
+/// the form, derived from the device list itself — e.g. `271-280, 282`.
+class _DeviceCodeRange extends StatelessWidget {
+  final String range;
+
+  const _DeviceCodeRange({required this.range});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: .07),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.format_list_numbered_rounded,
+            size: 16,
+            color: scheme.primary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'محدوده کد داخلی',
+            style: textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 10),
+          // LTR so the ranges keep their order inside this RTL line; the
+          // loose fit keeps the value next to the label instead of pushing it
+          // to the far edge of the row.
+          Flexible(
+            child: Text(
+              range,
+              textDirection: TextDirection.ltr,
+              textAlign: TextAlign.right,
+              style: textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

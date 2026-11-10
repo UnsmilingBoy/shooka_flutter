@@ -66,6 +66,47 @@ class Event {
       domain: json['domain']?.toString(),
     );
   }
+
+  /// Whether this event was reported by someone outside the system.
+  bool get isExternalRequester =>
+      (externalRequester?.trim().isNotEmpty ?? false);
+
+  /// Display name of the requester of a support event.
+  ///
+  /// Prefers the free-text external name, then falls back to the registered
+  /// user object (`registered_requester`), which the API returns either as a
+  /// plain string or as `{id, username, full_name}`.
+  /// Returns `null` for regular (non-support) events that have no requester.
+  String? get requesterDisplayName {
+    final external = externalRequester?.trim();
+    if (external != null && external.isNotEmpty) return external;
+
+    final registered = registeredRequester;
+    if (registered == null) return null;
+    if (registered is String) {
+      final value = registered.trim();
+      return value.isEmpty ? null : value;
+    }
+    if (registered is Map) {
+      for (final key in ['full_name', 'name', 'first_name', 'username']) {
+        final value = registered[key]?.toString().trim();
+        if (value != null && value.isNotEmpty) return value;
+      }
+      return null;
+    }
+    final value = registered.toString().trim();
+    return value.isEmpty ? null : value;
+  }
+
+  /// Requester phone number, or `null` when none was recorded.
+  String? get requesterPhone {
+    final phone = requesterPhoneNumber?.trim();
+    return (phone == null || phone.isEmpty) ? null : phone;
+  }
+
+  /// True when the event carries any requester information.
+  bool get hasRequester =>
+      requesterDisplayName != null || requesterPhone != null;
 }
 
 class EventCategoryDetails {

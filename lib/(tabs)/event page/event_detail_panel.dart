@@ -22,6 +22,14 @@ class EventDetailPanel extends StatelessWidget {
   final bool canEdit;
   final VoidCallback? onEditPressed;
 
+  /// Requester info — only support events (software / installer) have it.
+  final String? requesterName;
+  final String? requesterPhone;
+  final bool isExternalRequester;
+
+  /// Support events have no completion / sending workflow.
+  final bool showStatusFields;
+
   const EventDetailPanel({
     super.key,
     required this.title,
@@ -38,6 +46,10 @@ class EventDetailPanel extends StatelessWidget {
     this.sentAt,
     this.canEdit = true,
     this.onEditPressed,
+    this.requesterName,
+    this.requesterPhone,
+    this.isExternalRequester = false,
+    this.showStatusFields = true,
   });
 
   @override
@@ -135,6 +147,10 @@ class EventDetailPanel extends StatelessWidget {
                 completedAt: completedAt,
                 isSent: isSent,
                 sentAt: sentAt,
+                requesterName: requesterName,
+                requesterPhone: requesterPhone,
+                isExternalRequester: isExternalRequester,
+                showStatusFields: showStatusFields,
               ),
             ),
           ),
